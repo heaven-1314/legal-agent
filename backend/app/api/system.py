@@ -17,7 +17,8 @@ def health(settings: Settings = Depends(get_settings)):
         "ok": True,
         "service": "legal-agent",
         "data_dir": str(settings.legal_agent_data),
-        "ai_configured": bool(settings.ai_base and settings.ai_key),
+        "ai_configured": settings.ai_configured,
+        "ai_base": settings.ai_base.rstrip("/") if settings.ai_base else None,
         "ai_model": settings.ai_model if settings.ai_base else None,
     }
 

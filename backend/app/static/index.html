@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>法律 Agent · 合同审查</title>
+  <style>
+    :root {
+      --bg: #f4f1ea;
+      --paper: #fffcf7;
+      --ink: #1c1917;
+      --muted: #78716c;
+      --line: #e7e5e4;
+      --accent: #0f766e;
+      --accent-soft: #ccfbf1;
+      --danger: #b91c1c;
+      --warn: #b45309;
+      --ok: #047857;
+      --shadow: 0 12px 40px rgba(28, 25, 23, 0.08);
+      --radius: 14px;
+      --font: "Iowan Old Style", "Palatino Linotype", "Songti SC", "Noto Serif SC", Georgia, serif;
+      --sans: "Avenir Next", "PingFang SC", "Noto Sans SC", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(1200px 600px at 10% -10%, #d9f3ee 0%, transparent 55%),
+        radial-gradient(900px 500px at 100% 0%, #fde68a33 0%, transparent 50%),
+        var(--bg);
+      font-family: var(--sans);
+    }
+    header {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 28px 20px 8px;
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-end;
+    }
+    .brand h1 {
+      margin: 0;
+      font-family: var(--font);
+      font-size: 1.75rem;
+      letter-spacing: 0.02em;
+    }
+    .brand p { margin: 6px 0 0; color: var(--muted); font-size: 0.92rem; }
+    .status {
+      font-size: 0.82rem;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .status.ok { color: var(--ok); border-color: #a7f3d0; background: #ecfdf5; }
+    .status.bad { color: var(--danger); border-color: #fecaca; background: #fef2f2; }
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 16px 20px 48px;
+      display: grid;
+      grid-template-columns: 1.05fr 1.2fr;
+      gap: 18px;
+    }
+    @media (max-width: 900px) {
+      main { grid-template-columns: 1fr; }
+    }
+    .card {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px;
+    }
+    .card h2 {
+      margin: 0 0 12px;
+      font-family: var(--font);
+      font-size: 1.15rem;
+    }
+    .drop {
+      border: 1.5px dashed #a8a29e;
+      border-radius: 12px;
+      padding: 28px 16px;
+      text-align: center;
+      color: var(--muted);
+      background: #fafaf9;
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+    }
+    .drop:hover, .drop.drag { border-color: var(--accent); background: var(--accent-soft); color: var(--ink); }
+    .drop strong { display: block; color: var(--ink); margin-bottom: 6px; }
+    input[type="file"] { display: none; }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+    button, .btn {
+      appearance: none;
+      border: 0;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font: inherit;
+      font-size: 0.92rem;
+      cursor: pointer;
+      background: var(--ink);
+      color: #fff;
+    }
+    button.secondary { background: #fff; color: var(--ink); border: 1px solid var(--line); }
+    button.accent { background: var(--accent); }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+    ul.docs { list-style: none; margin: 14px 0 0; padding: 0; max-height: 280px; overflow: auto; }
+    ul.docs li {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      padding: 10px 8px;
+      border-top: 1px solid var(--line);
+      align-items: center;
+    }
+    ul.docs li.active { background: #f0fdfa; }
+    ul.docs .meta { color: var(--muted); font-size: 0.8rem; }
+    .search-box { display: flex; gap: 8px; margin-top: 8px; }
+    .search-box input, textarea {
+      flex: 1;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font: inherit;
+      background: #fff;
+    }
+    .hits { margin-top: 10px; font-size: 0.88rem; color: var(--muted); }
+    .hits .hit {
+      border-left: 3px solid var(--accent);
+      padding: 8px 10px;
+      margin: 8px 0;
+      background: #fafaf9;
+    }
+    .risk {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+      margin: 10px 0;
+      background: #fff;
+    }
+    .risk .tag {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: 999px;
+      margin-right: 6px;
+    }
+    .sev-high { background: #fee2e2; color: var(--danger); }
+    .sev-medium { background: #ffedd5; color: var(--warn); }
+    .sev-low { background: #ecfccb; color: #3f6212; }
+    .sev-info { background: #e0f2fe; color: #075985; }
+    .summary {
+      font-family: var(--font);
+      line-height: 1.65;
+      white-space: pre-wrap;
+    }
+    .opinion {
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 12px;
+      background: #1c1917;
+      color: #f5f5f4;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.78rem;
+      line-height: 1.5;
+      max-height: 280px;
+      overflow: auto;
+      white-space: pre-wrap;
+    }
+    .toast {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      background: var(--ink);
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: .2s;
+      pointer-events: none;
+      max-width: 360px;
+    }
+    .toast.show { opacity: 1; transform: none; }
+    .empty { color: var(--muted); font-size: 0.9rem; padding: 12px 0; }
+    footer {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 20px 32px;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <h1>法律 Agent</h1>
+      <p>V0/V1 工作台 · 私库文档 · 合同审查（AI 草稿，非正式法律意见）</p>
+    </div>
+    <div id="health" class="status">连接中…</div>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>文档库</h2>
+      <div id="drop" class="drop" tabindex="0">
+        <strong>拖入或点击上传合同</strong>
+        支持 txt / md / pdf / docx
+      </div>
+      <input id="file" type="file" accept=".txt,.md,.pdf,.docx,text/plain,application/pdf" />
+      <div class="row">
+        <button type="button" class="secondary" id="btnRefresh">刷新列表</button>
+        <button type="button" class="secondary" id="btnProbe">探测 LLM</button>
+      </div>
+      <ul class="docs" id="docList"></ul>
+
+      <h2 style="margin-top:18px">私库检索</h2>
+      <div class="search-box">
+        <input id="q" placeholder="关键词，如 违约金 / 管辖" />
+        <button type="button" class="secondary" id="btnSearch">搜索</button>
+      </div>
+      <div class="hits" id="hits"></div>
+    </section>
+
+    <section class="card">
+      <h2>合同审查</h2>
+      <p class="empty" id="selectedLabel">请先在左侧选择一份文档。</p>
+      <div class="row">
+        <button type="button" class="accent" id="btnReview" disabled>运行审查</button>
+        <button type="button" class="secondary" id="btnCopyMd" disabled>复制意见书 Markdown</button>
+      </div>
+      <div id="reviewOut"></div>
+    </section>
+  </main>
+
+  <footer>
+    API 默认 <code>http://127.0.0.1:8091</code> · Token 使用本地 dev · 模型经 new-api（默认 <code>grok-4.5</code>）。
+    审查结果仅供内部讨论，不构成正式法律意见。
+  </footer>
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const API = localStorage.getItem("LEGAL_AGENT_API") || "";
+    const TOKEN = localStorage.getItem("LEGAL_AGENT_TOKEN") || "dev-local-token";
+    let selectedId = null;
+    let lastMd = "";
+
+    function apiUrl(path) {
+      return (API || "") + path;
+    }
+    async function api(path, opts = {}) {
+      const headers = Object.assign({ Authorization: "Bearer " + TOKEN }, opts.headers || {});
+      const res = await fetch(apiUrl(path), { ...opts, headers });
+      const text = await res.text();
+      let data;
+      try { data = text ? JSON.parse(text) : {}; } catch { data = { detail: text }; }
+      if (!res.ok) throw new Error(data.detail || res.statusText || "request failed");
+      return data;
+    }
+    function toast(msg) {
+      const el = document.getElementById("toast");
+      el.textContent = msg;
+      el.classList.add("show");
+      setTimeout(() => el.classList.remove("show"), 2800);
+    }
+    function fmtSize(n) {
+      if (n < 1024) return n + " B";
+      if (n < 1024 * 1024) return (n / 1024).toFixed(1) + " KB";
+      return (n / 1024 / 1024).toFixed(1) + " MB";
+    }
+
+    async function refreshHealth() {
+      const el = document.getElementById("health");
+      try {
+        const h = await api("/api/health");
+        const ok = h.ai_configured;
+        el.className = "status " + (ok ? "ok" : "bad");
+        el.textContent = ok
+          ? `API 正常 · ${h.ai_model || "?"} · ${h.ai_base || ""}`
+          : `API 正常 · LLM 未配置`;
+      } catch (e) {
+        el.className = "status bad";
+        el.textContent = "无法连接 API：" + e.message;
+      }
+    }
+
+    async function refreshDocs() {
+      const list = document.getElementById("docList");
+      const data = await api("/api/documents");
+      if (!data.items.length) {
+        list.innerHTML = '<li class="empty">暂无文档</li>';
+        return;
+      }
+      list.innerHTML = data.items.map(d => `
+        <li data-id="${d.id}" class="${d.id === selectedId ? "active" : ""}">
+          <div>
+            <div>${escapeHtml(d.filename)}</div>
+            <div class="meta">${fmtSize(d.size_bytes)} · ${d.text_chars} 字 · ${d.created_at}</div>
+          </div>
+          <button type="button" class="secondary pick" data-id="${d.id}">选择</button>
+        </li>
+      `).join("");
+      list.querySelectorAll(".pick").forEach(btn => {
+        btn.addEventListener("click", () => selectDoc(btn.dataset.id, data.items.find(x => x.id === btn.dataset.id)));
+      });
+    }
+
+    function selectDoc(id, meta) {
+      selectedId = id;
+      document.getElementById("selectedLabel").textContent = meta
+        ? `已选：${meta.filename}`
+        : `已选：${id}`;
+      document.getElementById("btnReview").disabled = !id;
+      document.getElementById("btnCopyMd").disabled = !lastMd;
+      refreshDocs().catch(() => {});
+    }
+
+    async function uploadFile(file) {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch(apiUrl("/api/documents"), {
+        method: "POST",
+        headers: { Authorization: "Bearer " + TOKEN },
+        body: fd,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "upload failed");
+      toast("已上传 " + data.filename);
+      await refreshDocs();
+      selectDoc(data.id, data);
+    }
+
+    async function doSearch() {
+      const q = document.getElementById("q").value.trim();
+      if (!q) return;
+      const data = await api("/api/documents/search?q=" + encodeURIComponent(q));
+      const box = document.getElementById("hits");
+      if (!data.items.length) {
+        box.innerHTML = "<div class='empty'>无命中</div>";
+        return;
+      }
+      box.innerHTML = data.items.map(h => `
+        <div class="hit">
+          <div><strong>${escapeHtml(h.filename || "")}</strong> · chunk ${h.chunk_index}</div>
+          <div>${escapeHtml(h.snippet || "")}</div>
+        </div>
+      `).join("");
+    }
+
+    async function doReview() {
+      if (!selectedId) return;
+      const btn = document.getElementById("btnReview");
+      btn.disabled = true;
+      btn.textContent = "审查中…";
+      const out = document.getElementById("reviewOut");
+      out.innerHTML = '<p class="empty">模型分析中，可能需要数十秒…</p>';
+      try {
+        const data = await api("/api/review/contract", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ document_id: selectedId }),
+        });
+        lastMd = data.opinion_markdown || "";
+        document.getElementById("btnCopyMd").disabled = !lastMd;
+        const r = data.review || {};
+        const risks = r.risks || [];
+        out.innerHTML = `
+          <div class="summary">${escapeHtml(r.summary || "")}</div>
+          ${risks.map(risk => `
+            <div class="risk">
+              <span class="tag sev-${escapeHtml(risk.severity || "info")}">${escapeHtml(risk.severity || "info")}</span>
+              <strong>${escapeHtml(risk.title || risk.checklist_id || "")}</strong>
+              <p>${escapeHtml(risk.finding || "")}</p>
+              ${risk.quote ? `<p class="meta">原文：${escapeHtml(risk.quote)}</p>` : ""}
+              <p><em>建议：</em>${escapeHtml(risk.suggestion || "")}</p>
+            </div>
+          `).join("")}
+          ${(r.missing_clauses && r.missing_clauses.length) ? `
+            <h3>可能缺失条款</h3>
+            <ul>${r.missing_clauses.map(m => `<li>${escapeHtml(m)}</li>`).join("")}</ul>
+          ` : ""}
+          <p class="meta">${escapeHtml(r.disclaimer || "")}</p>
+          <div class="opinion">${escapeHtml(lastMd)}</div>
+        `;
+        toast("审查完成 · " + risks.length + " 条风险");
+      } catch (e) {
+        out.innerHTML = `<p class="empty">失败：${escapeHtml(e.message)}</p>`;
+        toast(e.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "运行审查";
+      }
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;");
+    }
+
+    // events
+    const drop = document.getElementById("drop");
+    const fileInput = document.getElementById("file");
+    drop.addEventListener("click", () => fileInput.click());
+    drop.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") fileInput.click(); });
+    drop.addEventListener("dragover", e => { e.preventDefault(); drop.classList.add("drag"); });
+    drop.addEventListener("dragleave", () => drop.classList.remove("drag"));
+    drop.addEventListener("drop", e => {
+      e.preventDefault();
+      drop.classList.remove("drag");
+      if (e.dataTransfer.files[0]) uploadFile(e.dataTransfer.files[0]).catch(err => toast(err.message));
+    });
+    fileInput.addEventListener("change", () => {
+      if (fileInput.files[0]) uploadFile(fileInput.files[0]).catch(err => toast(err.message));
+      fileInput.value = "";
+    });
+    document.getElementById("btnRefresh").onclick = () => refreshDocs().catch(e => toast(e.message));
+    document.getElementById("btnSearch").onclick = () => doSearch().catch(e => toast(e.message));
+    document.getElementById("q").addEventListener("keydown", e => {
+      if (e.key === "Enter") doSearch().catch(err => toast(err.message));
+    });
+    document.getElementById("btnReview").onclick = doReview;
+    document.getElementById("btnCopyMd").onclick = async () => {
+      await navigator.clipboard.writeText(lastMd);
+      toast("已复制意见书 Markdown");
+    };
+    document.getElementById("btnProbe").onclick = async () => {
+      try {
+        const r = await api("/api/llm/probe");
+        toast("LLM OK · " + r.model + " · " + (r.reply_preview || "").slice(0, 40));
+        refreshHealth();
+      } catch (e) { toast(e.message); }
+    };
+
+    refreshHealth();
+    refreshDocs().catch(e => toast(e.message));
+  </script>
+</body>
+</html>

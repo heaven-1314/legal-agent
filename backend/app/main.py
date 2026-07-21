@@ -2,12 +2,18 @@ from __future__ import annotations
 
 from contextlib import asynccontextmanager
 
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
-from app.api import documents, system
+from app.api import documents, review, system
 from app.config import ensure_data_dirs, get_settings
 from app.db import init_db
+
+_STATIC = Path(__file__).resolve().parent / "static"
 
 
 @asynccontextmanager
@@ -31,8 +37,15 @@ app.add_middleware(
 
 app.include_router(system.router)
 app.include_router(documents.router)
+app.include_router(review.router)
+
+if _STATIC.is_dir():
+    app.mount("/assets", StaticFiles(directory=str(_STATIC)), name="assets")
 
 
 @app.get("/")
 def root():
+    index = _STATIC / "index.html"
+    if index.is_file():
+        return FileResponse(index)
     return {"service": "legal-agent", "docs": "/docs"}
