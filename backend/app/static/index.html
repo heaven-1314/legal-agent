@@ -245,13 +245,16 @@
   </main>
 
   <footer>
-    API 默认 <code>http://127.0.0.1:8091</code> · Token 使用本地 dev · 模型经 new-api（默认 <code>grok-4.5</code>）。
+    API 默认经网关前缀 <code>/legal-agent</code> · Token 使用本地 dev · 模型经 new-api（默认 <code>grok-4.5</code>）。
     审查结果仅供内部讨论，不构成正式法律意见。
   </footer>
   <div class="toast" id="toast"></div>
 
   <script>
-    const API = localStorage.getItem("LEGAL_AGENT_API") || "";
+    const API = localStorage.getItem("LEGAL_AGENT_API") || (
+      // under nginx path prefix /legal-agent/ → same-origin prefix; local dev → empty
+      (location.pathname.startsWith("/legal-agent") ? "/legal-agent" : "")
+    );
     const TOKEN = localStorage.getItem("LEGAL_AGENT_TOKEN") || "dev-local-token";
     let selectedId = null;
     let lastMd = "";
