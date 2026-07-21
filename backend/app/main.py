@@ -9,9 +9,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from app.api import documents, review, system
+from app.api import documents, dossier, draft, matters, review, system
 from app.config import ensure_data_dirs, get_settings
 from app.db import init_db
+from app.services.checklist import ensure_default_checklist_file
 
 _STATIC = Path(__file__).resolve().parent / "static"
 
@@ -20,10 +21,11 @@ _STATIC = Path(__file__).resolve().parent / "static"
 async def lifespan(app: FastAPI):
     settings = ensure_data_dirs()
     init_db(settings.sqlite_path)
+    ensure_default_checklist_file(settings.legal_agent_data)
     yield
 
 
-app = FastAPI(title="legal-agent", version="0.1.0", lifespan=lifespan)
+app = FastAPI(title="legal-agent", version="0.2.0", lifespan=lifespan)
 
 _settings = get_settings()
 _origins = [o.strip() for o in _settings.cors_origins.split(",") if o.strip()]
@@ -37,7 +39,10 @@ app.add_middleware(
 
 app.include_router(system.router)
 app.include_router(documents.router)
+app.include_router(matters.router)
 app.include_router(review.router)
+app.include_router(dossier.router)
+app.include_router(draft.router)
 
 if _STATIC.is_dir():
     app.mount("/assets", StaticFiles(directory=str(_STATIC)), name="assets")

@@ -31,20 +31,30 @@ def require_token(
 
 @router.get("")
 def list_documents(
+    matter_id: str | None = None,
     actor: str = Depends(require_token),
     settings: Settings = Depends(get_settings),
 ):
     with db_session(settings.sqlite_path) as conn:
-        rows = conn.execute(
-            "SELECT id, filename, content_type, size_bytes, text_chars, created_at "
-            "FROM documents ORDER BY created_at DESC"
-        ).fetchall()
+        if matter_id:
+            rows = conn.execute(
+                "SELECT id, filename, content_type, size_bytes, text_chars, matter_id, doc_kind, created_at "
+                "FROM documents WHERE matter_id=? ORDER BY created_at DESC",
+                (matter_id,),
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                "SELECT id, filename, content_type, size_bytes, text_chars, matter_id, doc_kind, created_at "
+                "FROM documents ORDER BY created_at DESC"
+            ).fetchall()
         return {"items": [dict(r) for r in rows]}
 
 
 @router.post("")
 async def upload_document(
     file: UploadFile = File(...),
+    matter_id: str | None = None,
+    doc_kind: str = "contract",
     actor: str = Depends(require_token),
     settings: Settings = Depends(get_settings),
 ):
@@ -68,9 +78,13 @@ async def upload_document(
     chunks = chunk_text(text)
 
     with db_session(settings.sqlite_path) as conn:
+        if matter_id:
+            m = conn.execute("SELECT id FROM matters WHERE id=?", (matter_id,)).fetchone()
+            if not m:
+                raise HTTPException(status_code=400, detail="matter_id not found")
         conn.execute(
-            """INSERT INTO documents(id, filename, content_type, size_bytes, storage_path, text_chars, created_at)
-               VALUES (?,?,?,?,?,?,?)""",
+            """INSERT INTO documents(id, filename, content_type, size_bytes, storage_path, text_chars, matter_id, doc_kind, created_at)
+               VALUES (?,?,?,?,?,?,?,?,?)""",
             (
                 doc_id,
                 safe_name,
@@ -78,6 +92,8 @@ async def upload_document(
                 size,
                 str(dest),
                 len(text),
+                matter_id,
+                doc_kind or "contract",
                 now_iso(),
             ),
         )
@@ -92,7 +108,7 @@ async def upload_document(
             action="document.upload",
             resource_type="document",
             resource_id=doc_id,
-            detail=f"filename={safe_name};chunks={len(chunks)}",
+            detail=f"filename={safe_name};chunks={len(chunks)};kind={doc_kind}",
         )
 
     return {
@@ -101,6 +117,8 @@ async def upload_document(
         "size_bytes": size,
         "text_chars": len(text),
         "chunk_count": len(chunks),
+        "matter_id": matter_id,
+        "doc_kind": doc_kind,
     }
 
 
