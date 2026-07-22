@@ -19,6 +19,7 @@ from app.services.review import (
     run_compliance_report,
     run_draft,
 )
+# now_iso already imported from db
 
 router = APIRouter(prefix="/api", tags=["draft-report"])
 
@@ -162,6 +163,62 @@ def download_draft(
             "Content-Disposition": f'attachment; filename="draft-{draft_id[:8]}.md"'
         },
     )
+
+
+class DraftUpdate(BaseModel):
+    title: str | None = None
+    body_markdown: str | None = None
+    matter_id: str | None = None
+
+
+@router.patch("/drafts/{draft_id}")
+def update_draft(
+    draft_id: str,
+    body: DraftUpdate,
+    actor: str = Depends(require_token),
+    settings: Settings = Depends(get_settings),
+):
+    """Save lawyer edits to an existing draft (revision in place)."""
+    with db_session(settings.sqlite_path) as conn:
+        row = conn.execute("SELECT * FROM draft_docs WHERE id=?", (draft_id,)).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="not found")
+        title = body.title if body.title is not None else row["title"]
+        body_md = body.body_markdown if body.body_markdown is not None else row["body_md"]
+        matter_id = body.matter_id if body.matter_id is not None else row["matter_id"]
+        # preserve meta, mark edited
+        try:
+            meta = json.loads(row["meta_json"] or "{}")
+        except Exception:
+            meta = {}
+        if not isinstance(meta, dict):
+            meta = {}
+        meta["body_markdown"] = body_md
+        meta["title"] = title
+        meta["edited"] = True
+        meta["edited_at"] = now_iso()
+        meta["edited_by"] = actor
+        conn.execute(
+            """UPDATE draft_docs
+               SET title=?, body_md=?, matter_id=?, meta_json=?
+               WHERE id=?""",
+            (title, body_md, matter_id, json.dumps(meta, ensure_ascii=False), draft_id),
+        )
+        audit(
+            conn,
+            actor=actor,
+            action="draft.update",
+            resource_type="draft",
+            resource_id=draft_id,
+            detail=f"chars={len(body_md or '')}",
+        )
+    return {
+        "draft_id": draft_id,
+        "title": title,
+        "body_markdown": body_md,
+        "matter_id": matter_id,
+        "download_md": f"/api/drafts/{draft_id}/download.md",
+    }
 
 
 @router.post("/report/compliance")

@@ -84,10 +84,74 @@ def get_matter(
                ORDER BY created_at DESC LIMIT 50""",
             (matter_id, matter_id),
         ).fetchall()
+        notes = conn.execute(
+            """SELECT id, document_id, model, created_at, actor
+               FROM reading_notes
+               WHERE matter_id=? OR document_id IN
+                 (SELECT id FROM documents WHERE matter_id=?)
+               ORDER BY created_at DESC LIMIT 50""",
+            (matter_id, matter_id),
+        ).fetchall()
+        drafts = conn.execute(
+            """SELECT id, template_id, title, model, created_at, actor
+               FROM draft_docs WHERE matter_id=?
+               ORDER BY created_at DESC LIMIT 50""",
+            (matter_id,),
+        ).fetchall()
+        # unified timeline for matter workspace
+        timeline = []
+        for r in reviews:
+            timeline.append(
+                {
+                    "kind": r["kind"] or "review",
+                    "id": r["id"],
+                    "title": r["summary"] or ("检测报告" if r["kind"] == "compliance" else "合同审查"),
+                    "model": r["model"],
+                    "created_at": r["created_at"],
+                    "meta": {"risk_count": r["risk_count"], "document_id": r["document_id"]},
+                }
+            )
+        for n in notes:
+            timeline.append(
+                {
+                    "kind": "dossier",
+                    "id": n["id"],
+                    "title": "阅卷笔记",
+                    "model": n["model"],
+                    "created_at": n["created_at"],
+                    "meta": {"document_id": n["document_id"], "actor": n["actor"]},
+                }
+            )
+        for d in drafts:
+            timeline.append(
+                {
+                    "kind": "draft",
+                    "id": d["id"],
+                    "title": d["title"] or "文书草稿",
+                    "model": d["model"],
+                    "created_at": d["created_at"],
+                    "meta": {"template_id": d["template_id"], "actor": d["actor"]},
+                }
+            )
+        for doc in docs:
+            timeline.append(
+                {
+                    "kind": "document",
+                    "id": doc["id"],
+                    "title": f"上传材料 · {doc['filename']}",
+                    "model": None,
+                    "created_at": doc["created_at"],
+                    "meta": {"doc_kind": doc["doc_kind"], "size_bytes": doc["size_bytes"]},
+                }
+            )
+        timeline.sort(key=lambda x: x.get("created_at") or "", reverse=True)
         return {
             "matter": dict(m),
             "documents": [dict(d) for d in docs],
             "reviews": [dict(r) for r in reviews],
+            "notes": [dict(n) for n in notes],
+            "drafts": [dict(d) for d in drafts],
+            "timeline": timeline[:100],
         }
 
 
