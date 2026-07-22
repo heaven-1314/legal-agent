@@ -1,455 +1,86 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>法律 Agent · 合同审查</title>
-  <style>
-    :root {
-      --bg: #f4f1ea;
-      --paper: #fffcf7;
-      --ink: #1c1917;
-      --muted: #78716c;
-      --line: #e7e5e4;
-      --accent: #0f766e;
-      --accent-soft: #ccfbf1;
-      --danger: #b91c1c;
-      --warn: #b45309;
-      --ok: #047857;
-      --shadow: 0 12px 40px rgba(28, 25, 23, 0.08);
-      --radius: 14px;
-      --font: "Iowan Old Style", "Palatino Linotype", "Songti SC", "Noto Serif SC", Georgia, serif;
-      --sans: "Avenir Next", "PingFang SC", "Noto Sans SC", system-ui, sans-serif;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      min-height: 100vh;
-      color: var(--ink);
-      background:
-        radial-gradient(1200px 600px at 10% -10%, #d9f3ee 0%, transparent 55%),
-        radial-gradient(900px 500px at 100% 0%, #fde68a33 0%, transparent 50%),
-        var(--bg);
-      font-family: var(--sans);
-    }
-    header {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 28px 20px 8px;
-      display: flex;
-      justify-content: space-between;
-      gap: 16px;
-      align-items: flex-end;
-    }
-    .brand h1 {
-      margin: 0;
-      font-family: var(--font);
-      font-size: 1.75rem;
-      letter-spacing: 0.02em;
-    }
-    .brand p { margin: 6px 0 0; color: var(--muted); font-size: 0.92rem; }
-    .status {
-      font-size: 0.82rem;
-      padding: 8px 12px;
-      border-radius: 999px;
-      background: var(--paper);
-      border: 1px solid var(--line);
-      color: var(--muted);
-      white-space: nowrap;
-    }
-    .status.ok { color: var(--ok); border-color: #a7f3d0; background: #ecfdf5; }
-    .status.bad { color: var(--danger); border-color: #fecaca; background: #fef2f2; }
-    main {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 16px 20px 48px;
-      display: grid;
-      grid-template-columns: 1.05fr 1.2fr;
-      gap: 18px;
-    }
-    @media (max-width: 900px) {
-      main { grid-template-columns: 1fr; }
-    }
-    .card {
-      background: var(--paper);
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 18px;
-    }
-    .card h2 {
-      margin: 0 0 12px;
-      font-family: var(--font);
-      font-size: 1.15rem;
-    }
-    .drop {
-      border: 1.5px dashed #a8a29e;
-      border-radius: 12px;
-      padding: 28px 16px;
-      text-align: center;
-      color: var(--muted);
-      background: #fafaf9;
-      cursor: pointer;
-      transition: border-color .15s, background .15s;
-    }
-    .drop:hover, .drop.drag { border-color: var(--accent); background: var(--accent-soft); color: var(--ink); }
-    .drop strong { display: block; color: var(--ink); margin-bottom: 6px; }
-    input[type="file"] { display: none; }
-    .row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
-    button, .btn {
-      appearance: none;
-      border: 0;
-      border-radius: 10px;
-      padding: 10px 14px;
-      font: inherit;
-      font-size: 0.92rem;
-      cursor: pointer;
-      background: var(--ink);
-      color: #fff;
-    }
-    button.secondary { background: #fff; color: var(--ink); border: 1px solid var(--line); }
-    button.accent { background: var(--accent); }
-    button:disabled { opacity: 0.45; cursor: not-allowed; }
-    ul.docs { list-style: none; margin: 14px 0 0; padding: 0; max-height: 280px; overflow: auto; }
-    ul.docs li {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 8px;
-      padding: 10px 8px;
-      border-top: 1px solid var(--line);
-      align-items: center;
-    }
-    ul.docs li.active { background: #f0fdfa; }
-    ul.docs .meta { color: var(--muted); font-size: 0.8rem; }
-    .search-box { display: flex; gap: 8px; margin-top: 8px; }
-    .search-box input, textarea {
-      flex: 1;
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      padding: 10px 12px;
-      font: inherit;
-      background: #fff;
-    }
-    .hits { margin-top: 10px; font-size: 0.88rem; color: var(--muted); }
-    .hits .hit {
-      border-left: 3px solid var(--accent);
-      padding: 8px 10px;
-      margin: 8px 0;
-      background: #fafaf9;
-    }
-    .risk {
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 12px;
-      margin: 10px 0;
-      background: #fff;
-    }
-    .risk .tag {
-      display: inline-block;
-      font-size: 0.72rem;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      padding: 2px 8px;
-      border-radius: 999px;
-      margin-right: 6px;
-    }
-    .sev-high { background: #fee2e2; color: var(--danger); }
-    .sev-medium { background: #ffedd5; color: var(--warn); }
-    .sev-low { background: #ecfccb; color: #3f6212; }
-    .sev-info { background: #e0f2fe; color: #075985; }
-    .summary {
-      font-family: var(--font);
-      line-height: 1.65;
-      white-space: pre-wrap;
-    }
-    .opinion {
-      margin-top: 12px;
-      padding: 12px;
-      border-radius: 12px;
-      background: #1c1917;
-      color: #f5f5f4;
-      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-      font-size: 0.78rem;
-      line-height: 1.5;
-      max-height: 280px;
-      overflow: auto;
-      white-space: pre-wrap;
-    }
-    .toast {
-      position: fixed;
-      right: 16px;
-      bottom: 16px;
-      background: var(--ink);
-      color: #fff;
-      padding: 10px 14px;
-      border-radius: 10px;
-      font-size: 0.88rem;
-      opacity: 0;
-      transform: translateY(8px);
-      transition: .2s;
-      pointer-events: none;
-      max-width: 360px;
-    }
-    .toast.show { opacity: 1; transform: none; }
-    .empty { color: var(--muted); font-size: 0.9rem; padding: 12px 0; }
-    footer {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 0 20px 32px;
-      color: var(--muted);
-      font-size: 0.8rem;
-    }
-  </style>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>律序 · 法律智能工作台</title>
+<style>
+:root{--bg:#f5f7f8;--panel:#fff;--panel-2:#eef2f3;--ink:#172226;--muted:#647277;--line:#dce4e5;--brand:#087f78;--brand-strong:#05635e;--brand-soft:#e1f3f0;--gold:#a66b19;--danger:#b42318;--danger-soft:#fff0ee;--warn:#9a5b08;--warn-soft:#fff7e6;--ok:#087443;--ok-soft:#e8f7ee;--shadow:0 8px 28px rgba(19,39,43,.06);--r:10px;--sans:Inter,"SF Pro Display","PingFang SC","Noto Sans SC",system-ui,sans-serif;--serif:"Source Han Serif SC","Songti SC",Georgia,serif}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:var(--sans)}button,input,textarea,select{font:inherit}button{cursor:pointer}.shell{display:grid;grid-template-columns:240px minmax(0,1fr);min-height:100vh}.sidebar{background:#18272b;color:#dbe7e7;padding:22px 14px;display:flex;flex-direction:column}.brand{display:flex;align-items:center;gap:10px;padding:0 9px 28px}.brand-mark{width:32px;height:32px;background:#d6eee9;color:#155b56;border-radius:9px;display:grid;place-items:center;font-family:var(--serif);font-weight:800;font-size:19px}.brand strong{font-size:16px;letter-spacing:.06em}.brand small{display:block;color:#8da5a6;font-size:10px;margin-top:2px}.nav{display:grid;gap:4px}.nav button{border:0;background:transparent;color:#a9bcbc;text-align:left;border-radius:8px;padding:10px 11px;display:flex;align-items:center;gap:10px;font-size:13px}.nav button:hover{background:#24393d;color:#fff}.nav button.active{background:#d9eeeb;color:#164d49;font-weight:650}.nav .icon{width:18px;text-align:center;font-size:15px}.side-foot{margin-top:auto;padding:14px 9px;border-top:1px solid #304548;color:#8da5a6;font-size:11px;line-height:1.7}.main{min-width:0}.topbar{height:68px;background:var(--panel);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 clamp(18px,4vw,44px);position:sticky;top:0;z-index:10}.crumb{font-size:13px;color:var(--muted)}.crumb b{color:var(--ink);font-weight:650}.top-actions{display:flex;align-items:center;gap:12px}.health{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px}.dot{width:7px;height:7px;border-radius:50%;background:#aab5b7}.dot.ok{background:#16a36b}.dot.bad{background:#d14343}.avatar{width:29px;height:29px;border-radius:50%;background:var(--brand-soft);color:var(--brand-strong);display:grid;place-items:center;font-size:12px;font-weight:700}.content{max-width:1440px;margin:auto;padding:30px clamp(18px,4vw,44px) 50px}.view{display:none}.view.active{display:block}.page-head{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;margin-bottom:24px}.page-head h1{margin:0;font:700 28px var(--serif);letter-spacing:.01em}.page-head p{margin:8px 0 0;color:var(--muted);font-size:13px}.actions{display:flex;gap:8px;flex-wrap:wrap}.btn{border:1px solid transparent;border-radius:8px;padding:9px 13px;font-size:12px;font-weight:650;transition:background .16s,transform .16s}.btn:hover{transform:translateY(-1px)}.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}.btn.primary{background:var(--brand);color:#fff}.btn.primary:hover{background:var(--brand-strong)}.btn.ghost{background:#fff;border-color:var(--line);color:var(--ink)}.btn.danger{background:var(--danger-soft);color:var(--danger);border-color:#f5cac5}.btn.link{background:transparent;color:var(--brand);padding-left:0;padding-right:0}.grid{display:grid;gap:16px}.stats{grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:20px}.stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:17px 18px;box-shadow:var(--shadow)}.stat .label{color:var(--muted);font-size:12px}.stat .value{font-size:27px;font-weight:700;margin-top:7px;letter-spacing:-.03em}.stat .hint{font-size:11px;color:var(--muted);margin-top:6px}.two{grid-template-columns:minmax(0,1.4fr) minmax(290px,.8fr)}.three{grid-template-columns:repeat(3,minmax(0,1fr))}.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}.panel-head{padding:17px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px}.panel-head h2{font-size:14px;margin:0;font-weight:700}.panel-head span{font-size:11px;color:var(--muted)}.panel-body{padding:18px}.empty{color:var(--muted);font-size:12px;padding:25px 5px;text-align:center}.table{width:100%;border-collapse:collapse;font-size:12px}.table th{text-align:left;color:var(--muted);font-size:11px;font-weight:600;padding:0 10px 10px;border-bottom:1px solid var(--line)}.table td{padding:12px 10px;border-bottom:1px solid #edf1f1;vertical-align:middle}.table tr:last-child td{border-bottom:0}.table tr:hover td{background:#f8fbfb}.title-cell{font-weight:650}.muted{color:var(--muted)}.pill{display:inline-flex;align-items:center;border-radius:99px;padding:4px 8px;font-size:10px;font-weight:700}.pill.teal{background:var(--brand-soft);color:var(--brand-strong)}.pill.gold{background:var(--warn-soft);color:var(--warn)}.pill.red{background:var(--danger-soft);color:var(--danger)}.pill.green{background:var(--ok-soft);color:var(--ok)}.pill.gray{background:var(--panel-2);color:var(--muted)}.activity{display:grid;gap:14px}.activity-item{display:flex;gap:11px;font-size:12px}.activity-dot{width:8px;height:8px;border-radius:50%;background:#7abcb6;margin-top:4px;flex:0 0 auto}.activity-item b{font-weight:650}.activity-item small{display:block;color:var(--muted);margin-top:3px}.quick-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}.quick{border:1px solid var(--line);border-radius:8px;background:#fff;padding:13px;text-align:left;color:var(--ink);transition:border-color .15s,background .15s}.quick:hover{border-color:#91c9c4;background:#f4fbfa}.quick strong{font-size:12px;display:block}.quick small{color:var(--muted);font-size:11px;display:block;margin-top:5px;line-height:1.5}.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}.input,.select,.textarea{border:1px solid var(--line);background:#fff;border-radius:8px;color:var(--ink);padding:9px 11px;font-size:12px;outline:0}.input:focus,.select:focus,.textarea:focus{border-color:#62aaa4;box-shadow:0 0 0 3px #dff1ee}.input{min-width:230px}.textarea{width:100%;resize:vertical;min-height:110px;line-height:1.6}.drop{border:1.5px dashed #a8b8b9;border-radius:10px;padding:31px 18px;text-align:center;background:#fafcfc;color:var(--muted);cursor:pointer}.drop:hover,.drop.drag{border-color:var(--brand);background:var(--brand-soft);color:var(--ink)}.drop strong{display:block;color:var(--ink);font-size:13px;margin-bottom:5px}.hidden{display:none!important}.form{display:grid;gap:12px}.field{display:grid;gap:6px}.field label{font-size:11px;font-weight:700;color:#4d5d60}.field-note{font-size:10px;color:var(--muted)}.doc-list{display:grid;gap:7px;margin-top:15px}.doc-row{display:flex;justify-content:space-between;gap:12px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:11px 12px;background:#fff}.doc-row.selected{border-color:#72bbb5;background:#f1faf8}.doc-row strong{font-size:12px;display:block;max-width:360px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.doc-row small{display:block;color:var(--muted);font-size:10px;margin-top:4px}.doc-actions{display:flex;gap:5px}.result{margin-top:18px}.result-head{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:12px}.result-head h3{margin:0;font-size:15px}.summary{font:14px/1.75 var(--serif);background:#f7faf9;padding:14px;border-radius:8px;margin:14px 0}.risk{border:1px solid var(--line);border-radius:8px;padding:14px;margin:9px 0;background:#fff}.risk-top{display:flex;align-items:center;gap:8px}.risk h4{margin:0;font-size:13px}.risk p{font-size:12px;line-height:1.65;margin:9px 0 0}.quote{color:var(--muted);background:#f5f7f7;padding:8px 10px;border-radius:5px}.markdown{white-space:pre-wrap;font:12px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;background:#1e2b2d;color:#e4efed;border-radius:8px;padding:15px;max-height:330px;overflow:auto;margin-top:14px}.tabs{display:flex;gap:3px;border-bottom:1px solid var(--line);margin-bottom:18px}.tab{border:0;background:transparent;color:var(--muted);font-size:12px;padding:10px 13px;border-bottom:2px solid transparent}.tab.active{color:var(--brand-strong);font-weight:700;border-bottom-color:var(--brand)}.check{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:8px;padding:11px;margin:7px 0}.check input{accent-color:var(--brand);margin-top:3px}.check b{font-size:12px}.check small{display:block;color:var(--muted);font-size:11px;margin-top:4px;line-height:1.5}.score{font-size:34px;font-weight:750;color:var(--brand-strong)}.report-check{display:grid;grid-template-columns:70px 1fr;gap:10px;padding:11px 0;border-bottom:1px solid #edf1f1;font-size:12px}.report-check:last-child{border:0}.mobile-toggle{display:none;border:0;background:transparent;font-size:20px;color:var(--ink)}.toast{position:fixed;z-index:30;right:20px;bottom:20px;background:#172226;color:#fff;border-radius:8px;padding:11px 14px;font-size:12px;box-shadow:var(--shadow);opacity:0;transform:translateY(8px);pointer-events:none;transition:.2s}.toast.show{opacity:1;transform:none}.modal-backdrop{position:fixed;inset:0;background:#12222666;z-index:20;display:none;align-items:center;justify-content:center;padding:20px}.modal-backdrop.open{display:flex}.modal{background:#fff;border-radius:12px;max-width:620px;width:100%;max-height:90vh;overflow:auto;box-shadow:0 24px 80px #13272b33}.modal-head{display:flex;justify-content:space-between;padding:18px;border-bottom:1px solid var(--line)}.modal-head h2{font-size:16px;margin:0}.modal-body{padding:18px}.modal-close{border:0;background:transparent;color:var(--muted);font-size:20px}.upload-zone{display:grid;gap:10px}.notice{padding:11px 13px;background:var(--warn-soft);color:var(--warn);border-radius:7px;font-size:11px;line-height:1.5}
+@media(max-width:900px){.shell{grid-template-columns:1fr}.sidebar{position:fixed;z-index:15;inset:0 auto 0 0;width:240px;transform:translateX(-100%);transition:transform .2s}.sidebar.open{transform:none}.mobile-toggle{display:block}.stats{grid-template-columns:repeat(2,1fr)}.two{grid-template-columns:1fr}.three{grid-template-columns:1fr}.topbar{padding:0 18px}.content{padding:24px 18px 40px}}
+@media(max-width:560px){.stats{grid-template-columns:1fr 1fr}.page-head{display:block}.page-head .actions{margin-top:14px}.table{min-width:650px}.panel.table-wrap{overflow:auto}.input{min-width:0;width:100%}.toolbar .input{flex:1}.doc-row{align-items:flex-start;flex-direction:column}.doc-actions{width:100%}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{transition:none!important;animation:none!important}}
+</style>
 </head>
 <body>
-  <header>
-    <div class="brand">
-      <h1>法律 Agent</h1>
-      <p>V0/V1 工作台 · 私库文档 · 合同审查（AI 草稿，非正式法律意见）</p>
-    </div>
-    <div id="health" class="status">连接中…</div>
-  </header>
-
-  <main>
-    <section class="card">
-      <h2>文档库</h2>
-      <div id="drop" class="drop" tabindex="0">
-        <strong>拖入或点击上传合同</strong>
-        支持 txt / md / pdf / docx
-      </div>
-      <input id="file" type="file" accept=".txt,.md,.pdf,.docx,text/plain,application/pdf" />
-      <div class="row">
-        <button type="button" class="secondary" id="btnRefresh">刷新列表</button>
-        <button type="button" class="secondary" id="btnProbe">探测 LLM</button>
-      </div>
-      <ul class="docs" id="docList"></ul>
-
-      <h2 style="margin-top:18px">私库检索</h2>
-      <div class="search-box">
-        <input id="q" placeholder="关键词，如 违约金 / 管辖" />
-        <button type="button" class="secondary" id="btnSearch">搜索</button>
-      </div>
-      <div class="hits" id="hits"></div>
-    </section>
-
-    <section class="card">
-      <h2>合同审查</h2>
-      <p class="empty" id="selectedLabel">请先在左侧选择一份文档。</p>
-      <div class="row">
-        <button type="button" class="accent" id="btnReview" disabled>运行审查</button>
-        <button type="button" class="secondary" id="btnCopyMd" disabled>复制意见书 Markdown</button>
-      </div>
-      <div id="reviewOut"></div>
-    </section>
-  </main>
-
-  <footer>
-    API 默认经网关前缀 <code>/legal-agent</code> · Token 使用本地 dev · 模型经 new-api（默认 <code>grok-4.5</code>）。
-    审查结果仅供内部讨论，不构成正式法律意见。
-  </footer>
-  <div class="toast" id="toast"></div>
-
-  <script>
-    const API = localStorage.getItem("LEGAL_AGENT_API") || (
-      // under nginx path prefix /legal-agent/ → same-origin prefix; local dev → empty
-      (location.pathname.startsWith("/legal-agent") ? "/legal-agent" : "")
-    );
-    const TOKEN = localStorage.getItem("LEGAL_AGENT_TOKEN") || "dev-local-token";
-    let selectedId = null;
-    let lastMd = "";
-
-    function apiUrl(path) {
-      return (API || "") + path;
-    }
-    async function api(path, opts = {}) {
-      const headers = Object.assign({ Authorization: "Bearer " + TOKEN }, opts.headers || {});
-      const res = await fetch(apiUrl(path), { ...opts, headers });
-      const text = await res.text();
-      let data;
-      try { data = text ? JSON.parse(text) : {}; } catch { data = { detail: text }; }
-      if (!res.ok) throw new Error(data.detail || res.statusText || "request failed");
-      return data;
-    }
-    function toast(msg) {
-      const el = document.getElementById("toast");
-      el.textContent = msg;
-      el.classList.add("show");
-      setTimeout(() => el.classList.remove("show"), 2800);
-    }
-    function fmtSize(n) {
-      if (n < 1024) return n + " B";
-      if (n < 1024 * 1024) return (n / 1024).toFixed(1) + " KB";
-      return (n / 1024 / 1024).toFixed(1) + " MB";
-    }
-
-    async function refreshHealth() {
-      const el = document.getElementById("health");
-      try {
-        const h = await api("/api/health");
-        const ok = h.ai_configured;
-        el.className = "status " + (ok ? "ok" : "bad");
-        el.textContent = ok
-          ? `API 正常 · ${h.ai_model || "?"} · ${h.ai_base || ""}`
-          : `API 正常 · LLM 未配置`;
-      } catch (e) {
-        el.className = "status bad";
-        el.textContent = "无法连接 API：" + e.message;
-      }
-    }
-
-    async function refreshDocs() {
-      const list = document.getElementById("docList");
-      const data = await api("/api/documents");
-      if (!data.items.length) {
-        list.innerHTML = '<li class="empty">暂无文档</li>';
-        return;
-      }
-      list.innerHTML = data.items.map(d => `
-        <li data-id="${d.id}" class="${d.id === selectedId ? "active" : ""}">
-          <div>
-            <div>${escapeHtml(d.filename)}</div>
-            <div class="meta">${fmtSize(d.size_bytes)} · ${d.text_chars} 字 · ${d.created_at}</div>
-          </div>
-          <button type="button" class="secondary pick" data-id="${d.id}">选择</button>
-        </li>
-      `).join("");
-      list.querySelectorAll(".pick").forEach(btn => {
-        btn.addEventListener("click", () => selectDoc(btn.dataset.id, data.items.find(x => x.id === btn.dataset.id)));
-      });
-    }
-
-    function selectDoc(id, meta) {
-      selectedId = id;
-      document.getElementById("selectedLabel").textContent = meta
-        ? `已选：${meta.filename}`
-        : `已选：${id}`;
-      document.getElementById("btnReview").disabled = !id;
-      document.getElementById("btnCopyMd").disabled = !lastMd;
-      refreshDocs().catch(() => {});
-    }
-
-    async function uploadFile(file) {
-      const fd = new FormData();
-      fd.append("file", file);
-      const res = await fetch(apiUrl("/api/documents"), {
-        method: "POST",
-        headers: { Authorization: "Bearer " + TOKEN },
-        body: fd,
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || "upload failed");
-      toast("已上传 " + data.filename);
-      await refreshDocs();
-      selectDoc(data.id, data);
-    }
-
-    async function doSearch() {
-      const q = document.getElementById("q").value.trim();
-      if (!q) return;
-      const data = await api("/api/documents/search?q=" + encodeURIComponent(q));
-      const box = document.getElementById("hits");
-      if (!data.items.length) {
-        box.innerHTML = "<div class='empty'>无命中</div>";
-        return;
-      }
-      box.innerHTML = data.items.map(h => `
-        <div class="hit">
-          <div><strong>${escapeHtml(h.filename || "")}</strong> · chunk ${h.chunk_index}</div>
-          <div>${escapeHtml(h.snippet || "")}</div>
-        </div>
-      `).join("");
-    }
-
-    async function doReview() {
-      if (!selectedId) return;
-      const btn = document.getElementById("btnReview");
-      btn.disabled = true;
-      btn.textContent = "审查中…";
-      const out = document.getElementById("reviewOut");
-      out.innerHTML = '<p class="empty">模型分析中，可能需要数十秒…</p>';
-      try {
-        const data = await api("/api/review/contract", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ document_id: selectedId }),
-        });
-        lastMd = data.opinion_markdown || "";
-        document.getElementById("btnCopyMd").disabled = !lastMd;
-        const r = data.review || {};
-        const risks = r.risks || [];
-        out.innerHTML = `
-          <div class="summary">${escapeHtml(r.summary || "")}</div>
-          ${risks.map(risk => `
-            <div class="risk">
-              <span class="tag sev-${escapeHtml(risk.severity || "info")}">${escapeHtml(risk.severity || "info")}</span>
-              <strong>${escapeHtml(risk.title || risk.checklist_id || "")}</strong>
-              <p>${escapeHtml(risk.finding || "")}</p>
-              ${risk.quote ? `<p class="meta">原文：${escapeHtml(risk.quote)}</p>` : ""}
-              <p><em>建议：</em>${escapeHtml(risk.suggestion || "")}</p>
-            </div>
-          `).join("")}
-          ${(r.missing_clauses && r.missing_clauses.length) ? `
-            <h3>可能缺失条款</h3>
-            <ul>${r.missing_clauses.map(m => `<li>${escapeHtml(m)}</li>`).join("")}</ul>
-          ` : ""}
-          <p class="meta">${escapeHtml(r.disclaimer || "")}</p>
-          <div class="opinion">${escapeHtml(lastMd)}</div>
-        `;
-        toast("审查完成 · " + risks.length + " 条风险");
-      } catch (e) {
-        out.innerHTML = `<p class="empty">失败：${escapeHtml(e.message)}</p>`;
-        toast(e.message);
-      } finally {
-        btn.disabled = false;
-        btn.textContent = "运行审查";
-      }
-    }
-
-    function escapeHtml(s) {
-      return String(s)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;");
-    }
-
-    // events
-    const drop = document.getElementById("drop");
-    const fileInput = document.getElementById("file");
-    drop.addEventListener("click", () => fileInput.click());
-    drop.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") fileInput.click(); });
-    drop.addEventListener("dragover", e => { e.preventDefault(); drop.classList.add("drag"); });
-    drop.addEventListener("dragleave", () => drop.classList.remove("drag"));
-    drop.addEventListener("drop", e => {
-      e.preventDefault();
-      drop.classList.remove("drag");
-      if (e.dataTransfer.files[0]) uploadFile(e.dataTransfer.files[0]).catch(err => toast(err.message));
-    });
-    fileInput.addEventListener("change", () => {
-      if (fileInput.files[0]) uploadFile(fileInput.files[0]).catch(err => toast(err.message));
-      fileInput.value = "";
-    });
-    document.getElementById("btnRefresh").onclick = () => refreshDocs().catch(e => toast(e.message));
-    document.getElementById("btnSearch").onclick = () => doSearch().catch(e => toast(e.message));
-    document.getElementById("q").addEventListener("keydown", e => {
-      if (e.key === "Enter") doSearch().catch(err => toast(err.message));
-    });
-    document.getElementById("btnReview").onclick = doReview;
-    document.getElementById("btnCopyMd").onclick = async () => {
-      await navigator.clipboard.writeText(lastMd);
-      toast("已复制意见书 Markdown");
-    };
-    document.getElementById("btnProbe").onclick = async () => {
-      try {
-        const r = await api("/api/llm/probe");
-        toast("LLM OK · " + r.model + " · " + (r.reply_preview || "").slice(0, 40));
-        refreshHealth();
-      } catch (e) { toast(e.message); }
-    };
-
-    refreshHealth();
-    refreshDocs().catch(e => toast(e.message));
-  </script>
-</body>
-</html>
+<div class="shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand"><div class="brand-mark">律</div><div><strong>律序</strong><small>LEGAL WORKBENCH</small></div></div>
+    <nav class="nav" id="nav">
+      <button class="active" data-view="overview"><span class="icon">⌂</span>工作台</button>
+      <button data-view="matters"><span class="icon">▣</span>案件与客户</button>
+      <button data-view="documents"><span class="icon">▤</span>文档资料</button>
+      <button data-view="review"><span class="icon">⊙</span>合同审查</button>
+      <button data-view="dossier"><span class="icon">◫</span>阅卷助手</button>
+      <button data-view="draft"><span class="icon">✎</span>文书起草</button>
+      <button data-view="report"><span class="icon">◈</span>检测报告</button>
+      <button data-view="history"><span class="icon">↺</span>工作记录</button>
+    </nav>
+    <div class="side-foot">AI 生成内容需由执业律师复核<br>数据默认保存在本机数据目录</div>
+  </aside>
+  <div class="main">
+    <header class="topbar"><div class="top-actions"><button class="mobile-toggle" id="mobileToggle">☰</button><div class="crumb">律序 <span> / </span> <b id="crumb">工作台</b></div></div><div class="top-actions"><div class="health"><i class="dot" id="healthDot"></i><span id="healthText">连接检查中</span></div><div class="avatar">赵</div></div></header>
+    <main class="content">
+      <section class="view active" id="view-overview">
+        <div class="page-head"><div><h1>工作台</h1><p>把材料、案件和 AI 产物放在同一条工作线上。</p></div><div class="actions"><button class="btn primary" data-open="upload">＋ 上传材料</button><button class="btn ghost" data-view-go="review">开始审查</button></div></div>
+        <div class="grid stats"><div class="stat"><div class="label">案件夹</div><div class="value" id="statMatters">—</div><div class="hint">当前工作空间</div></div><div class="stat"><div class="label">文档材料</div><div class="value" id="statDocs">—</div><div class="hint">已解析并可检索</div></div><div class="stat"><div class="label">审查产物</div><div class="value" id="statReviews">—</div><div class="hint">合同与检测记录</div></div><div class="stat"><div class="label">当前模型</div><div class="value" style="font-size:19px;margin-top:11px" id="statModel">—</div><div class="hint">经 New API 路由</div></div></div>
+        <div class="grid two"><div class="panel"><div class="panel-head"><h2>最近工作</h2><span>按时间排序</span></div><div class="panel-body"><div class="activity" id="recentActivity"><div class="empty">加载中…</div></div></div></div><div class="panel"><div class="panel-head"><h2>快速开始</h2><span>常用动作</span></div><div class="panel-body"><div class="quick-grid"><button class="quick" data-open="upload"><strong>上传合同</strong><small>PDF、Word 或纯文本材料</small></button><button class="quick" data-view-go="dossier"><strong>开始阅卷</strong><small>提炼主体、时间线与关键事实</small></button><button class="quick" data-view-go="draft"><strong>起草文书</strong><small>从事实到可编辑的文书草稿</small></button><button class="quick" data-view-go="report"><strong>生成检测</strong><small>检查要素缺项与行动项</small></button></div><div class="notice" style="margin-top:16px">当前版本重点是“材料 → 结构化产物”，不会把 AI 输出直接当作最终法律意见。</div></div></div></div>
+      </section>
+      <section class="view" id="view-matters"><div class="page-head"><div><h1>案件与客户</h1><p>用案件夹组织材料与后续 AI 产物。</p></div><button class="btn primary" id="createMatterBtn">＋ 新建案件</button></div><div class="panel table-wrap"><div class="panel-body"><table class="table"><thead><tr><th>案件名称</th><th>客户</th><th>材料</th><th>更新时间</th><th></th></tr></thead><tbody id="matterTable"></tbody></table></div></div></section>
+      <section class="view" id="view-documents"><div class="page-head"><div><h1>文档资料</h1><p>上传、检索并将材料归入案件夹。</p></div><button class="btn primary" data-open="upload">＋ 上传材料</button></div><div class="toolbar"><input class="input" id="docSearch" placeholder="搜索材料内容…"><button class="btn ghost" id="docSearchBtn">检索</button><select class="select" id="matterFilter"><option value="">全部案件</option></select></div><div class="panel"><div class="panel-body"><div class="doc-list" id="documentsList"></div><div id="searchResults"></div></div></div></section>
+      <section class="view" id="view-review"><div class="page-head"><div><h1>合同审查</h1><p>按检查单生成风险清单、原文证据与修改建议。</p></div><div class="actions"><button class="btn ghost" id="reviewHistoryBtn">查看历史</button></div></div><div class="grid two"><div class="panel"><div class="panel-head"><h2>审查输入</h2><span id="reviewSelectedText">未选择材料</span></div><div class="panel-body form"><div class="field"><label>选择合同材料</label><select class="select" id="reviewDocSelect"><option value="">请选择</option></select></div><div class="field"><label>检查单</label><select class="select" id="checklistSelect"></select><div class="field-note">检查单可以在“设置”中以 YAML 形式维护。</div></div><button class="btn primary" id="runReviewBtn">运行合同审查</button><div class="notice">审查结果是 AI 草稿。引用、风险等级和修改建议都需要律师核对原文。</div></div></div><div class="panel"><div class="panel-head"><h2>审查结果</h2><span id="reviewRunMeta">等待运行</span></div><div class="panel-body" id="reviewResult"><div class="empty">选择材料后运行审查，结果会保存在工作记录中。</div></div></div></div></section>
+      <section class="view" id="view-dossier"><div class="page-head"><div><h1>阅卷助手</h1><p>从单份材料开始，提炼主体、时间线、争点与待核实问题。</p></div></div><div class="grid two"><div class="panel"><div class="panel-head"><h2>阅卷输入</h2></div><div class="panel-body form"><div class="field"><label>材料</label><select class="select" id="dossierDocSelect"><option value="">请选择</option></select></div><div class="field"><label>你想先问什么？<span class="muted">（可选）</span></label><textarea class="textarea" id="dossierQuestion" placeholder="例如：请梳理付款义务、违约责任和目前缺少的证据。"></textarea></div><button class="btn primary" id="runDossierBtn">开始阅卷</button></div></div><div class="panel"><div class="panel-head"><h2>阅卷笔记</h2><span id="dossierMeta">等待运行</span></div><div class="panel-body" id="dossierResult"><div class="empty">阅卷结果会按结构化栏目呈现。</div></div></div></div></section>
+      <section class="view" id="view-draft"><div class="page-head"><div><h1>文书起草</h1><p>用模板和事实生成可继续编辑的草稿，不自动补造事实。</p></div></div><div class="grid two"><div class="panel"><div class="panel-head"><h2>起草输入</h2></div><div class="panel-body form"><div class="field"><label>文书模板</label><select class="select" id="draftTemplate"></select></div><div class="field"><label>标题提示</label><input class="input" style="width:100%" id="draftTitle" placeholder="例如：关于付款违约的法律备忘录"></div><div class="field"><label>事实与要求</label><textarea class="textarea" id="draftFacts" style="min-height:180px" placeholder="输入已核实事实、当事人诉求和希望文书解决的问题…"></textarea></div><div class="field"><label>参考材料 <span class="muted">（可选）</span></label><select class="select" id="draftDocSelect"><option value="">不引用材料</option></select></div><button class="btn primary" id="runDraftBtn">生成文书草稿</button></div></div><div class="panel"><div class="panel-head"><h2>草稿预览</h2><span id="draftMeta">等待生成</span></div><div class="panel-body" id="draftResult"><div class="empty">生成后在这里查看并下载 Markdown 草稿。</div></div></div></div></section>
+      <section class="view" id="view-report"><div class="page-head"><div><h1>检测报告</h1><p>对合同或文书做要素完整性检查，形成行动项。</p></div></div><div class="grid two"><div class="panel"><div class="panel-head"><h2>检测输入</h2></div><div class="panel-body form"><div class="field"><label>材料</label><select class="select" id="reportDocSelect"><option value="">请选择</option></select></div><div class="field"><label>检测重点</label><input class="input" style="width:100%" id="reportFocus" placeholder="例如：商业合同完整性、付款条款、劳动用工要素"></div><button class="btn primary" id="runReportBtn">生成检测报告</button></div></div><div class="panel"><div class="panel-head"><h2>报告结果</h2><span id="reportMeta">等待运行</span></div><div class="panel-body" id="reportResult"><div class="empty">报告将给出评分、逐项状态与下一步行动。</div></div></div></div></section>
+      <section class="view" id="view-history"><div class="page-head"><div><h1>工作记录</h1><p>所有 AI 产物和操作都留下可回看的记录。</p></div></div><div class="tabs"><button class="tab active" data-history="reviews">审查与检测</button><button class="tab" data-history="notes">阅卷笔记</button><button class="tab" data-history="drafts">文书草稿</button><button class="tab" data-history="audit">操作日志</button></div><div class="panel table-wrap"><div class="panel-body"><table class="table"><thead><tr id="historyHead"></tr></thead><tbody id="historyBody"></tbody></table></div></div></section>
+    </main>
+  </div>
+</div>
+<div class="modal-backdrop" id="modal"><div class="modal"><div class="modal-head"><h2>上传材料</h2><button class="modal-close" id="modalClose">×</button></div><div class="modal-body upload-zone"><div id="modalDrop" class="drop"><strong>点击选择或拖入文件</strong>支持 txt / md / pdf / docx</div><input id="fileInput" class="hidden" type="file" accept=".txt,.md,.pdf,.docx"><div class="field"><label>归入案件（可选）</label><select class="select" id="uploadMatter"><option value="">暂不归入</option></select></div><div class="field"><label>材料类型</label><select class="select" id="uploadKind"><option value="contract">合同</option><option value="evidence">证据材料</option><option value="pleading">诉讼文书</option><option value="other">其他</option></select></div><div id="uploadName" class="muted" style="font-size:11px"></div><button class="btn primary" id="uploadBtn" disabled>上传材料</button></div></div></div>
+<div class="toast" id="toast"></div>
+<script>
+const API=(localStorage.getItem('LEGAL_AGENT_API')||'')||(location.pathname.startsWith('/legal-agent')?'/legal-agent':'');const TOKEN=localStorage.getItem('LEGAL_AGENT_TOKEN')||'dev-local-token';let docs=[],matters=[],selectedFile=null,lastMd='';
+const $=id=>document.getElementById(id);const esc=s=>String(s??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');const url=p=>API+p;
+async function api(path,opt={}){let h=Object.assign({'Authorization':'Bearer '+TOKEN},opt.headers||{});let r=await fetch(url(path),{...opt,headers:h});let t=await r.text(),d={};try{d=t?JSON.parse(t):{}}catch{d={detail:t}}if(!r.ok)throw Error(d.detail||r.statusText);return d}
+function toast(s){$('toast').textContent=s;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),2800)}
+function size(n){return n<1024?n+' B':n<1048576?(n/1024).toFixed(1)+' KB':(n/1048576).toFixed(1)+' MB'}
+const labels={overview:'工作台',matters:'案件与客户',documents:'文档资料',review:'合同审查',dossier:'阅卷助手',draft:'文书起草',report:'检测报告',history:'工作记录'};
+function showView(name){document.querySelectorAll('.view').forEach(x=>x.classList.toggle('active',x.id==='view-'+name));document.querySelectorAll('#nav button').forEach(x=>x.classList.toggle('active',x.dataset.view===name));$('crumb').textContent=labels[name];$('sidebar').classList.remove('open');if(name==='overview')loadOverview();if(name==='matters')renderMatters();if(['documents','review','dossier','draft','report'].includes(name))loadDocs();if(name==='review')loadChecklists();if(name==='draft')loadTemplates();if(name==='history')loadHistory('reviews')}
+document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>showView(b.dataset.view));document.querySelectorAll('[data-view-go]').forEach(b=>b.onclick=()=>showView(b.dataset.viewGo));$('mobileToggle').onclick=()=>$('sidebar').classList.toggle('open');
+async function loadHealth(){try{let h=await api('/api/health');$('healthDot').className='dot '+(h.ai_configured?'ok':'bad');$('healthText').textContent=h.ai_configured?'API · '+h.ai_model:'API · LLM 未配置';$('statModel').textContent=h.ai_model||'未配置'}catch(e){$('healthDot').className='dot bad';$('healthText').textContent='API 未连接'}}
+async function loadDocs(){docs=(await api('/api/documents')).items||[];renderDocSelects();if(document.querySelector('#view-documents.active'))renderDocuments()}
+async function loadMatters(){matters=(await api('/api/matters')).items||[];renderMatterOptions();return matters}
+function renderMatterOptions(){['matterFilter','uploadMatter'].forEach(id=>{let el=$(id);if(!el)return;let first=id==='matterFilter'?'<option value="">全部案件</option>':'<option value="">暂不归入</option>';el.innerHTML=first+matters.map(m=>`<option value="${m.id}">${esc(m.title)}</option>`).join('')})}
+function renderDocSelects(){['reviewDocSelect','dossierDocSelect','draftDocSelect','reportDocSelect'].forEach(id=>{let el=$(id);if(!el)return;let first=id==='draftDocSelect'?'<option value="">不引用材料</option>':'<option value="">请选择</option>';el.innerHTML=first+docs.map(d=>`<option value="${d.id}">${esc(d.filename)}</option>`).join('')})}
+async function renderMatters(){await loadMatters();$('matterTable').innerHTML=matters.length?matters.map(m=>`<tr><td class="title-cell">${esc(m.title)}</td><td>${esc(m.client_name||'—')}</td><td>${m.doc_count||0} 份</td><td class="muted">${m.updated_at}</td><td><button class="btn link" onclick="openMatter('${m.id}')">查看</button></td></tr>`).join(''):'<tr><td colspan="5"><div class="empty">还没有案件夹。新建一个案件，把材料放进去。</div></td></tr>'}
+async function openMatter(id){let d=await api('/api/matters/'+id);showView('documents');$('matterFilter').value=id;renderDocuments();toast('已切换到案件：'+d.matter.title)}
+function renderDocuments(){let filter=$('matterFilter').value;let list=docs.filter(d=>!filter||d.matter_id===filter);$('documentsList').innerHTML=list.length?list.map(d=>`<div class="doc-row" data-doc="${d.id}"><div><strong>${esc(d.filename)}</strong><small>${esc(d.doc_kind||'other')} · ${size(d.size_bytes)} · ${d.text_chars} 字 · ${d.created_at}</small></div><div class="doc-actions"><button class="btn ghost" onclick="selectForReview('${d.id}')">使用</button><button class="btn danger" onclick="deleteDoc('${d.id}')">删除</button></div></div>`).join(''):'<div class="empty">没有匹配材料。</div>'}
+$('matterFilter').onchange=renderDocuments;$('docSearchBtn').onclick=async()=>{let q=$('docSearch').value.trim();if(!q)return;let d=await api('/api/documents/search?q='+encodeURIComponent(q));$('searchResults').innerHTML='<div style="margin-top:20px"><b style="font-size:13px">检索结果</b>'+((d.items||[]).map(x=>`<div class="risk"><b>${esc(x.filename)}</b><p>${esc(x.snippet)}</p></div>`).join('')||'<div class="empty">无命中</div>')+'</div>'};
+function selectForReview(id){showView('review');setTimeout(()=>$('reviewDocSelect').value=id,0)}
+async function deleteDoc(id){if(!confirm('删除这份材料及其相关记录？'))return;await api('/api/documents/'+id,{method:'DELETE'});toast('已删除');loadDocs()}
+async function loadChecklists(){let d=await api('/api/review/checklists');$('checklistSelect').innerHTML=(d.items||[]).map(x=>`<option value="${x.id}">${esc(x.name)} · ${x.item_count} 项</option>`).join('')}
+function riskHtml(r){return `<div class="risk"><div class="risk-top"><span class="pill ${r.severity==='high'?'red':r.severity==='medium'?'gold':r.severity==='low'?'green':'teal'}">${esc(r.severity)}</span><h4>${esc(r.title||r.checklist_id)}</h4></div><p>${esc(r.finding)}</p>${r.quote?`<p class="quote">原文：${esc(r.quote)}</p>`:''}<p><b>建议：</b>${esc(r.suggestion)}</p></div>`}
+function resultDownload(path,label='下载 Markdown'){return path?`<button class="btn ghost" onclick="downloadMd('${esc(path)}','${esc(label)}')">${label}</button>`:''}
+async function downloadMd(path,label='下载'){try{let r=await fetch(url(path),{headers:{Authorization:'Bearer '+TOKEN}});if(!r.ok)throw Error('下载失败 '+r.status);let blob=await r.blob(),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=path.split('/').pop()||'result.md';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);toast(label+'完成')}catch(e){toast(e.message)}}
+$('runReviewBtn').onclick=async()=>{let id=$('reviewDocSelect').value;if(!id)return toast('先选择合同材料');let b=$('runReviewBtn');b.disabled=true;b.textContent='审查中…';$('reviewResult').innerHTML='<div class="empty">正在按检查单分析材料，请稍候…</div>';try{let d=await api('/api/review/contract',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({document_id:id,checklist_id:$('checklistSelect').value})});lastMd=d.opinion_markdown;$('reviewRunMeta').textContent='刚刚完成 · '+d.review.model;$('reviewResult').innerHTML=`<div class="summary">${esc(d.review.summary)}</div>${(d.review.risks||[]).map(riskHtml).join('')}<div class="actions" style="margin-top:15px">${resultDownload(d.download_md)}<button class="btn ghost" onclick="copyText(lastMd)">复制意见书</button></div><div class="markdown">${esc(lastMd)}</div>`;toast('审查完成，已保存到工作记录')}catch(e){$('reviewResult').innerHTML=`<div class="empty">审查失败：${esc(e.message)}</div>`;toast(e.message)}finally{b.disabled=false;b.textContent='运行合同审查'}};
+$('runDossierBtn').onclick=async()=>{let id=$('dossierDocSelect').value;if(!id)return toast('先选择阅卷材料');let b=$('runDossierBtn');b.disabled=true;b.textContent='阅卷中…';$('dossierResult').innerHTML='<div class="empty">正在提炼材料…</div>';try{let d=await api('/api/dossier/read',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({document_id:id,question:$('dossierQuestion').value})}),n=d.note;$('dossierMeta').textContent='刚刚完成 · '+n.model;$('dossierResult').innerHTML=`<div class="summary">${esc(n.overview)}</div><h3>主体</h3><p>${(n.parties||[]).map(x=>'<span class="pill gray" style="margin:3px">'+esc(x)+'</span>').join('')||'—'}</p><h3>时间线</h3><div>${(n.timeline||[]).map(x=>`<div class="report-check"><b>${esc(x.date)}</b><span>${esc(x.event)}</span></div>`).join('')||'—'}</div><h3>关键事实</h3><ul>${(n.key_facts||[]).map(x=>'<li>'+esc(x)+'</li>').join('')}</ul><h3>待核实问题</h3><ul>${(n.open_questions||[]).map(x=>'<li>'+esc(x)+'</li>').join('')||'<li>未生成</li>'}</ul><div class="actions" style="margin-top:15px">${resultDownload(d.download_md)}<button class="btn ghost" onclick="copyText(${JSON.stringify(d.notes_markdown)})">复制笔记</button></div>`;toast('阅卷完成，已保存笔记')}catch(e){$('dossierResult').innerHTML=`<div class="empty">阅卷失败：${esc(e.message)}</div>`;toast(e.message)}finally{b.disabled=false;b.textContent='开始阅卷'}};
+async function loadTemplates(){let d=await api('/api/draft/templates');$('draftTemplate').innerHTML=(d.items||[]).map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join('')}
+$('runDraftBtn').onclick=async()=>{let facts=$('draftFacts').value.trim();if(!facts)return toast('先输入事实与要求');let b=$('runDraftBtn');b.disabled=true;b.textContent='生成中…';$('draftResult').innerHTML='<div class="empty">正在生成文书草稿…</div>';try{let d=await api('/api/draft',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({template_id:$('draftTemplate').value,title:$('draftTitle').value,facts,source_document_id:$('draftDocSelect').value||null})}),x=d.draft;$('draftMeta').textContent='刚刚完成 · '+x.model;$('draftResult').innerHTML=`<h3>${esc(x.title)}</h3><div class="markdown">${esc(x.body_markdown)}</div><p class="muted" style="font-size:11px">${esc(x.disclaimer)}</p><div class="actions">${resultDownload(d.download_md)}<button class="btn ghost" onclick="copyText(${JSON.stringify(x.body_markdown)})">复制正文</button></div>`;toast('草稿已保存')}catch(e){$('draftResult').innerHTML=`<div class="empty">生成失败：${esc(e.message)}</div>`;toast(e.message)}finally{b.disabled=false;b.textContent='生成文书草稿'}};
+$('runReportBtn').onclick=async()=>{let id=$('reportDocSelect').value;if(!id)return toast('先选择检测材料');let b=$('runReportBtn');b.disabled=true;b.textContent='检测中…';$('reportResult').innerHTML='<div class="empty">正在检查材料要素…</div>';try{let d=await api('/api/report/compliance',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({document_id:id,focus:$('reportFocus').value})}),r=d.report;$('reportMeta').textContent='刚刚完成 · '+r.model;$('reportResult').innerHTML=`<div class="score">${r.score}<span style="font-size:13px;color:var(--muted);font-weight:500"> / 100 · ${esc(r.grade)}</span></div><div class="summary">${esc(r.summary)}</div>${(r.checks||[]).map(c=>`<div class="report-check"><span class="pill ${c.status==='pass'?'green':c.status==='fail'?'red':c.status==='warn'?'gold':'gray'}">${esc(c.status)}</span><div><b>${esc(c.name||c.id)}</b><div class="muted" style="margin-top:5px">${esc(c.detail)}${c.quote?' · 原文：'+esc(c.quote):''}</div></div></div>`).join('')}<h3>行动项</h3><ul>${(r.action_items||[]).map(x=>'<li>'+esc(x)+'</li>').join('')||'<li>暂无</li>'}</ul><div class="actions">${resultDownload(d.download_md,'下载报告')}</div>`;toast('检测完成，已保存')}catch(e){$('reportResult').innerHTML=`<div class="empty">检测失败：${esc(e.message)}</div>`;toast(e.message)}finally{b.disabled=false;b.textContent='生成检测报告'}};
+async function loadHistory(type){document.querySelectorAll('[data-history]').forEach(x=>x.classList.toggle('active',x.dataset.history===type));let head=$('historyHead'),body=$('historyBody');let d;if(type==='reviews'){d=await api('/api/review/runs?limit=100');head.innerHTML='<th>文件</th><th>类型</th><th>模型</th><th>结果</th><th>时间</th><th></th>';body.innerHTML=(d.items||[]).map(x=>`<tr><td class="title-cell">${esc(x.filename||'—')}</td><td><span class="pill teal">${esc(x.kind)}</span></td><td class="muted">${esc(x.model)}</td><td>${x.kind==='compliance'?esc(x.summary||'检测完成'):x.risk_count+' 条风险'}</td><td class="muted">${x.created_at}</td><td><button class="btn link" onclick="openRun('${x.id}')">查看</button></td></tr>`).join('')||'<tr><td colspan="6"><div class="empty">暂无记录</div></td></tr>'}else if(type==='notes'){d=await api('/api/dossier/notes?limit=100');head.innerHTML='<th>文件</th><th>模型</th><th>时间</th><th></th>';body.innerHTML=(d.items||[]).map(x=>`<tr><td class="title-cell">${esc(x.filename||'—')}</td><td>${esc(x.model)}</td><td class="muted">${x.created_at}</td><td><button class="btn link" onclick="openNote('${x.id}')">查看</button></td></tr>`).join('')||'<tr><td colspan="4"><div class="empty">暂无记录</div></td></tr>'}else if(type==='drafts'){d=await api('/api/drafts?limit=100');head.innerHTML='<th>标题</th><th>模板</th><th>模型</th><th>时间</th><th></th>';body.innerHTML=(d.items||[]).map(x=>`<tr><td class="title-cell">${esc(x.title)}</td><td>${esc(x.template_id)}</td><td>${esc(x.model)}</td><td class="muted">${x.created_at}</td><td><button class="btn link" onclick="openDraft('${x.id}')">查看</button></td></tr>`).join('')||'<tr><td colspan="5"><div class="empty">暂无记录</div></td></tr>'}else{d=await api('/api/audit?limit=100');head.innerHTML='<th>动作</th><th>资源</th><th>详情</th><th>时间</th>';body.innerHTML=(d.items||[]).map(x=>`<tr><td class="title-cell">${esc(x.action)}</td><td>${esc(x.resource_type||'—')}</td><td class="muted">${esc(x.detail||'')}</td><td class="muted">${x.created_at}</td></tr>`).join('')||'<tr><td colspan="4"><div class="empty">暂无记录</div></td></tr>'}}
+document.querySelectorAll('[data-history]').forEach(b=>b.onclick=()=>loadHistory(b.dataset.history));async function openRun(id){let d=await api('/api/review/runs/'+id);showView(d.kind==='compliance'?'report':'review');$('reviewResult').innerHTML=`<div class="summary">${esc(d.review?.summary||d.summary||'')}</div><div class="markdown">${esc(d.opinion_markdown||'')}</div>`}async function openNote(id){let d=await api('/api/dossier/notes/'+id);showView('dossier');let n=d.note;$('dossierResult').innerHTML=`<div class="summary">${esc(n.overview||'')}</div><div class="markdown">${esc(d.notes_markdown||'')}</div>`}async function openDraft(id){let d=await api('/api/drafts/'+id);showView('draft');$('draftResult').innerHTML=`<h3>${esc(d.title)}</h3><div class="markdown">${esc(d.body_markdown||'')}</div>`}
+$('createMatterBtn').onclick=async()=>{let title=prompt('案件名称');if(!title)return;let client=prompt('客户名称（可选）')||'';await api('/api/matters',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title,client_name:client})});toast('案件已创建');renderMatters();loadMatters()};
+function openModal(){$('modal').classList.add('open');loadMatters()}function closeModal(){$('modal').classList.remove('open');selectedFile=null;$('uploadName').textContent='';$('uploadBtn').disabled=true}$('[data-open="upload"]').forEach(b=>b.onclick=openModal);$('modalClose').onclick=closeModal;$('modal').onclick=e=>{if(e.target===$('modal'))closeModal()};$('modalDrop').onclick=()=>$('fileInput').click();$('fileInput').onchange=e=>{selectedFile=e.target.files[0];$('uploadName').textContent=selectedFile?.name||'';$('uploadBtn').disabled=!selectedFile};$('modalDrop').ondragover=e=>{e.preventDefault();$('modalDrop').classList.add('drag')};$('modalDrop').ondragleave=()=>$('modalDrop').classList.remove('drag');$('modalDrop').ondrop=e=>{e.preventDefault();$('modalDrop').classList.remove('drag');selectedFile=e.dataTransfer.files[0];$('uploadName').textContent=selectedFile?.name||'';$('uploadBtn').disabled=!selectedFile};$('uploadBtn').onclick=async()=>{if(!selectedFile)return;let fd=new FormData();fd.append('file',selectedFile);let mid=$('uploadMatter').value;if(mid)fd.append('matter_id',mid);fd.append('doc_kind',$('uploadKind').value);let b=$('uploadBtn');b.disabled=true;b.textContent='上传中…';try{let r=await fetch(url('/api/documents'),{method:'POST',headers:{Authorization:'Bearer '+TOKEN},body:fd});let d=await r.json();if(!r.ok)throw Error(d.detail||'上传失败');toast('已上传 '+d.filename);closeModal();loadDocs();loadOverview()}catch(e){toast(e.message);b.disabled=false;b.textContent='上传材料'}};
+async function loadOverview(){try{let [m,d,r]=await Promise.all([api('/api/matters'),api('/api/documents'),api('/api/review/runs?limit=6')]);matters=m.items||[];docs=d.items||[];$('statMatters').textContent=matters.length;$('statDocs').textContent=docs.length;$('statReviews').textContent=(r.items||[]).length;$('recentActivity').innerHTML=(r.items||[]).map(x=>`<div class="activity-item"><i class="activity-dot"></i><div><b>${esc(x.filename||'材料')}</b> · ${x.kind==='compliance'?'检测报告':'合同审查'}<small>${x.risk_count||0} 个结果 · ${x.created_at}</small></div></div>`).join('')||'<div class="empty">还没有工作记录，从上传一份材料开始。</div>';renderMatterOptions()}catch(e){toast(e.message)}}async function copyText(t){await navigator.clipboard.writeText(t||'');toast('已复制')}
+loadHealth();loadOverview();loadDocs();
+</script>
+</body></html>
