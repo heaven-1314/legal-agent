@@ -1,9 +1,14 @@
-"""Matters (案件夹) + document linking."""
+"""Matters (案件夹) + document linking + export package."""
 from __future__ import annotations
 
+import io
+import json
 import uuid
+import zipfile
+from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
 from app.api.documents import require_token
@@ -234,3 +239,96 @@ def delete_matter(
         conn.execute("DELETE FROM matters WHERE id=?", (matter_id,))
         audit(conn, actor=actor, action="matter.delete", resource_type="matter", resource_id=matter_id)
     return {"ok": True}
+
+
+@router.get("/{matter_id}/export.zip")
+def export_matter_zip(
+    matter_id: str,
+    actor: str = Depends(require_token),
+    settings: Settings = Depends(get_settings),
+):
+    """Package matter materials + AI artifacts into a downloadable zip."""
+    with db_session(settings.sqlite_path) as conn:
+        m = conn.execute("SELECT * FROM matters WHERE id=?", (matter_id,)).fetchone()
+        if not m:
+            raise HTTPException(status_code=404, detail="not found")
+        docs = conn.execute(
+            "SELECT * FROM documents WHERE matter_id=? ORDER BY created_at DESC",
+            (matter_id,),
+        ).fetchall()
+        reviews = conn.execute(
+            """SELECT * FROM review_runs WHERE matter_id=? OR document_id IN
+               (SELECT id FROM documents WHERE matter_id=?) ORDER BY created_at DESC""",
+            (matter_id, matter_id),
+        ).fetchall()
+        notes = conn.execute(
+            """SELECT * FROM reading_notes WHERE matter_id=? OR document_id IN
+               (SELECT id FROM documents WHERE matter_id=?) ORDER BY created_at DESC""",
+            (matter_id, matter_id),
+        ).fetchall()
+        drafts = conn.execute(
+            "SELECT * FROM draft_docs WHERE matter_id=? ORDER BY created_at DESC",
+            (matter_id,),
+        ).fetchall()
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+            meta = {
+                "matter": dict(m),
+                "exported_at": now_iso(),
+                "counts": {
+                    "documents": len(docs),
+                    "reviews": len(reviews),
+                    "notes": len(notes),
+                    "drafts": len(drafts),
+                },
+            }
+            zf.writestr("matter.json", json.dumps(meta, ensure_ascii=False, indent=2))
+            for d in docs:
+                sp = Path(d["storage_path"]) if d["storage_path"] else None
+                arc = f"documents/{d['id']}_{d['filename']}"
+                if sp and sp.is_file():
+                    zf.write(sp, arcname=arc)
+                else:
+                    zf.writestr(arc + ".missing.txt", "source file missing on disk")
+            for r in reviews:
+                kind = r["kind"] or "review"
+                zf.writestr(f"reviews/{kind}_{r['id']}.md", r["opinion_md"] or "")
+                zf.writestr(f"reviews/{kind}_{r['id']}.json", r["result_json"] or "{}")
+            for n in notes:
+                zf.writestr(f"notes/dossier_{n['id']}.md", n["notes_md"] or "")
+                zf.writestr(f"notes/dossier_{n['id']}.json", n["result_json"] or "{}")
+            for d in drafts:
+                safe_title = (d["title"] or "draft")[:40].replace("/", "_")
+                zf.writestr(f"drafts/{d['id']}_{safe_title}.md", d["body_md"] or "")
+            lines = [
+                f"# 案件导出包：{m['title']}",
+                "",
+                f"- 客户：{m['client_name'] or '—'}",
+                f"- 导出时间：{meta['exported_at']}",
+                f"- 材料：{len(docs)}",
+                f"- 审查/检测：{len(reviews)}",
+                f"- 阅卷：{len(notes)}",
+                f"- 文书：{len(drafts)}",
+                "",
+                "## 目录",
+                "- documents/ 原文件",
+                "- reviews/ 审查与检测结果",
+                "- notes/ 阅卷笔记",
+                "- drafts/ 文书草稿",
+            ]
+            zf.writestr("README.md", "\n".join(lines))
+        audit(
+            conn,
+            actor=actor,
+            action="matter.export",
+            resource_type="matter",
+            resource_id=matter_id,
+            detail=f"docs={len(docs)};reviews={len(reviews)};notes={len(notes)};drafts={len(drafts)}",
+        )
+    data = buf.getvalue()
+    fname = f"matter-{matter_id[:8]}.zip"
+    return Response(
+        content=data,
+        media_type="application/zip",
+        headers={"Content-Disposition": f'attachment; filename="{fname}"'},
+    )
