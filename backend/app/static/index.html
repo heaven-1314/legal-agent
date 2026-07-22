@@ -9,6 +9,25 @@
 @media(max-width:900px){.shell{grid-template-columns:1fr}.sidebar{position:fixed;z-index:15;inset:0 auto 0 0;width:240px;transform:translateX(-100%);transition:transform .2s}.sidebar.open{transform:none}.mobile-toggle{display:block}.stats{grid-template-columns:repeat(2,1fr)}.two{grid-template-columns:1fr}.three{grid-template-columns:1fr}.topbar{padding:0 18px}.content{padding:24px 18px 40px}}
 @media(max-width:560px){.stats{grid-template-columns:1fr 1fr}.page-head{display:block}.page-head .actions{margin-top:14px}.table{min-width:650px}.panel.table-wrap{overflow:auto}.input{min-width:0;width:100%}.toolbar .input{flex:1}.doc-row{align-items:flex-start;flex-direction:column}.doc-actions{width:100%}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{transition:none!important;animation:none!important}}
+/* Spatial glass layer: translucent only on chrome, opaque content stays readable. */
+body{background:var(--bg);isolation:isolate;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:-18%;z-index:-2;pointer-events:none;background:radial-gradient(circle at var(--mx,18%) var(--my,12%),oklch(79% .105 178 / .22),transparent 24%),radial-gradient(circle at 86% 16%,oklch(84% .09 72 / .13),transparent 21%),radial-gradient(circle at 54% 108%,oklch(80% .08 205 / .14),transparent 31%);filter:blur(26px);animation:ambient-drift 18s ease-in-out infinite alternate}
+body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.28;background-image:radial-gradient(oklch(22% .02 190 / .12) .55px,transparent .55px);background-size:5px 5px;mix-blend-mode:multiply}
+@keyframes ambient-drift{0%{transform:translate3d(-1%,-1%,0) scale(1)}100%{transform:translate3d(2%,1%,0) scale(1.04)}}
+.sidebar{background:oklch(22% .035 190 / .90);backdrop-filter:blur(26px) saturate(1.22);-webkit-backdrop-filter:blur(26px) saturate(1.22);box-shadow:12px 0 40px oklch(20% .03 190 / .14);border-right:1px solid oklch(100% 0 0 / .10)}
+.topbar{background:oklch(100% 0 0 / .70);backdrop-filter:blur(22px) saturate(1.32);-webkit-backdrop-filter:blur(22px) saturate(1.32);box-shadow:0 1px 0 oklch(35% .03 190 / .06)}
+.panel,.stat{background:oklch(100% 0 0 / .78);backdrop-filter:blur(18px) saturate(1.14);-webkit-backdrop-filter:blur(18px) saturate(1.14);position:relative}
+.panel::before,.stat::before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(120deg,oklch(100% 0 0 / .40),transparent 38%,oklch(75% .08 180 / .05));opacity:.85}
+.panel>* ,.stat>*{position:relative;z-index:1}
+.stat{transition:transform .34s cubic-bezier(.2,.8,.2,1),box-shadow .34s ease,border-color .34s ease}.stat:hover{transform:translateY(-4px) scale(1.008);box-shadow:0 17px 42px oklch(30% .04 190 / .13);border-color:oklch(60% .08 178)}
+.view.active{animation:view-arrive .34s cubic-bezier(.2,.8,.2,1) both}@keyframes view-arrive{from{opacity:.35;transform:translateY(8px)}to{opacity:1;transform:none}}
+.nav button{transition:background .20s ease,color .20s ease,transform .20s ease}.nav button:hover{transform:translateX(2px)}
+.nav button.active{box-shadow:0 6px 18px oklch(10% .03 190 / .12)}
+.quick,.doc-row,.risk{transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease}.quick:hover,.doc-row:hover,.risk:hover{transform:translateY(-2px);box-shadow:0 9px 24px oklch(30% .04 190 / .08)}
+.btn.primary{box-shadow:0 6px 16px oklch(46% .12 178 / .18)}
+.drop{transition:border-color .2s ease,background .2s ease,transform .2s ease,box-shadow .2s ease}.drop:hover,.drop.drag{transform:translateY(-2px);box-shadow:0 10px 25px oklch(46% .08 178 / .12)}
+.modal-backdrop{backdrop-filter:blur(11px);-webkit-backdrop-filter:blur(11px)}.modal{animation:modal-arrive .28s cubic-bezier(.2,.8,.2,1) both}@keyframes modal-arrive{from{opacity:0;transform:translateY(12px) scale(.97)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){body::before{animation:none}.view.active,.modal{animation:none}.stat:hover,.quick:hover,.doc-row:hover,.risk:hover,.drop:hover,.drop.drag,.nav button:hover{transform:none}}
 </style>
 </head>
 <body>
@@ -49,6 +68,7 @@
 <div class="toast" id="toast"></div>
 <script>
 const API=(localStorage.getItem('LEGAL_AGENT_API')||'')||(location.pathname.startsWith('/legal-agent')?'/legal-agent':'');const TOKEN=localStorage.getItem('LEGAL_AGENT_TOKEN')||'dev-local-token';let docs=[],matters=[],selectedFile=null,lastMd='';
+window.addEventListener('pointermove',e=>{document.documentElement.style.setProperty('--mx',`${(e.clientX/innerWidth*100).toFixed(1)}%`);document.documentElement.style.setProperty('--my',`${(e.clientY/innerHeight*100).toFixed(1)}%`)},{passive:true});
 const $=id=>document.getElementById(id);const esc=s=>String(s??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');const url=p=>API+p;
 async function api(path,opt={}){let h=Object.assign({'Authorization':'Bearer '+TOKEN},opt.headers||{});let r=await fetch(url(path),{...opt,headers:h});let t=await r.text(),d={};try{d=t?JSON.parse(t):{}}catch{d={detail:t}}if(!r.ok)throw Error(d.detail||r.statusText);return d}
 function toast(s){$('toast').textContent=s;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),2800)}
