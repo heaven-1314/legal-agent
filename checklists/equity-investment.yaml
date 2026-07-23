@@ -1,0 +1,30 @@
+id: equity-investment
+name: 股权投资/增资协议专项审查
+items:
+- id: parties_cap
+  title: 主体与股权结构
+  prompt: 检查投资方/目标公司/创始人主体、注册资本、股权比例前后变化是否自洽。
+- id: valuation_price
+  title: 估值与对价
+  prompt: 检查投前/投后估值、认购价款、缴付节点、资金用途限制。
+- id: closing
+  title: 交割条件
+  prompt: 检查交割先决条件、文件清单、最晚交割日与失败后果。
+- id: governance
+  title: 公司治理
+  prompt: 检查董事会席位、一票否决/保护性条款、信息权是否清晰可执行。
+- id: transfer
+  title: 股权转让限制
+  prompt: 检查锁定期、优先购买权、随售/拖售、禁售例外是否对等。
+- id: exit
+  title: 退出与回购
+  prompt: 检查回购触发、价格公式、连带责任是否过苛或无法执行。
+- id: reps_indemnity
+  title: 陈述保证与赔偿
+  prompt: 检查陈述保证范围、赔偿上限/免赔/期限是否平衡。
+- id: dispute
+  title: 争议解决
+  prompt: 检查管辖/仲裁、适用法律是否明确。
+- id: missing
+  title: 关键缺项
+  prompt: 指出投融资协议常见缺项（反稀释、员工期权池、竞业、保密、交割后整合等）。

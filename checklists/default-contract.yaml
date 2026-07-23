@@ -1,0 +1,24 @@
+id: default-contract
+name: 通用商业合同审查
+items:
+- id: parties
+  title: 主体与签约资格
+  prompt: 检查合同当事方是否完整、名称是否明确，是否存在主体不明或代签风险。
+- id: payment
+  title: 价款与支付
+  prompt: 检查价款金额、币种、支付节点、逾期违约金是否清晰可执行。
+- id: term
+  title: 期限与解除
+  prompt: 检查合同期限、续期、单方解除/终止条件是否对等、是否可操作。
+- id: liability
+  title: 违约与责任限制
+  prompt: 检查违约责任、赔偿上限、免责条款是否过宽或显失公平。
+- id: ip_confidential
+  title: 知识产权与保密
+  prompt: 检查保密范围、期限、知识产权归属是否清晰。
+- id: dispute
+  title: 争议解决与管辖
+  prompt: 检查管辖法院/仲裁机构、适用法律是否明确且可执行。
+- id: missing
+  title: 关键缺项
+  prompt: 指出商业合同常见但本文明显缺失的条款（如不可抗力、通知送达、变更程序等）。

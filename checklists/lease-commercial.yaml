@@ -1,0 +1,27 @@
+id: lease-commercial
+name: 房屋租赁（商业）专项审查
+items:
+- id: premises
+  title: 标的物与权属
+  prompt: 检查地址、面积、用途、权属证明、共有/抵押权披露是否充分。
+- id: term_rent
+  title: 租期与租金
+  prompt: 检查租期起止、租金标准、递增、支付方式与逾期违约金是否清晰。
+- id: deposit
+  title: 保证金与费用
+  prompt: 检查押金数额、抵扣条件、返还时限；物业/水电/税费承担是否明确。
+- id: fitout_use
+  title: 装修与使用
+  prompt: 检查装修审批、还原义务、转租/分租限制是否对等。
+- id: maintenance
+  title: 维修与风险
+  prompt: 检查修缮责任划分、不可抗力、毁损灭失风险承担。
+- id: termination
+  title: 提前解除与违约
+  prompt: 检查双方解除权、违约金、腾退与损失计算是否显失公平。
+- id: dispute
+  title: 争议解决与送达
+  prompt: 检查管辖、通知送达地址是否明确。
+- id: missing
+  title: 关键缺项
+  prompt: 指出商业租赁常见缺项（优先承租权、税费发票、消防/证照、转租同意等）。

@@ -26,7 +26,7 @@ router = APIRouter(prefix="/api/review", tags=["review"])
 class ReviewRequest(BaseModel):
     document_id: str = Field(..., min_length=8)
     checklist_id: str | None = "default-contract"
-    matter_id: str | None = None
+    matter_id: str | None = None  # optional; falls back to document.matter_id
 
 
 class ChecklistUpsert(BaseModel):
@@ -109,6 +109,12 @@ def review_contract(
             raise HTTPException(status_code=404, detail="document not found") from None
         if not text.strip():
             raise HTTPException(status_code=400, detail="document has no extractable text")
+        matter_id = body.matter_id
+        if not matter_id:
+            row = conn.execute(
+                "SELECT matter_id FROM documents WHERE id=?", (body.document_id,)
+            ).fetchone()
+            matter_id = row["matter_id"] if row else None
         try:
             review = run_contract_review(
                 settings,
@@ -133,7 +139,7 @@ def review_contract(
             (
                 run_id,
                 body.document_id,
-                body.matter_id,
+                matter_id,
                 "contract",
                 settings.ai_model,
                 cl["id"],

@@ -1,0 +1,27 @@
+id: employment-contract
+name: 劳动合同专项审查
+items:
+- id: parties_identity
+  title: 主体与用工身份
+  prompt: 检查用人单位名称、劳动者姓名/证件、工作地是否明确；是否存在劳务/承揽混用导致劳动关系认定风险。
+- id: term_probation
+  title: 合同期限与试用期
+  prompt: 检查固定/无固定/完成一定任务期限是否合法；试用期时长、次数、工资是否符合劳动法上限。
+- id: job_duties
+  title: 工作内容与地点
+  prompt: 检查岗位职责、工作地点及变更程序是否清晰，单方调岗是否过宽。
+- id: salary_benefits
+  title: 薪酬福利与工时
+  prompt: 检查工资构成、发放日、加班费计算、社保公积金约定是否明确可执行。
+- id: confidentiality_compete
+  title: 保密与竞业限制
+  prompt: 检查保密范围、竞业限制期限/地域/补偿金是否符合司法解释要求。
+- id: termination
+  title: 解除终止与经济补偿
+  prompt: 检查单方解除事由、通知期、经济补偿/赔偿金约定是否违法或显失公平。
+- id: dispute
+  title: 争议解决
+  prompt: 检查劳动争议仲裁/诉讼约定是否合法（不得排除仲裁前置）。
+- id: missing
+  title: 关键缺项
+  prompt: 指出劳动合同常见缺项（工时制度、休假、培训服务期、规章制度效力等）。

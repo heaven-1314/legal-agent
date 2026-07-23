@@ -1,4 +1,4 @@
-"""Matters (案件夹) + document linking + export package."""
+"""Matters (案件夹) + document linking + export package + batch AI jobs."""
 from __future__ import annotations
 
 import io
@@ -14,6 +14,15 @@ from pydantic import BaseModel, Field
 from app.api.documents import require_token
 from app.config import Settings, get_settings
 from app.db import audit, db_session, now_iso
+from app.services.llm import LLMError
+from app.services.review import (
+    load_document_text,
+    render_compliance_md,
+    render_opinion_md,
+    resolve_checklist,
+    run_compliance_report,
+    run_contract_review,
+)
 
 router = APIRouter(prefix="/api/matters", tags=["matters"])
 
@@ -33,6 +42,18 @@ class MatterUpdate(BaseModel):
 class LinkDoc(BaseModel):
     document_id: str
     doc_kind: str | None = None
+
+
+class MatterBatchReview(BaseModel):
+    checklist_id: str | None = "default-contract"
+    document_ids: list[str] | None = None  # default: all matter docs
+    max_docs: int = Field(default=8, ge=1, le=20)
+
+
+class MatterBatchCompliance(BaseModel):
+    focus: str = ""
+    document_ids: list[str] | None = None
+    max_docs: int = Field(default=8, ge=1, le=20)
 
 
 @router.get("")
@@ -239,6 +260,220 @@ def delete_matter(
         conn.execute("DELETE FROM matters WHERE id=?", (matter_id,))
         audit(conn, actor=actor, action="matter.delete", resource_type="matter", resource_id=matter_id)
     return {"ok": True}
+
+
+def _matter_doc_rows(conn, matter_id: str, document_ids: list[str] | None, max_docs: int):
+    if document_ids:
+        rows = []
+        for did in document_ids[:max_docs]:
+            row = conn.execute(
+                "SELECT id, filename, doc_kind FROM documents WHERE id=? AND matter_id=?",
+                (did, matter_id),
+            ).fetchone()
+            if row:
+                rows.append(row)
+        return rows
+    return conn.execute(
+        """SELECT id, filename, doc_kind FROM documents
+           WHERE matter_id=? ORDER BY created_at DESC LIMIT ?""",
+        (matter_id, max_docs),
+    ).fetchall()
+
+
+@router.post("/{matter_id}/batch-review")
+def batch_review_matter(
+    matter_id: str,
+    body: MatterBatchReview,
+    actor: str = Depends(require_token),
+    settings: Settings = Depends(get_settings),
+):
+    """Run contract review on multiple matter documents (sequential)."""
+    if not settings.ai_configured:
+        raise HTTPException(status_code=503, detail="LLM not configured")
+    try:
+        cl = resolve_checklist(settings, body.checklist_id)
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="checklist not found") from None
+
+    results: list[dict] = []
+    with db_session(settings.sqlite_path) as conn:
+        m = conn.execute("SELECT id FROM matters WHERE id=?", (matter_id,)).fetchone()
+        if not m:
+            raise HTTPException(status_code=404, detail="matter not found")
+        docs = _matter_doc_rows(conn, matter_id, body.document_ids, body.max_docs)
+        if not docs:
+            raise HTTPException(status_code=400, detail="no documents in matter")
+        for doc in docs:
+            item: dict = {
+                "document_id": doc["id"],
+                "filename": doc["filename"],
+                "ok": False,
+            }
+            try:
+                filename, text = load_document_text(settings, doc["id"], conn)
+                if not text.strip():
+                    item["error"] = "empty document"
+                    results.append(item)
+                    continue
+                review = run_contract_review(
+                    settings,
+                    filename=filename,
+                    text=text,
+                    checklist=cl["items"],
+                    checklist_meta={"id": cl["id"], "name": cl["name"]},
+                )
+                md = render_opinion_md(filename, review)
+                run_id = uuid.uuid4().hex
+                risk_count = len(review.get("risks") or [])
+                conn.execute(
+                    """INSERT INTO review_runs(
+                         id, document_id, matter_id, kind, model, checklist_id, status,
+                         summary, risk_count, result_json, opinion_md, created_at, actor
+                       ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                    (
+                        run_id,
+                        doc["id"],
+                        matter_id,
+                        "contract",
+                        settings.ai_model,
+                        cl["id"],
+                        "done",
+                        review.get("summary") or "",
+                        risk_count,
+                        json.dumps(review, ensure_ascii=False),
+                        md,
+                        now_iso(),
+                        actor,
+                    ),
+                )
+                item.update(
+                    {
+                        "ok": True,
+                        "run_id": run_id,
+                        "risk_count": risk_count,
+                        "summary": (review.get("summary") or "")[:200],
+                        "download_md": f"/api/review/runs/{run_id}/download.md",
+                    }
+                )
+            except LLMError as e:
+                item["error"] = str(e)
+            except Exception as e:
+                item["error"] = f"{type(e).__name__}: {e}"
+            results.append(item)
+        conn.execute(
+            "UPDATE matters SET updated_at=? WHERE id=?", (now_iso(), matter_id)
+        )
+        ok_n = sum(1 for r in results if r.get("ok"))
+        audit(
+            conn,
+            actor=actor,
+            action="matter.batch_review",
+            resource_type="matter",
+            resource_id=matter_id,
+            detail=f"ok={ok_n}/{len(results)};checklist={cl['id']}",
+        )
+    return {
+        "matter_id": matter_id,
+        "checklist_id": cl["id"],
+        "checklist_name": cl["name"],
+        "total": len(results),
+        "ok": sum(1 for r in results if r.get("ok")),
+        "failed": sum(1 for r in results if not r.get("ok")),
+        "items": results,
+    }
+
+
+@router.post("/{matter_id}/batch-compliance")
+def batch_compliance_matter(
+    matter_id: str,
+    body: MatterBatchCompliance,
+    actor: str = Depends(require_token),
+    settings: Settings = Depends(get_settings),
+):
+    """Run compliance detection on multiple matter documents (sequential)."""
+    if not settings.ai_configured:
+        raise HTTPException(status_code=503, detail="LLM not configured")
+
+    results: list[dict] = []
+    with db_session(settings.sqlite_path) as conn:
+        m = conn.execute("SELECT id FROM matters WHERE id=?", (matter_id,)).fetchone()
+        if not m:
+            raise HTTPException(status_code=404, detail="matter not found")
+        docs = _matter_doc_rows(conn, matter_id, body.document_ids, body.max_docs)
+        if not docs:
+            raise HTTPException(status_code=400, detail="no documents in matter")
+        for doc in docs:
+            item: dict = {
+                "document_id": doc["id"],
+                "filename": doc["filename"],
+                "ok": False,
+            }
+            try:
+                filename, text = load_document_text(settings, doc["id"], conn)
+                if not text.strip():
+                    item["error"] = "empty document"
+                    results.append(item)
+                    continue
+                report = run_compliance_report(
+                    settings, filename=filename, text=text, focus=body.focus
+                )
+                md = render_compliance_md(report)
+                run_id = uuid.uuid4().hex
+                conn.execute(
+                    """INSERT INTO review_runs(
+                         id, document_id, matter_id, kind, model, checklist_id, status,
+                         summary, risk_count, result_json, opinion_md, created_at, actor
+                       ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                    (
+                        run_id,
+                        doc["id"],
+                        matter_id,
+                        "compliance",
+                        settings.ai_model,
+                        None,
+                        "done",
+                        report.get("summary") or "",
+                        len(report.get("checks") or []),
+                        json.dumps(report, ensure_ascii=False),
+                        md,
+                        now_iso(),
+                        actor,
+                    ),
+                )
+                item.update(
+                    {
+                        "ok": True,
+                        "run_id": run_id,
+                        "score": report.get("score"),
+                        "grade": report.get("grade"),
+                        "summary": (report.get("summary") or "")[:200],
+                        "download_md": f"/api/review/runs/{run_id}/download.md",
+                    }
+                )
+            except LLMError as e:
+                item["error"] = str(e)
+            except Exception as e:
+                item["error"] = f"{type(e).__name__}: {e}"
+            results.append(item)
+        conn.execute(
+            "UPDATE matters SET updated_at=? WHERE id=?", (now_iso(), matter_id)
+        )
+        ok_n = sum(1 for r in results if r.get("ok"))
+        audit(
+            conn,
+            actor=actor,
+            action="matter.batch_compliance",
+            resource_type="matter",
+            resource_id=matter_id,
+            detail=f"ok={ok_n}/{len(results)}",
+        )
+    return {
+        "matter_id": matter_id,
+        "total": len(results),
+        "ok": sum(1 for r in results if r.get("ok")),
+        "failed": sum(1 for r in results if not r.get("ok")),
+        "items": results,
+    }
 
 
 @router.get("/{matter_id}/export.zip")

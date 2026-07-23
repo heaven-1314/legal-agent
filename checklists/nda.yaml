@@ -1,0 +1,27 @@
+id: nda
+name: 保密协议（NDA）专项审查
+items:
+- id: parties
+  title: 披露方与接收方
+  prompt: 检查各方名称、关联方是否纳入保密义务主体。
+- id: definition
+  title: 保密信息定义
+  prompt: 检查保密信息范围是否过宽/过窄，是否包含口头信息、标记要求是否合理。
+- id: exclusions
+  title: 例外信息
+  prompt: 检查公知、独立开发、第三方合法取得、强制披露等例外是否完整。
+- id: use_purpose
+  title: 使用目的与限制
+  prompt: 检查接收方使用目的、复制/转交限制、最小必要原则是否可执行。
+- id: term
+  title: 保密期限
+  prompt: 检查协议期限与信息保密期限是否分离清晰，到期后义务是否合理。
+- id: return_destroy
+  title: 返还销毁
+  prompt: 检查终止后返还/销毁与书面确认要求是否明确。
+- id: remedy
+  title: 违约与救济
+  prompt: 检查违约金、禁令救济、举证约定是否可执行，是否过苛。
+- id: missing
+  title: 关键缺项
+  prompt: 指出 NDA 常见缺项（管辖、通知、残存条款、员工/外包穿透等）。

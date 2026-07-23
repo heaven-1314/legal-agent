@@ -17,15 +17,30 @@ from app.services.checklist import ensure_default_checklist_file
 _STATIC = Path(__file__).resolve().parent / "static"
 
 
+def _seed_bundled_checklists(data_root: Path) -> None:
+    """Copy repo checklists/*.yaml into data dir if id missing (non-destructive)."""
+    # main.py → app → backend → project root
+    bundled = Path(__file__).resolve().parents[2] / "checklists"
+    if not bundled.is_dir():
+        return
+    dest = data_root / "checklists"
+    dest.mkdir(parents=True, exist_ok=True)
+    for src in bundled.glob("*.y*ml"):
+        target = dest / src.name
+        if not target.is_file():
+            target.write_text(src.read_text(encoding="utf-8"), encoding="utf-8")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     settings = ensure_data_dirs()
     init_db(settings.sqlite_path)
     ensure_default_checklist_file(settings.legal_agent_data)
+    _seed_bundled_checklists(settings.legal_agent_data)
     yield
 
 
-app = FastAPI(title="legal-agent", version="0.2.0", lifespan=lifespan)
+app = FastAPI(title="legal-agent", version="0.3.0", lifespan=lifespan)
 
 _settings = get_settings()
 _origins = [o.strip() for o in _settings.cors_origins.split(",") if o.strip()]

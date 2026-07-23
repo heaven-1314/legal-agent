@@ -36,6 +36,7 @@ class DraftRequest(BaseModel):
 class ReportRequest(BaseModel):
     document_id: str = Field(..., min_length=8)
     focus: str = ""
+    matter_id: str | None = None
 
 
 @router.get("/draft/templates")
@@ -236,6 +237,12 @@ def compliance_report(
             raise HTTPException(status_code=404, detail="document not found") from None
         if not text.strip():
             raise HTTPException(status_code=400, detail="empty document")
+        matter_id = body.matter_id
+        if not matter_id:
+            row = conn.execute(
+                "SELECT matter_id FROM documents WHERE id=?", (body.document_id,)
+            ).fetchone()
+            matter_id = row["matter_id"] if row else None
         try:
             report = run_compliance_report(
                 settings, filename=filename, text=text, focus=body.focus
@@ -253,7 +260,7 @@ def compliance_report(
             (
                 run_id,
                 body.document_id,
-                None,
+                matter_id,
                 "compliance",
                 settings.ai_model,
                 None,
