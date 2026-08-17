@@ -1,0 +1,30 @@
+{
+  "name": "legal-agent-desktop",
+  "version": "0.1.0",
+  "private": "true",
+  "main": "dist-electron/main.js",
+  "scripts": {
+    "build:main": "node esbuild.mjs",
+    "build:ui": "vite build",
+    "dev:ui": "vite",
+    "dev": "pnpm run build:main && concurrently -k \"pnpm run dev:ui\" \"electron .\"",
+    "start": "pnpm run build:main && pnpm run build:ui && electron ."
+  },
+  "dependencies": {
+    "react-dom": "^19.2.8",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.2.0",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@vitejs/plugin-react": "^6.0.5",
+    "concurrently": "^10.0.5",
+    "electron": "^43.4.0",
+    "esbuild": "^0.28.2",
+    "react": "^19.2.8",
+    "typescript": "^7.0.2",
+    "vite": "^8.2.1"
+  }
+}

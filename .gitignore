@@ -1,2 +1,5 @@
 agent-core/node_modules/
 agent-core/dist/
+desktop/node_modules/
+desktop/dist/
+desktop/dist-electron/
