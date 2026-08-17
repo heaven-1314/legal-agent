@@ -24,3 +24,7 @@ linux:
     - deb
   category: Utility
   artifactName: legal-workbench-${version}-linux-${arch}.${ext}
+
+publish:
+  provider: github
+  draft: false
