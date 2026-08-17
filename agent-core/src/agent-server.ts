@@ -16,6 +16,12 @@ if (!config.aiKey) {
 const agent = createLegalAgent();
 const out = (msg: Record<string, unknown>) => process.stdout.write(`${JSON.stringify(msg)}\n`);
 
+// 读端（如 head/管道）提前关闭时静默退出，避免 EPIPE 崩溃
+process.stdout.on("error", (err: NodeJS.ErrnoException) => {
+  if (err.code === "EPIPE") process.exit(0);
+  throw err;
+});
+
 agent.subscribe((ev: AgentEvent) => {
   const e = ev as Record<string, any>;
   if (e.type === "tool_execution_start") {

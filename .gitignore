@@ -6,3 +6,5 @@ desktop/dist-electron/
 backend/.venv/
 *.bak.*
 __pycache__/
+desktop/release/
+desktop/agent-server.bundle.mjs

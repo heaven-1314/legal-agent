@@ -18,6 +18,15 @@ let agentReady = false;
 let uiReady = false;
 const pendingAutoPrompt = process.env.AUTO_PROMPT ?? "";
 
+/** 开发态：tsx 跑仓库源码；打包态：Electron 自带 Node 跑 bundle 单文件。 */
+function agentSpawnOptions() {
+  if (app.isPackaged) {
+    const entry = path.join(process.resourcesPath, "agent-server.bundle.mjs");
+    return { command: process.execPath, args: [entry], cwd: path.dirname(entry) };
+  }
+  return { command: TSX, args: ["src/agent-server.ts"], cwd: AGENT_DIR };
+}
+
 function send(event: unknown): void {
   if (process.env.DEBUG_FILE) {
     appendFileSync(process.env.DEBUG_FILE, `[main→ui] ${JSON.stringify(event).slice(0, 300)}\n`);
@@ -26,9 +35,10 @@ function send(event: unknown): void {
 }
 
 function startAgent() {
-  const child = spawn(TSX, ["src/agent-server.ts"], {
-    cwd: AGENT_DIR,
-    env: { ...process.env },
+  const { command, args, cwd } = agentSpawnOptions();
+  const child = spawn(command, args, {
+    cwd,
+    env: { ...process.env, ...(app.isPackaged ? { ELECTRON_RUN_AS_NODE: "1" } : {}) },
     stdio: ["pipe", "pipe", "inherit"],
   });
   if (process.env.DEBUG_FILE) {

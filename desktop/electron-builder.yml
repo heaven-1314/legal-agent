@@ -1,0 +1,26 @@
+appId: io.github.heaven1314.legal-agent
+productName: legal-workbench
+directories:
+  output: release
+files:
+  - dist/**
+  - dist-electron/**
+extraResources:
+  - from: agent-server.bundle.mjs
+    to: agent-server.bundle.mjs
+win:
+  target: nsis
+nsis:
+  oneClick: true
+  artifactName: legal-workbench-${version}-setup.${ext}
+mac:
+  target: dmg
+  identity: null
+  category: public.app-category.productivity
+  artifactName: legal-workbench-${version}-mac-${arch}.${ext}
+linux:
+  target:
+    - AppImage
+    - deb
+  category: Utility
+  artifactName: legal-workbench-${version}-linux-${arch}.${ext}

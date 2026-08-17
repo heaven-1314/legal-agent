@@ -22,9 +22,12 @@
     "@vitejs/plugin-react": "^6.0.5",
     "concurrently": "^10.0.5",
     "electron": "^43.4.0",
+    "electron-builder": "^26.15.3",
     "esbuild": "^0.28.2",
     "react": "^19.2.8",
     "typescript": "^7.0.2",
     "vite": "^8.2.1"
-  }
+  },
+  "author": "heaven-1314",
+  "description": "Legal workbench: Pi-based agent + FastAPI tools + Electron"
 }
