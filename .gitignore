@@ -3,3 +3,6 @@ agent-core/dist/
 desktop/node_modules/
 desktop/dist/
 desktop/dist-electron/
+backend/.venv/
+*.bak.*
+__pycache__/

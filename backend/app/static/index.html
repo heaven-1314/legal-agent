@@ -1,216 +1,514 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>律序 · 法律智能工作台</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>法律智能助手 · Legal AI Platform</title>
 <style>
-:root{--bg:#f5f7f8;--panel:#fff;--panel-2:#eef2f3;--ink:#172226;--muted:#647277;--line:#dce4e5;--brand:#087f78;--brand-strong:#05635e;--brand-soft:#e1f3f0;--gold:#a66b19;--danger:#b42318;--danger-soft:#fff0ee;--warn:#9a5b08;--warn-soft:#fff7e6;--ok:#087443;--ok-soft:#e8f7ee;--shadow:0 8px 28px rgba(19,39,43,.06);--r:10px;--sans:Inter,"SF Pro Display","PingFang SC","Noto Sans SC",system-ui,sans-serif;--serif:"Source Han Serif SC","Songti SC",Georgia,serif}
-*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:var(--sans)}button,input,textarea,select{font:inherit}button{cursor:pointer}.shell{display:grid;grid-template-columns:240px minmax(0,1fr);min-height:100vh}.sidebar{background:#18272b;color:#dbe7e7;padding:22px 14px;display:flex;flex-direction:column}.brand{display:flex;align-items:center;gap:10px;padding:0 9px 28px}.brand-mark{width:32px;height:32px;background:#d6eee9;color:#155b56;border-radius:9px;display:grid;place-items:center;font-family:var(--serif);font-weight:800;font-size:19px}.brand strong{font-size:16px;letter-spacing:.06em}.brand small{display:block;color:#8da5a6;font-size:10px;margin-top:2px}.nav{display:grid;gap:4px}.nav button{border:0;background:transparent;color:#a9bcbc;text-align:left;border-radius:8px;padding:10px 11px;display:flex;align-items:center;gap:10px;font-size:13px}.nav button:hover{background:#24393d;color:#fff}.nav button.active{background:#d9eeeb;color:#164d49;font-weight:650}.nav .icon{width:18px;text-align:center;font-size:15px}.side-foot{margin-top:auto;padding:14px 9px;border-top:1px solid #304548;color:#8da5a6;font-size:11px;line-height:1.7}.main{min-width:0}.topbar{height:68px;background:var(--panel);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 clamp(18px,4vw,44px);position:sticky;top:0;z-index:10}.crumb{font-size:13px;color:var(--muted)}.crumb b{color:var(--ink);font-weight:650}.top-actions{display:flex;align-items:center;gap:12px}.health{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px}.dot{width:7px;height:7px;border-radius:50%;background:#aab5b7}.dot.ok{background:#16a36b}.dot.bad{background:#d14343}.avatar{width:29px;height:29px;border-radius:50%;background:var(--brand-soft);color:var(--brand-strong);display:grid;place-items:center;font-size:12px;font-weight:700}.content{max-width:1440px;margin:auto;padding:30px clamp(18px,4vw,44px) 50px}.view{display:none}.view.active{display:block}.page-head{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;margin-bottom:24px}.page-head h1{margin:0;font:700 28px var(--serif);letter-spacing:.01em}.page-head p{margin:8px 0 0;color:var(--muted);font-size:13px}.actions{display:flex;gap:8px;flex-wrap:wrap}.btn{border:1px solid transparent;border-radius:8px;padding:9px 13px;font-size:12px;font-weight:650;transition:background .16s,transform .16s}.btn:hover{transform:translateY(-1px)}.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}.btn.primary{background:var(--brand);color:#fff}.btn.primary:hover{background:var(--brand-strong)}.btn.ghost{background:#fff;border-color:var(--line);color:var(--ink)}.btn.danger{background:var(--danger-soft);color:var(--danger);border-color:#f5cac5}.btn.link{background:transparent;color:var(--brand);padding-left:0;padding-right:0}.grid{display:grid;gap:16px}.stats{grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:20px}.stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:17px 18px;box-shadow:var(--shadow)}.stat .label{color:var(--muted);font-size:12px}.stat .value{font-size:27px;font-weight:700;margin-top:7px;letter-spacing:-.03em}.stat .hint{font-size:11px;color:var(--muted);margin-top:6px}.two{grid-template-columns:minmax(0,1.4fr) minmax(290px,.8fr)}.three{grid-template-columns:repeat(3,minmax(0,1fr))}.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}.panel-head{padding:17px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px}.panel-head h2{font-size:14px;margin:0;font-weight:700}.panel-head span{font-size:11px;color:var(--muted)}.panel-body{padding:18px}.empty{color:var(--muted);font-size:12px;padding:25px 5px;text-align:center}.table{width:100%;border-collapse:collapse;font-size:12px}.table th{text-align:left;color:var(--muted);font-size:11px;font-weight:600;padding:0 10px 10px;border-bottom:1px solid var(--line)}.table td{padding:12px 10px;border-bottom:1px solid #edf1f1;vertical-align:middle}.table tr:last-child td{border-bottom:0}.table tr:hover td{background:#f8fbfb}.title-cell{font-weight:650}.muted{color:var(--muted)}.pill{display:inline-flex;align-items:center;border-radius:99px;padding:4px 8px;font-size:10px;font-weight:700}.pill.teal{background:var(--brand-soft);color:var(--brand-strong)}.pill.gold{background:var(--warn-soft);color:var(--warn)}.pill.red{background:var(--danger-soft);color:var(--danger)}.pill.green{background:var(--ok-soft);color:var(--ok)}.pill.gray{background:var(--panel-2);color:var(--muted)}.activity{display:grid;gap:14px}.activity-item{display:flex;gap:11px;font-size:12px}.activity-dot{width:8px;height:8px;border-radius:50%;background:#7abcb6;margin-top:4px;flex:0 0 auto}.activity-item b{font-weight:650}.activity-item small{display:block;color:var(--muted);margin-top:3px}.quick-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}.quick{border:1px solid var(--line);border-radius:8px;background:#fff;padding:13px;text-align:left;color:var(--ink);transition:border-color .15s,background .15s}.quick:hover{border-color:#91c9c4;background:#f4fbfa}.quick strong{font-size:12px;display:block}.quick small{color:var(--muted);font-size:11px;display:block;margin-top:5px;line-height:1.5}.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}.input,.select,.textarea{border:1px solid var(--line);background:#fff;border-radius:8px;color:var(--ink);padding:9px 11px;font-size:12px;outline:0}.input:focus,.select:focus,.textarea:focus{border-color:#62aaa4;box-shadow:0 0 0 3px #dff1ee}.input{min-width:230px}.textarea{width:100%;resize:vertical;min-height:110px;line-height:1.6}.drop{border:1.5px dashed #a8b8b9;border-radius:10px;padding:31px 18px;text-align:center;background:#fafcfc;color:var(--muted);cursor:pointer}.drop:hover,.drop.drag{border-color:var(--brand);background:var(--brand-soft);color:var(--ink)}.drop strong{display:block;color:var(--ink);font-size:13px;margin-bottom:5px}.hidden{display:none!important}.form{display:grid;gap:12px}.field{display:grid;gap:6px}.field label{font-size:11px;font-weight:700;color:#4d5d60}.field-note{font-size:10px;color:var(--muted)}.doc-list{display:grid;gap:7px;margin-top:15px}.doc-row{display:flex;justify-content:space-between;gap:12px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:11px 12px;background:#fff}.doc-row.selected{border-color:#72bbb5;background:#f1faf8}.doc-row strong{font-size:12px;display:block;max-width:360px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.doc-row small{display:block;color:var(--muted);font-size:10px;margin-top:4px}.doc-actions{display:flex;gap:5px}.result{margin-top:18px}.result-head{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:12px}.result-head h3{margin:0;font-size:15px}.summary{font:14px/1.75 var(--serif);background:#f7faf9;padding:14px;border-radius:8px;margin:14px 0}.risk{border:1px solid var(--line);border-radius:8px;padding:14px;margin:9px 0;background:#fff}.risk-top{display:flex;align-items:center;gap:8px}.risk h4{margin:0;font-size:13px}.risk p{font-size:12px;line-height:1.65;margin:9px 0 0}.quote{color:var(--muted);background:#f5f7f7;padding:8px 10px;border-radius:5px}.markdown{white-space:pre-wrap;font:12px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;background:#1e2b2d;color:#e4efed;border-radius:8px;padding:15px;max-height:330px;overflow:auto;margin-top:14px}.tabs{display:flex;gap:3px;border-bottom:1px solid var(--line);margin-bottom:18px}.tab{border:0;background:transparent;color:var(--muted);font-size:12px;padding:10px 13px;border-bottom:2px solid transparent}.tab.active{color:var(--brand-strong);font-weight:700;border-bottom-color:var(--brand)}.check{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:8px;padding:11px;margin:7px 0}.check input{accent-color:var(--brand);margin-top:3px}.check b{font-size:12px}.check small{display:block;color:var(--muted);font-size:11px;margin-top:4px;line-height:1.5}.score{font-size:34px;font-weight:750;color:var(--brand-strong)}.report-check{display:grid;grid-template-columns:70px 1fr;gap:10px;padding:11px 0;border-bottom:1px solid #edf1f1;font-size:12px}.report-check:last-child{border:0}.mobile-toggle{display:none;border:0;background:transparent;font-size:20px;color:var(--ink)}.toast{position:fixed;z-index:30;right:20px;bottom:20px;background:#172226;color:#fff;border-radius:8px;padding:11px 14px;font-size:12px;box-shadow:var(--shadow);opacity:0;transform:translateY(8px);pointer-events:none;transition:.2s}.toast.show{opacity:1;transform:none}.modal-backdrop{position:fixed;inset:0;background:#12222666;z-index:20;display:none;align-items:center;justify-content:center;padding:20px}.modal-backdrop.open{display:flex}.modal{background:#fff;border-radius:12px;max-width:620px;width:100%;max-height:90vh;overflow:auto;box-shadow:0 24px 80px #13272b33}.modal-head{display:flex;justify-content:space-between;padding:18px;border-bottom:1px solid var(--line)}.modal-head h2{font-size:16px;margin:0}.modal-body{padding:18px}.modal-close{border:0;background:transparent;color:var(--muted);font-size:20px}.upload-zone{display:grid;gap:10px}.notice{padding:11px 13px;background:var(--warn-soft);color:var(--warn);border-radius:7px;font-size:11px;line-height:1.5}
-@media(max-width:900px){.shell{grid-template-columns:1fr}.sidebar{position:fixed;z-index:15;inset:0 auto 0 0;width:240px;transform:translateX(-100%);transition:transform .2s}.sidebar.open{transform:none}.mobile-toggle{display:block}.stats{grid-template-columns:repeat(2,1fr)}.two{grid-template-columns:1fr}.three{grid-template-columns:1fr}.topbar{padding:0 18px}.content{padding:24px 18px 40px}}
-@media(max-width:560px){.stats{grid-template-columns:1fr 1fr}.page-head{display:block}.page-head .actions{margin-top:14px}.table{min-width:650px}.panel.table-wrap{overflow:auto}.input{min-width:0;width:100%}.toolbar .input{flex:1}.doc-row{align-items:flex-start;flex-direction:column}.doc-actions{width:100%}}
-@media(prefers-reduced-motion:reduce){*,*:before,*:after{transition:none!important;animation:none!important}}
-/* Spatial glass layer: translucent only on chrome, opaque content stays readable. */
-body{background:var(--bg);isolation:isolate;overflow-x:hidden}
-body::before{content:"";position:fixed;inset:-18%;z-index:-2;pointer-events:none;background:radial-gradient(circle at var(--mx,18%) var(--my,12%),oklch(79% .105 178 / .22),transparent 24%),radial-gradient(circle at 86% 16%,oklch(84% .09 72 / .13),transparent 21%),radial-gradient(circle at 54% 108%,oklch(80% .08 205 / .14),transparent 31%);filter:blur(26px);animation:ambient-drift 18s ease-in-out infinite alternate}
-body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.28;background-image:radial-gradient(oklch(22% .02 190 / .12) .55px,transparent .55px);background-size:5px 5px;mix-blend-mode:multiply}
-@keyframes ambient-drift{0%{transform:translate3d(-1%,-1%,0) scale(1)}100%{transform:translate3d(2%,1%,0) scale(1.04)}}
-.sidebar{background:oklch(22% .035 190 / .90);backdrop-filter:blur(26px) saturate(1.22);-webkit-backdrop-filter:blur(26px) saturate(1.22);box-shadow:12px 0 40px oklch(20% .03 190 / .14);border-right:1px solid oklch(100% 0 0 / .10)}
-.topbar{background:oklch(100% 0 0 / .70);backdrop-filter:blur(22px) saturate(1.32);-webkit-backdrop-filter:blur(22px) saturate(1.32);box-shadow:0 1px 0 oklch(35% .03 190 / .06)}
-.panel,.stat{background:oklch(100% 0 0 / .78);backdrop-filter:blur(18px) saturate(1.14);-webkit-backdrop-filter:blur(18px) saturate(1.14);position:relative}
-.panel::before,.stat::before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(120deg,oklch(100% 0 0 / .40),transparent 38%,oklch(75% .08 180 / .05));opacity:.85}
-.panel>* ,.stat>*{position:relative;z-index:1}
-.stat{transition:transform .34s cubic-bezier(.2,.8,.2,1),box-shadow .34s ease,border-color .34s ease}.stat:hover{transform:translateY(-4px) scale(1.008);box-shadow:0 17px 42px oklch(30% .04 190 / .13);border-color:oklch(60% .08 178)}
-.view.active{animation:view-arrive .34s cubic-bezier(.2,.8,.2,1) both}@keyframes view-arrive{from{opacity:.35;transform:translateY(8px)}to{opacity:1;transform:none}}
-.nav button{transition:background .20s ease,color .20s ease,transform .20s ease}.nav button:hover{transform:translateX(2px)}
-.nav button.active{box-shadow:0 6px 18px oklch(10% .03 190 / .12)}
-.quick,.doc-row,.risk{transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease}.quick:hover,.doc-row:hover,.risk:hover{transform:translateY(-2px);box-shadow:0 9px 24px oklch(30% .04 190 / .08)}
-.btn.primary{box-shadow:0 6px 16px oklch(46% .12 178 / .18)}
-.drop{transition:border-color .2s ease,background .2s ease,transform .2s ease,box-shadow .2s ease}.drop:hover,.drop.drag{transform:translateY(-2px);box-shadow:0 10px 25px oklch(46% .08 178 / .12)}
-.modal-backdrop{backdrop-filter:blur(11px);-webkit-backdrop-filter:blur(11px)}.modal{animation:modal-arrive .28s cubic-bezier(.2,.8,.2,1) both}@keyframes modal-arrive{from{opacity:0;transform:translateY(12px) scale(.97)}to{opacity:1;transform:none}}
-@media(prefers-reduced-motion:reduce){body::before{animation:none}.view.active,.modal{animation:none}.stat:hover,.quick:hover,.doc-row:hover,.risk:hover,.drop:hover,.drop.drag,.nav button:hover{transform:none}}
-/* Theme system */
-:root[data-theme="indigo"]{--bg:#f5f6fb;--panel:#fff;--panel-2:#eef0f9;--ink:#1d2233;--muted:#666d82;--line:#dfe2ed;--brand:#5367dc;--brand-strong:#3d4fb7;--brand-soft:#e8ebff;--shadow:0 8px 28px rgba(37,48,104,.07)}
-:root[data-theme="light"]{--bg:#f4f6f7;--panel:#fff;--panel-2:#edf0f1;--ink:#1d2528;--muted:#626d71;--line:#dde3e5;--brand:#4f707a;--brand-strong:#38545c;--brand-soft:#e5ecee;--shadow:0 8px 28px rgba(31,43,47,.06)}
-:root[data-theme="dark"]{--bg:#11171b;--panel:#1d252a;--panel-2:#263137;--ink:#eef4f5;--muted:#a4b1b6;--line:#354248;--brand:#56c7bb;--brand-strong:#7fdbd2;--brand-soft:#173d3b;--danger-soft:#442522;--warn-soft:#3e321d;--ok-soft:#17382a;--shadow:0 12px 36px rgba(0,0,0,.25)}
-:root[data-theme="dark"] body::after{opacity:.12;mix-blend-mode:screen}:root[data-theme="dark"] body::before{opacity:.72}:root[data-theme="dark"] .topbar{background:oklch(18% .02 190 / .72)}:root[data-theme="dark"] .panel,:root[data-theme="dark"] .stat{background:oklch(22% .02 190 / .80)}:root[data-theme="dark"] .input,:root[data-theme="dark"] .select,:root[data-theme="dark"] .textarea,:root[data-theme="dark"] .quick,:root[data-theme="dark"] .doc-row,:root[data-theme="dark"] .risk{background:#202a2f;color:var(--ink)}:root[data-theme="dark"] .summary,:root[data-theme="dark"] .quote{background:#263136}:root[data-theme="dark"] .table tr:hover td{background:#263136}:root[data-theme="dark"] .modal,:root[data-theme="dark"] .theme-popover,:root[data-theme="dark"] .command-box{background:#1d252a;color:var(--ink)}:root[data-theme="dark"] .btn.ghost{background:#263136;color:var(--ink)}
-.icon-btn{border:1px solid var(--line);background:oklch(100% 0 0 / .58);color:var(--ink);border-radius:9px;min-width:32px;height:32px;padding:0 8px;font-size:11px;font-weight:700;backdrop-filter:blur(12px);transition:.2s}.icon-btn:hover{transform:translateY(-1px);border-color:var(--brand);color:var(--brand-strong)}
-.theme-popover{position:fixed;right:24px;top:58px;z-index:25;width:230px;padding:13px;background:oklch(100% 0 0 / .84);border:1px solid var(--line);border-radius:13px;box-shadow:0 18px 50px rgba(20,38,42,.18);backdrop-filter:blur(22px);display:none;animation:modal-arrive .2s ease both}.theme-popover.open{display:block}.theme-popover-head{display:flex;justify-content:space-between;font-size:12px;margin-bottom:8px}.theme-popover-head span{color:var(--muted);font-size:10px}.theme-options{display:grid;gap:3px}.theme-options button{display:grid;grid-template-columns:22px 1fr auto;gap:7px;align-items:center;border:0;background:transparent;color:var(--ink);border-radius:8px;padding:8px 6px;text-align:left;font-size:11px}.theme-options button:hover{background:var(--brand-soft)}.theme-options i{width:17px;height:17px;border-radius:50%;background:var(--sw);border:2px solid rgba(255,255,255,.8);box-shadow:0 0 0 1px var(--line)}.theme-options small{color:var(--muted);font-size:9px}.auto-swatch{background:linear-gradient(135deg,#087f78 50%,#5367dc 50%)!important}.motion-toggle{display:flex;gap:8px;align-items:center;border-top:1px solid var(--line);padding:11px 6px 2px;margin-top:5px;color:var(--muted);font-size:10px}.motion-toggle input{accent-color:var(--brand)}
-.command-backdrop{position:fixed;inset:0;z-index:24;background:rgba(17,31,34,.28);backdrop-filter:blur(8px);display:none;justify-content:center;padding-top:13vh}.command-backdrop.open{display:flex}.command-box{width:min(600px,calc(100vw - 28px));height:max-content;background:oklch(100% 0 0 / .9);border:1px solid var(--line);border-radius:15px;box-shadow:0 24px 80px rgba(15,32,37,.25);backdrop-filter:blur(24px);overflow:hidden;animation:modal-arrive .2s ease both}.command-input{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line)}.command-input span{font-size:20px;color:var(--muted)}.command-input input{border:0;outline:0;background:transparent;color:var(--ink);width:100%;font-size:14px}.command-input kbd{font-size:10px;color:var(--muted);border:1px solid var(--line);padding:3px 6px;border-radius:5px}.command-results{padding:7px;max-height:360px;overflow:auto}.command-result{display:flex;align-items:center;gap:10px;padding:11px;border-radius:8px;cursor:pointer}.command-result:hover,.command-result.selected{background:var(--brand-soft)}.command-result b{font-size:12px}.command-result small{display:block;color:var(--muted);font-size:10px;margin-top:3px}.command-foot{display:flex;gap:15px;padding:10px 14px;border-top:1px solid var(--line);color:var(--muted);font-size:10px}
-@media(prefers-reduced-motion:reduce){.theme-popover,.command-box{animation:none}.icon-btn:hover{transform:none}}
-:root.reduce-motion *,:root.reduce-motion *::before,:root.reduce-motion *::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
-.theme-options button.selected{background:var(--brand-soft);color:var(--brand-strong);font-weight:700}
-
-:root[data-theme="indigo"]{--bg:#f5f6fb;--panel:#fff;--panel-2:#eef0f9;--ink:#1d2233;--muted:#666d82;--line:#dfe2ed;--brand:#5367dc;--brand-strong:#3d4fb7;--brand-soft:#e8ebff;--shadow:0 8px 28px rgba(37,48,104,.07)}
-:root[data-theme="light"]{--bg:#f4f6f7;--panel:#fff;--panel-2:#edf0f1;--ink:#1d2528;--muted:#626d71;--line:#dde3e5;--brand:#4f707a;--brand-strong:#38545c;--brand-soft:#e5ecee;--shadow:0 8px 28px rgba(31,43,47,.06)}
-:root[data-theme="dark"]{--bg:#11171b;--panel:#1d252a;--panel-2:#263137;--ink:#eef4f5;--muted:#a4b1b6;--line:#354248;--brand:#56c7bb;--brand-strong:#7fdbd2;--brand-soft:#173d3b;--danger-soft:#442522;--warn-soft:#3e321d;--ok-soft:#17382a;--shadow:0 12px 36px rgba(0,0,0,.25)}
-:root[data-theme="dark"] body{background:var(--bg);color:var(--ink)}
-:root[data-theme="dark"] body::after{opacity:.12;mix-blend-mode:screen}:root[data-theme="dark"] body::before{opacity:.72}
-:root[data-theme="indigo"] body::before{filter:hue-rotate(42deg) saturate(1.35)}:root[data-theme="light"] body::before{filter:saturate(.55) brightness(1.12)}
-:root[data-theme="dark"] .topbar{background:oklch(18% .02 190 / .82);border-color:var(--line)}
-:root[data-theme="dark"] .panel,:root[data-theme="dark"] .stat{background:oklch(22% .02 190 / .88);border-color:var(--line)}
-:root[data-theme="dark"] .input,:root[data-theme="dark"] .select,:root[data-theme="dark"] .textarea,:root[data-theme="dark"] .quick,:root[data-theme="dark"] .doc-row,:root[data-theme="dark"] .risk{background:#202a2f;color:var(--ink);border-color:var(--line)}
-:root[data-theme="dark"] .summary,:root[data-theme="dark"] .quote{background:#263136;color:var(--ink)}:root[data-theme="dark"] .table tr:hover td{background:#263136}
-:root[data-theme="dark"] .modal,:root[data-theme="dark"] .theme-popover,:root[data-theme="dark"] .command-box{background:#1d252a;color:var(--ink);border-color:var(--line)}:root[data-theme="dark"] .btn.ghost{background:#263136;color:var(--ink);border-color:var(--line)}
-:root[data-theme="dark"] .markdown{background:#0b1012;color:#d6e8e5}:root[data-theme="dark"] .drop{background:#1c272b;color:var(--muted);border-color:#52666a}:root[data-theme="dark"] .notice{background:#3e321d;color:#f5ca78}
-:root[data-theme="dark"] .theme-popover,.theme-popover{color:var(--ink)}
-:root[data-theme="indigo"] .sidebar{background:oklch(22% .055 270 / .94)}:root[data-theme="light"] .sidebar{background:oklch(28% .025 205 / .92)}:root[data-theme="dark"] .sidebar{background:oklch(18% .035 190 / .96)}
-.theme-options button.selected{background:var(--brand-soft);color:var(--brand-strong);font-weight:700}
-/* Full-site theme surfaces — every visual layer follows these tokens. */
-:root{
-  --app-canvas:#f5f7f8;--app-canvas-2:#eaf1f1;--glass:rgba(255,255,255,.78);
-  --glass-strong:rgba(255,255,255,.9);--sidebar-surface:oklch(22% .035 190 / .92);
-  --sidebar-ink:#dbe7e7;--sidebar-muted:#8da5a6;--sidebar-hover:#24393d;
-  --field-surface:#fff;--row-hover:#f8fbfb;--subtle-surface:#f5f7f7;
-  --code-surface:#1e2b2d;--code-ink:#e4efed;
-  --ambient-1:oklch(79% .105 178 / .22);--ambient-2:oklch(84% .09 72 / .13);--ambient-3:oklch(80% .08 205 / .14);
-}
-:root[data-theme="indigo"]{
-  --app-canvas:#eef0fb;--app-canvas-2:#e5e8f7;--glass:rgba(248,249,255,.78);
-  --glass-strong:rgba(250,250,255,.91);--sidebar-surface:oklch(22% .055 270 / .94);
-  --sidebar-ink:#e4e7ff;--sidebar-muted:#a4acd6;--sidebar-hover:#303763;
-  --field-surface:#f9f9ff;--row-hover:#f0f1ff;--subtle-surface:#f0f1fa;
-  --code-surface:#20233b;--code-ink:#eceeff;
-  --ambient-1:oklch(76% .14 275 / .27);--ambient-2:oklch(83% .11 310 / .17);--ambient-3:oklch(81% .09 240 / .18);
-}
-:root[data-theme="light"]{
-  --app-canvas:#f1f3f4;--app-canvas-2:#e7ebec;--glass:rgba(255,255,255,.83);
-  --glass-strong:rgba(255,255,255,.94);--sidebar-surface:oklch(28% .025 205 / .94);
-  --sidebar-ink:#edf2f3;--sidebar-muted:#afbdc0;--sidebar-hover:#34464c;
-  --field-surface:#fff;--row-hover:#f1f4f5;--subtle-surface:#eef2f3;
-  --code-surface:#263236;--code-ink:#eef3f4;
-  --ambient-1:oklch(83% .035 205 / .16);--ambient-2:oklch(89% .02 240 / .14);--ambient-3:oklch(81% .04 180 / .13);
-}
-:root[data-theme="dark"]{
-  --app-canvas:#10171b;--app-canvas-2:#141e23;--glass:rgba(28,37,42,.82);
-  --glass-strong:rgba(30,40,45,.94);--sidebar-surface:oklch(17% .035 190 / .97);
-  --sidebar-ink:#e6f0f1;--sidebar-muted:#91a4a9;--sidebar-hover:#263a3e;
-  --field-surface:#202a2f;--row-hover:#263136;--subtle-surface:#263136;
-  --code-surface:#090e10;--code-ink:#d6e8e5;
-  --ambient-1:oklch(48% .13 178 / .24);--ambient-2:oklch(55% .10 245 / .16);--ambient-3:oklch(49% .10 315 / .14);
-}
-html,body{background:var(--app-canvas);color:var(--ink)}
-body::before{background:radial-gradient(circle at var(--mx,18%) var(--my,12%),var(--ambient-1),transparent 24%),radial-gradient(circle at 86% 16%,var(--ambient-2),transparent 21%),radial-gradient(circle at 54% 108%,var(--ambient-3),transparent 31%)}
-.main{background:linear-gradient(145deg,var(--app-canvas),var(--app-canvas-2))}
-.sidebar{background:var(--sidebar-surface);color:var(--sidebar-ink)}
-.brand small,.side-foot{color:var(--sidebar-muted)}.side-foot{border-color:color-mix(in srgb,var(--sidebar-ink) 18%,transparent)}
-.nav button{color:var(--sidebar-muted)}.nav button:hover{background:var(--sidebar-hover);color:var(--sidebar-ink)}
-.nav button.active{background:var(--brand-soft);color:var(--brand-strong)}
-.topbar,.panel,.stat,.theme-popover,.command-box{background:var(--glass);color:var(--ink);border-color:var(--line)}
-.modal{background:var(--glass-strong);color:var(--ink);border:1px solid var(--line)}
-.input,.select,.textarea,.quick,.doc-row,.risk,.btn.ghost,.drop{background:var(--field-surface);color:var(--ink);border-color:var(--line)}
-.table td{border-color:var(--line)}.table tr:hover td{background:var(--row-hover)}
-.summary,.quote{background:var(--subtle-surface);color:var(--ink)}
-.markdown{background:var(--code-surface);color:var(--code-ink)}
-.icon-btn{background:var(--glass);color:var(--ink)}
-.panel-head,.modal-head,.command-input,.command-foot,.tabs{border-color:var(--line)}
-.brand-mark{background:var(--brand-soft);color:var(--brand-strong)}
-.avatar{background:var(--brand-soft);color:var(--brand-strong)}
-.btn.primary{background:var(--brand);color:white;box-shadow:0 7px 18px color-mix(in srgb,var(--brand) 25%,transparent)}
-.btn.primary:hover{background:var(--brand-strong)}
-.quick:hover,.doc-row.selected{background:var(--brand-soft);border-color:color-mix(in srgb,var(--brand) 55%,var(--line))}
-.input:focus,.select:focus,.textarea:focus{border-color:var(--brand);box-shadow:0 0 0 3px color-mix(in srgb,var(--brand) 18%,transparent)}
-.theme-options button,.command-result{color:var(--ink)}
-.notice{background:var(--warn-soft);color:var(--warn)}
-.pill.teal{background:var(--brand-soft);color:var(--brand-strong)}
-.toast{background:var(--ink);color:var(--app-canvas)}
-
-html[data-theme="indigo"] .btn.primary{background:#5367dc;color:#fff}html[data-theme="indigo"] .btn.primary:hover{background:#3d4fb7}
-html[data-theme="light"] .btn.primary{background:#4f707a;color:#fff}html[data-theme="light"] .btn.primary:hover{background:#38545c}
-html[data-theme="dark"] .btn.primary{background:#56c7bb;color:#102322}html[data-theme="dark"] .btn.primary:hover{background:#7fdbd2}
-html[data-theme="indigo"] .activity-dot{background:#7888e8}html[data-theme="light"] .activity-dot{background:#789098}html[data-theme="dark"] .activity-dot{background:#56c7bb}
-html[data-theme="indigo"] .pill.teal{background:#e8ebff;color:#3d4fb7}html[data-theme="light"] .pill.teal{background:#e5ecee;color:#38545c}html[data-theme="dark"] .pill.teal{background:#173d3b;color:#7fdbd2}
-.risk-toolbar{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0}.risk-filter{border:1px solid var(--line);background:var(--field-surface);color:var(--muted);border-radius:999px;padding:6px 10px;font-size:10px;font-weight:700}.risk-filter:hover,.risk-filter.active{background:var(--brand-soft);color:var(--brand-strong);border-color:color-mix(in srgb,var(--brand) 50%,var(--line))}.panel-head .btn{margin-left:8px}</style>
+:root{--pri:oklch(0.34 0.045 195);--pri-h:oklch(0.40 0.05 195);--pri-l:oklch(0.92 0.015 195);--bg:#fff;--sf:oklch(0.97 0.003 195);--s2:oklch(0.94 0.004 195);--ink:oklch(0.16 0.012 195);--i2:oklch(0.30 0.008 195);--mut:oklch(0.52 0.01 195);--bd:oklch(0.90 0.005 195);--bds:oklch(0.82 0.008 195);--acc:oklch(0.62 0.14 55);--accl:oklch(0.92 0.03 55);--suc:oklch(0.55 0.13 145);--war:oklch(0.70 0.15 70);--dgr:oklch(0.55 0.18 25);--r:8px;--rs:6px;--rl:12px;--ss:0 1px 2px oklch(0.1 0 0/0.06);--sd:0 2px 8px oklch(0.1 0 0/0.08);--sw:220px;--th:56px;--font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:14px}body{font-family:var(--font);background:var(--bg);color:var(--ink);line-height:1.6;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;cursor:pointer;border:none;background:none}input,textarea,select{font-family:inherit;font-size:inherit}
+::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-thumb{background:var(--bds);border-radius:3px}
+.app{display:flex;min-height:100vh}
+.sb{width:var(--sw);background:var(--pri);color:oklch(0.85 0.01 195);position:fixed;top:0;left:0;bottom:0;z-index:100;display:flex;flex-direction:column}
+.sb__logo{padding:16px 20px;display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px;color:#fff}
+.sb__logo svg{width:24px;height:24px;flex-shrink:0}
+.sb__nav{flex:1;padding:8px 10px;overflow-y:auto}
+.ng{margin-bottom:14px}
+.ng__l{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:oklch(0.55 0.02 195);padding:8px 12px 4px}
+.ni{display:flex;align-items:center;gap:10px;padding:7px 12px;border-radius:var(--rs);font-size:13px;color:oklch(0.80 0.01 195);cursor:pointer;transition:background .15s,color .15s}
+.ni:hover{background:oklch(0.42 0.04 195);color:#fff}
+.ni.act{background:oklch(0.45 0.05 195);color:#fff;font-weight:500}
+.ni svg{width:16px;height:16px;flex-shrink:0;opacity:.7}
+.sb__u{padding:12px 16px;border-top:1px solid oklch(0.42 0.04 195);display:flex;align-items:center;gap:10px}
+.av{width:28px;height:28px;border-radius:50%;background:var(--acc);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:12px;flex-shrink:0}
+.mn{flex:1;margin-left:var(--sw);display:flex;flex-direction:column;min-height:100vh}
+.tb{height:var(--th);background:var(--bg);border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:50}
+.tb__t{font-size:16px;font-weight:600}
+.ct{flex:1;padding:24px}
+.pg{display:none}.pg.act{display:block}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:var(--rs);font-size:13px;font-weight:500;transition:all .15s}
+.btn--p{background:var(--pri);color:#fff}.btn--p:hover{background:var(--pri-h)}
+.btn--g{color:var(--i2)}.btn--g:hover{background:var(--sf)}
+.btn--o{border:1px solid var(--bds);color:var(--i2)}.btn--o:hover{background:var(--sf)}
+.bd{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:100px;font-size:11px;font-weight:500}
+.bd--s{background:oklch(0.92 0.04 145);color:var(--suc)}.bd--w{background:oklch(0.94 0.04 70);color:oklch(0.50 0.13 70)}.bd--d{background:oklch(0.94 0.04 25);color:var(--dgr)}.bd--i{background:var(--pri-l);color:var(--pri)}.bd--m{background:var(--s2);color:var(--mut)}
+.in{width:100%;padding:8px 12px;border:1px solid var(--bds);border-radius:var(--rs);font-size:13px;color:var(--ink);background:var(--bg);outline:none}
+.in:focus{border-color:var(--pri)}
+.lbl{display:block;font-size:12px;font-weight:500;color:var(--mut);margin-bottom:4px}
+.fg{margin-bottom:16px}
+.cd{background:var(--bg);border:1px solid var(--bd);border-radius:var(--r);overflow:hidden}
+.cd__h{padding:14px 18px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between}
+.cd__b{padding:18px}
+.dg{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+.st{background:var(--bg);border:1px solid var(--bd);border-radius:var(--r);padding:18px}
+.st__v{font-size:28px;font-weight:700;letter-spacing:-0.03em}
+.st__l{font-size:12px;color:var(--mut);margin-top:2px}
+.st__i{width:32px;height:32px;border-radius:var(--rs);background:var(--pri-l);color:var(--pri);display:flex;align-items:center;justify-content:center;margin-bottom:12px}
+.dr{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:900px){.dr{grid-template-columns:1fr}}
+.qa{display:flex;align-items:center;gap:12px;padding:14px;border:1px solid var(--bd);border-radius:var(--r);cursor:pointer;transition:all .15s}
+.qa:hover{border-color:var(--pri);background:var(--pri-l)}
+.qa__t{font-size:13px;font-weight:600}.qa__d{font-size:12px;color:var(--mut)}
+.ti{display:flex;gap:12px;padding-bottom:14px;position:relative}
+.ti::before{content:'';position:absolute;left:7px;top:20px;bottom:0;width:1px;background:var(--bd)}
+.ti:last-child::before{display:none}
+.td{width:14px;height:14px;border-radius:50%;border:2px solid var(--pri);background:var(--bg);flex-shrink:0;margin-top:4px;z-index:1}
+.td--d{background:var(--pri)}.td--a{border-color:var(--acc)}
+.cl{display:flex;flex-direction:column;gap:8px}
+.ci{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--bd);border-radius:var(--rs);cursor:pointer}
+.ci:hover{border-color:var(--bds)}.ci__t{font-size:13px;font-weight:500}.ci__m{font-size:11px;color:var(--mut);margin-top:2px}
+.ch{display:flex;gap:0;height:calc(100vh - var(--th) - 48px)}
+.cm{flex:1;display:flex;flex-direction:column;border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;margin-right:16px}
+.cmsg{flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:16px}
+.mg{display:flex;gap:12px;max-width:75%}.mg--u{margin-left:auto;flex-direction:row-reverse}
+.mg__a{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;color:#fff}
+.mg__b{padding:12px 16px;border-radius:var(--r);font-size:13px;line-height:1.7}
+.mg--u .mg__b{background:var(--pri);color:#fff}.mg--b .mg__b{background:var(--sf);color:var(--ink)}
+.lr{display:inline;padding:1px 6px;margin:0 1px;background:var(--accl);border-radius:3px;font-size:12px;color:oklch(0.45 0.12 55)}
+.csg{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.cs{padding:4px 12px;border:1px solid var(--bds);border-radius:100px;font-size:12px;color:var(--i2);cursor:pointer}
+.cs:hover{border-color:var(--pri);color:var(--pri)}
+.cib{border-top:1px solid var(--bd);padding:12px 16px;display:flex;gap:10px;align-items:flex-end}
+.cin{flex:1;resize:none;border:none;outline:none;font-size:13px;line-height:1.6;max-height:120px;padding:6px 0}
+.cs__side{width:280px;display:flex;flex-direction:column;gap:12px}
+.sc{background:var(--bg);border:1px solid var(--bd);border-radius:var(--r);overflow:hidden}
+.sc__h{padding:10px 14px;border-bottom:1px solid var(--bd);font-size:12px;font-weight:600;color:var(--i2)}
+.sc__b{padding:10px 14px;max-height:300px;overflow-y:auto}
+.fi{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bd);font-size:12px}
+.fi:last-child{border-bottom:none}.fi__l{color:var(--mut)}.fi__v{font-weight:500}.fi__v--m{color:var(--dgr);font-style:italic}
+.lm{padding:8px 10px;margin-bottom:6px;background:var(--sf);border-radius:var(--rs);font-size:12px}
+.lm__n{font-weight:600}.lm__d{color:var(--mut);margin-top:2px}
+.cal{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:800px){.cal{grid-template-columns:1fr}}
+.calr{background:var(--pri);color:#fff;border-radius:var(--r);padding:20px}
+.calr__t{font-size:36px;font-weight:700;letter-spacing:-0.03em}
+.cln{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid oklch(0.45 0.04 195);font-size:13px}
+.cln:last-child{border-bottom:none;font-weight:600;font-size:15px}
+.ctl{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:900px){.ctl{grid-template-columns:1fr}}
+.cpn{border:1px solid var(--bd);border-radius:var(--r);overflow:hidden}
+.cpn__h{padding:10px 14px;border-bottom:1px solid var(--bd);font-size:12px;font-weight:600;color:var(--mut);display:flex;justify-content:space-between;align-items:center}
+.ctx{padding:16px;font-size:13px;line-height:1.8;max-height:500px;overflow-y:auto}
+.cl__item{margin-bottom:14px}
+.cl__r{background:oklch(0.97 0.02 25);border-left:3px solid var(--dgr);padding:8px 12px;border-radius:0 var(--rs) var(--rs) 0}
+.cl__o{background:oklch(0.97 0.02 145);border-left:3px solid var(--suc);padding:8px 12px;border-radius:0 var(--rs) var(--rs) 0}
+.rt{display:inline-block;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:600;margin-left:6px}
+.rt--h{background:oklch(0.90 0.06 25);color:var(--dgr)}
+.ri{padding:14px;border:1px solid var(--bd);border-radius:var(--rs);margin-bottom:10px;cursor:pointer}
+.ri:hover{border-color:var(--bds)}
+.dgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.dcard{border:1px solid var(--bd);border-radius:var(--r);padding:18px;cursor:pointer;transition:all .15s}
+.dcard:hover{border-color:var(--pri);box-shadow:var(--ss)}
+.dcard__i{width:40px;height:40px;border-radius:var(--rs);background:var(--pri-l);color:var(--pri);display:flex;align-items:center;justify-content:center;margin-bottom:12px}
+.di{display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--bd);border-radius:var(--rs);margin-bottom:6px}
+.dck{width:18px;height:18px;border:2px solid var(--bds);border-radius:4px;flex-shrink:0;cursor:pointer}
+.kbl{display:grid;grid-template-columns:240px 1fr;gap:16px}
+@media(max-width:800px){.kbl{grid-template-columns:1fr}}
+.kbt{border:1px solid var(--bd);border-radius:var(--r);padding:10px}
+.kbn{padding:6px 10px;font-size:13px;cursor:pointer;border-radius:var(--rs);color:var(--i2)}
+.kbn:hover{background:var(--sf)}.kbn--a{background:var(--pri-l);color:var(--pri);font-weight:500}
+.kbn--s{padding-left:24px;font-size:12px;color:var(--mut)}
+.kbc{border:1px solid var(--bd);border-radius:var(--r);padding:24px;max-height:600px;overflow-y:auto}
+.kbc h3{font-size:16px;font-weight:700;margin-bottom:12px}
+.kbc h4{font-size:14px;font-weight:600;margin-top:16px;margin-bottom:6px;color:var(--i2)}
+.kbc p{font-size:13px;color:var(--i2);line-height:1.8;margin-bottom:8px}
+.kq{background:var(--sf);border-left:3px solid var(--acc);padding:10px 14px;border-radius:0 var(--rs) var(--rs) 0;margin:8px 0;font-size:13px}
+.cpg{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.cpc{border:1px solid var(--bd);border-radius:var(--r);overflow:hidden}
+.cpc__h{padding:10px 14px;font-size:13px;font-weight:600;border-bottom:1px solid var(--bd)}
+.cpc__b{padding:14px;font-size:12px;line-height:1.7;color:var(--i2);max-height:300px;overflow-y:auto}
+.cpsc{font-size:24px;font-weight:700;color:var(--pri);margin-bottom:8px}
+.flex{display:flex}.g8{gap:8px}.g12{gap:12px}.aic{align-items:center}.jcb{justify-content:space-between}
+.mb8{margin-bottom:8px}.mb16{margin-bottom:16px}.mb24{margin-bottom:24px}.mt16{margin-top:16px}
+.ts{font-size:12px}.tm{color:var(--mut)}.fm{font-weight:500}.fs{font-weight:600}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:700px){.g2{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
-<div class="shell">
-  <aside class="sidebar" id="sidebar">
-    <div class="brand"><div class="brand-mark">律</div><div><strong>律序</strong><small>LEGAL WORKBENCH</small></div></div>
-    <nav class="nav" id="nav">
-      <button class="active" data-view="overview"><span class="icon">⌂</span>工作台</button>
-      <button data-view="matters"><span class="icon">▣</span>案件与客户</button>
-      <button data-view="documents"><span class="icon">▤</span>文档资料</button>
-      <button data-view="review"><span class="icon">⊙</span>合同审查</button>
-      <button data-view="dossier"><span class="icon">◫</span>阅卷助手</button>
-      <button data-view="draft"><span class="icon">✎</span>文书起草</button>
-      <button data-view="report"><span class="icon">◈</span>检测报告</button>
-      <button data-view="history"><span class="icon">↺</span>工作记录</button><button data-view="settings"><span class="icon">⚙</span>检查单设置</button>
-    </nav>
-    <div class="side-foot">AI 生成内容需由执业律师复核<br>数据默认保存在本机数据目录</div>
-  </aside>
-  <div class="main">
-    <header class="topbar"><div class="top-actions"><button class="mobile-toggle" id="mobileToggle">☰</button><div class="crumb">律序 <span> / </span> <b id="crumb">工作台</b></div></div><div class="top-actions"><button class="icon-btn" id="themeBtn" aria-label="切换主题" title="主题：海松绿">◐</button><button class="icon-btn" id="commandBtn" aria-label="打开快捷操作" title="快捷操作 ⌘K">⌘K</button><div class="health"><i class="dot" id="healthDot"></i><span id="healthText">连接检查中</span></div><div class="avatar">赵</div></div></header>
-    <main class="content">
-      <section class="view active" id="view-overview">
-        <div class="page-head"><div><h1>工作台</h1><p>把材料、案件和 工作事件放在同一条工作线上。</p></div><div class="actions"><button class="btn primary" data-open="upload">＋ 上传材料</button><button class="btn ghost" data-view-go="review">开始审查</button></div></div>
-        <div class="grid stats"><div class="stat"><div class="label">案件夹</div><div class="value" id="statMatters">—</div><div class="hint">当前工作空间</div></div><div class="stat"><div class="label">文档材料</div><div class="value" id="statDocs">—</div><div class="hint">已解析并可检索</div></div><div class="stat"><div class="label">审查产物</div><div class="value" id="statReviews">—</div><div class="hint">合同与检测记录</div></div><div class="stat"><div class="label">当前模型</div><div class="value" style="font-size:19px;margin-top:11px" id="statModel">—</div><div class="hint">经 New API 路由</div></div></div>
-        <div class="grid two"><div class="panel"><div class="panel-head"><h2>最近工作</h2><span>按时间排序</span></div><div class="panel-body"><div class="activity" id="recentActivity"><div class="empty">加载中…</div></div></div></div><div class="panel"><div class="panel-head"><h2>快速开始</h2><span>常用动作</span></div><div class="panel-body"><div class="quick-grid"><button class="quick" data-open="upload"><strong>上传合同</strong><small>PDF、Word 或纯文本材料</small></button><button class="quick" data-view-go="dossier"><strong>开始阅卷</strong><small>提炼主体、时间线与关键事实</small></button><button class="quick" data-view-go="draft"><strong>起草文书</strong><small>从事实到可编辑的文书草稿</small></button><button class="quick" data-view-go="report"><strong>生成检测</strong><small>检查要素缺项与行动项</small></button></div><div class="notice" style="margin-top:16px">当前版本重点是“材料 → 结构化产物”，不会把 AI 输出直接当作最终法律意见。</div></div></div></div>
-      </section>
-      <section class="view" id="view-matters"><div class="page-head"><div><h1>案件与客户</h1><p>用案件夹组织材料与后续 工作事件。</p></div><button class="btn primary" id="createMatterBtn">＋ 新建案件</button></div><div class="panel table-wrap"><div class="panel-body"><table class="table"><thead><tr><th>案件名称</th><th>客户</th><th>材料</th><th>更新时间</th><th></th></tr></thead><tbody id="matterTable"></tbody></table></div></div></section>
-      <section class="view" id="view-matter-detail"><div class="page-head"><div><button class="btn link" id="matterBackBtn">← 返回案件列表</button><h1 id="matterDetailTitle">案件详情</h1><p id="matterDetailClient">客户与案件材料概览</p></div><div class="actions"><button class="btn ghost" id="matterBatchReviewBtn">批量审查</button><button class="btn ghost" id="matterBatchComplianceBtn">批量检测</button><button class="btn ghost" id="matterBatchReadBtn">综合阅卷</button><button class="btn ghost" id="matterExportBtn">导出 ZIP</button><button class="btn primary" id="matterUploadBtn">＋ 上传到本案</button></div></div><div class="grid stats"><div class="stat"><div class="label">材料</div><div class="value" id="matterDocCount">0</div><div class="hint">已归档文档</div></div><div class="stat"><div class="label">工作事件</div><div class="value" id="matterReviewCount">0</div><div class="hint">审查与检测</div></div><div class="stat"><div class="label">最近更新</div><div class="value" style="font-size:15px;margin-top:12px" id="matterUpdated">—</div><div class="hint">案件工作时间</div></div><div class="stat"><div class="label">案件 ID</div><div class="value" style="font-size:12px;margin-top:14px" id="matterIdDisplay">—</div><div class="hint">工作空间标识</div></div></div><div class="grid two"><div class="panel"><div class="panel-head"><h2>案件材料</h2><span id="matterDocsMeta">0 份</span></div><div class="panel-body"><div class="doc-list" id="matterDocsList"></div></div></div><div class="panel"><div class="panel-head"><h2>案件时间线</h2><span id="matterReviewsMeta">0 条</span></div><div class="panel-body"><div class="activity" id="matterReviewsList"></div></div></div></div></section><section class="view" id="view-documents"><div class="page-head"><div><h1>文档资料</h1><p>上传、检索并将材料归入案件夹。</p></div><button class="btn primary" data-open="upload">＋ 上传材料</button></div><div class="toolbar"><input class="input" id="docSearch" placeholder="搜索材料内容…"><button class="btn ghost" id="docSearchBtn">检索</button><select class="select" id="matterFilter"><option value="">全部案件</option></select></div><div class="panel"><div class="panel-body"><div class="doc-list" id="documentsList"></div><div id="searchResults"></div></div></div></section>
-      <section class="view" id="view-review"><div class="page-head"><div><h1>合同审查</h1><p>按检查单生成风险清单、原文证据与修改建议。</p></div><div class="actions"><button class="btn ghost" id="reviewHistoryBtn">查看历史</button></div></div><div class="grid two"><div class="panel"><div class="panel-head"><h2>审查输入</h2><span id="reviewSelectedText">未选择材料</span></div><div class="panel-body form"><div class="field"><label>选择合同材料</label><select class="select" id="reviewDocSelect"><option value="">请选择</option></select></div><div class="field"><label>检查单</label><select class="select" id="checklistSelect"></select><div class="field-note">检查单可以在“设置”中以 YAML 形式维护。</div></div><button class="btn primary" id="runReviewBtn">运行合同审查</button><div class="notice">审查结果是 AI 草稿。引用、风险等级和修改建议都需要律师核对原文。</div></div></div><div class="panel"><div class="panel-head"><h2>审查结果</h2><span id="reviewRunMeta">等待运行</span></div><div class="panel-body" id="reviewResult"><div class="empty">选择材料后运行审查，结果会保存在工作记录中。</div></div></div></div></section>
-      <section class="view" id="view-dossier"><div class="page-head"><div><h1>阅卷助手</h1><p>从单份材料开始，提炼主体、时间线、争点与待核实问题。</p></div></div><div class="grid two"><div class="panel"><div class="panel-head"><h2>阅卷输入</h2></div><div class="panel-body form"><div class="field"><label>材料</label><select class="select" id="dossierDocSelect"><option value="">请选择</option></select></div><div class="field"><label>你想先问什么？<span class="muted">（可选）</span></label><textarea class="textarea" id="dossierQuestion" placeholder="例如：请梳理付款义务、违约责任和目前缺少的证据。"></textarea></div><button class="btn primary" id="runDossierBtn">开始阅卷</button></div></div><div class="panel"><div class="panel-head"><h2>阅卷笔记</h2><span id="dossierMeta">等待运行</span></div><div class="panel-body" id="dossierResult"><div class="empty">阅卷结果会按结构化栏目呈现。</div></div></div></div></section>
-      <section class="view" id="view-draft"><div class="page-head"><div><h1>文书起草</h1><p>用模板和事实生成可继续编辑的草稿，不自动补造事实。</p></div></div><div class="grid two"><div class="panel"><div class="panel-head"><h2>起草输入</h2></div><div class="panel-body form"><div class="field"><label>文书模板</label><select class="select" id="draftTemplate"></select></div><div class="field"><label>标题提示</label><input class="input" style="width:100%" id="draftTitle" placeholder="例如：关于付款违约的法律备忘录"></div><div class="field"><label>事实与要求</label><textarea class="textarea" id="draftFacts" style="min-height:180px" placeholder="输入已核实事实、当事人诉求和希望文书解决的问题…"></textarea></div><div class="field"><label>参考材料 <span class="muted">（可选）</span></label><select class="select" id="draftDocSelect"><option value="">不引用材料</option></select></div><button class="btn primary" id="runDraftBtn">生成文书草稿</button></div></div><div class="panel"><div class="panel-head"><h2>草稿预览</h2><span id="draftMeta">等待生成</span></div><div class="panel-body" id="draftResult"><div class="empty">生成后在这里查看并下载 Markdown 草稿。</div></div></div></div></section>
-      <section class="view" id="view-report"><div class="page-head"><div><h1>检测报告</h1><p>对合同或文书做要素完整性检查，形成行动项。</p></div></div><div class="grid two"><div class="panel"><div class="panel-head"><h2>检测输入</h2></div><div class="panel-body form"><div class="field"><label>材料</label><select class="select" id="reportDocSelect"><option value="">请选择</option></select></div><div class="field"><label>检测重点</label><input class="input" style="width:100%" id="reportFocus" placeholder="例如：商业合同完整性、付款条款、劳动用工要素"></div><button class="btn primary" id="runReportBtn">生成检测报告</button></div></div><div class="panel"><div class="panel-head"><h2>报告结果</h2><span id="reportMeta">等待运行</span></div><div class="panel-body" id="reportResult"><div class="empty">报告将给出评分、逐项状态与下一步行动。</div></div></div></div></section>
-      <section class="view" id="view-settings"><div class="page-head"><div><h1>检查单模板库</h1><p>内置行业模板 + 可自定义 YAML 规则。保存后立即可用于合同审查与批量审查。</p></div><button class="btn primary" id="newChecklistBtn">＋ 新建检查单</button></div><div class="grid two"><div class="panel"><div class="panel-head"><h2>已保存检查单</h2><span>YAML 配置</span></div><div class="panel-body" id="checklistLibrary"><div class="empty">加载中…</div></div></div><div class="panel"><div class="panel-head"><h2 id="checklistEditorTitle">选择一个检查单</h2><span id="checklistEditorMeta">可编辑</span></div><div class="panel-body form"><div class="field"><label>检查单 ID</label><input class="input" id="editChecklistId" placeholder="例如：employment-contract"></div><div class="field"><label>名称</label><input class="input" id="editChecklistName" placeholder="例如：劳动合同专项审查"></div><div class="field"><label>规则项目（JSON）</label><textarea class="textarea" id="editChecklistItems" style="min-height:280px" placeholder='[{"id":"salary","title":"薪酬与支付","prompt":"检查..."}]'></textarea><div class="field-note">每项必须包含 id、title、prompt。保存后会生成 YAML 检查单。</div></div><div class="actions"><button class="btn primary" id="saveChecklistBtn">保存检查单</button><button class="btn ghost" id="resetChecklistBtn">清空</button></div></div></div></div></section><section class="view" id="view-history"><div class="page-head"><div><h1>工作记录</h1><p>所有 工作事件和操作都留下可回看的记录。</p></div></div><div class="tabs"><button class="tab active" data-history="reviews">审查与检测</button><button class="tab" data-history="notes">阅卷笔记</button><button class="tab" data-history="drafts">文书草稿</button><button class="tab" data-history="audit">操作日志</button></div><div class="panel table-wrap"><div class="panel-body"><table class="table"><thead><tr id="historyHead"></tr></thead><tbody id="historyBody"></tbody></table></div></div></section>
-    </main>
-  </div>
+<div class="app">
+<aside class="sb">
+<div class="sb__logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>法律智能助手</div>
+<nav class="sb__nav" id="nav">
+<div class="ng"><div class="ng__l">工作台</div><div class="ni act" data-p="dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>仪表盘</div></div>
+<div class="ng"><div class="ng__l">核心功能</div>
+<div class="ni" data-p="consult"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>智能咨询</div>
+<div class="ni" data-p="research"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>法律检索</div>
+<div class="ni" data-p="contract"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>合同审查</div>
+<div class="ni" data-p="calculator"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/></svg>赔偿计算器</div>
+<div class="ni" data-p="documents"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>文书生成</div>
+<div class="ni" data-p="evidence"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>证据指引</div>
 </div>
-<div class="modal-backdrop" id="modal"><div class="modal"><div class="modal-head"><h2>上传材料</h2><button class="modal-close" id="modalClose">×</button></div><div class="modal-body upload-zone"><div id="modalDrop" class="drop"><strong>点击选择或拖入文件</strong>支持 txt / md / pdf / docx</div><input id="fileInput" class="hidden" type="file" accept=".txt,.md,.pdf,.docx"><div class="field"><label>归入案件（可选）</label><select class="select" id="uploadMatter"><option value="">暂不归入</option></select></div><div class="field"><label>材料类型</label><select class="select" id="uploadKind"><option value="contract">合同</option><option value="evidence">证据材料</option><option value="pleading">诉讼文书</option><option value="other">其他</option></select></div><div id="uploadName" class="muted" style="font-size:11px"></div><button class="btn primary" id="uploadBtn" disabled>上传材料</button></div></div></div>
-<div class="theme-popover" id="themePopover" role="dialog" aria-label="主题选择"><div class="theme-popover-head"><b>外观主题</b><span>自动保存</span></div><div class="theme-options"><button data-theme="pine"><i style="--sw:#087f78"></i><span>海松绿</span><small>当前默认</small></button><button data-theme="indigo"><i style="--sw:#5367dc"></i><span>靛蓝</span><small>专注沉稳</small></button><button data-theme="light"><i style="--sw:#8b9497"></i><span>银白</span><small>明亮纯净</small></button><button data-theme="dark"><i style="--sw:#20272d"></i><span>曜石</span><small>深色低光</small></button><button data-theme="auto"><i class="auto-swatch"></i><span>跟随系统</span><small>自动切换</small></button></div><label class="motion-toggle"><input type="checkbox" id="motionToggle"><span>减少动态效果</span></label></div>
-<div class="command-backdrop" id="commandPalette"><div class="command-box"><div class="command-input"><span>⌕</span><input id="commandSearch" placeholder="搜索功能、案件或材料…" autocomplete="off"><kbd>Esc</kbd></div><div class="command-results" id="commandResults"></div><div class="command-foot"><span>↑↓ 移动</span><span>Enter 打开</span><span>⌘K 关闭</span></div></div></div>
-<div class="toast" id="toast"></div>
+<div class="ng"><div class="ng__l">进阶工具</div>
+<div class="ni" data-p="dd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>尽职调查</div>
+<div class="ni" data-p="knowledge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>知识库</div>
+<div class="ni" data-p="anonymize"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>脱敏工具</div>
+<div class="ni" data-p="compare"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5"/><path d="M8 3H3v5"/><path d="M21 16v5h-5"/><path d="M3 16v5h5"/></svg>多平台对比</div>
+</div>
+<div class="ng"><div class="ng__l">管理</div>
+<div class="ni" data-p="cases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>案件管理</div>
+</div>
+</nav>
+<div class="sb__u"><div class="av">赵</div><div><div style="color:#fff;font-size:12px;font-weight:500">赵培州</div><div style="opacity:.6;font-size:11px">免费版</div></div></div>
+</aside>
+<div class="mn">
+<header class="tb"><div class="tb__t" id="pt">仪表盘</div>
+<div class="flex g12 aic"><div style="display:flex;align-items:center;gap:8px;padding:5px 14px;background:var(--sf);border:1px solid var(--bd);border-radius:var(--rs);font-size:13px;color:var(--i2);cursor:pointer"><select id="caseSelector" onchange="selectCase(this.value)" style="padding:5px 10px;background:var(--sf);border:1px solid var(--bd);border-radius:var(--rs);font-size:12px;color:var(--i2);outline:none;cursor:pointer"><option value="">全部案件</option></select></div><button class="btn btn--p" onclick="nav('consult')">新建咨询</button></div></header>
+<div class="ct" id="ct"></div>
+</div>
+</div>
 <script>
-const API=(localStorage.getItem('LEGAL_AGENT_API')||'')||(location.pathname.startsWith('/legal-agent')?'/legal-agent':'');const TOKEN=localStorage.getItem('LEGAL_AGENT_TOKEN')||'dev-local-token';let docs=[],matters=[],selectedFile=null,lastMd='';
-const $=id=>document.getElementById(id);const esc=s=>String(s??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');const url=p=>API+p;
-const labels={overview:'工作台',matters:'案件与客户',documents:'文档资料',review:'合同审查',dossier:'阅卷助手',draft:'文书起草',report:'检测报告',history:'工作记录',settings:'检查单设置','matter-detail':'案件详情'};
-const themes=['pine','indigo','light','dark','auto'];let currentMatter=null;function resolveMatterId(docId){if(currentMatter&&currentMatter.id)return currentMatter.id;const d=(docs||[]).find(x=>x.id===docId);return (d&&d.matter_id)||null;}
-function applyTheme(name){const root=document.documentElement;const resolved=name==='auto'?(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'pine'):name;if(resolved==='pine')root.removeAttribute('data-theme');else root.dataset.theme=resolved;localStorage.setItem('legal-theme',name);$('themeBtn').title='主题：'+({pine:'海松绿',indigo:'靛蓝',light:'银白',dark:'曜石',auto:'跟随系统'}[name]);document.querySelectorAll('[data-theme]').forEach(x=>x.classList.toggle('selected',x.dataset.theme===name))}
-applyTheme(localStorage.getItem('legal-theme')||'pine');
-matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if((localStorage.getItem('legal-theme')||'pine')==='auto')applyTheme('auto')});
+// ============ API 层（从旧前端移植）============
+var API=(location.pathname.indexOf('/legal-agent')>=0?'/legal-agent':'');
+var TOKEN=localStorage.getItem('LEGAL_AGENT_TOKEN')||'dev-local-token';
+var $=function(id){return document.getElementById(id);};
+var esc=function(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');};
+function mdToHtml(md){
+var lines=String(md||'').split('\n');
+var html='',inCode=false,inUl=false,inOl=false,inQuote=false;
+function closeLists(){if(inUl){html+='</ul>';inUl=false}if(inOl){html+='</ol>';inOl=false}if(inQuote){html+='</blockquote>';inQuote=false}}
+function inline(s){
+s=s.replace(/`([^`]+)`/g,'<code style="background:#f0f0f0;padding:1px 4px;border-radius:3px;font-size:.9em">$1</code>');
+s=s.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');
+s=s.replace(/\*([^*]+)\*/g,'<em>$1</em>');
+s=s.replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank" style="color:var(--pri)">$1</a>');
+return s;}
+for(var i=0;i<lines.length;i++){
+var line=lines[i];
+if(line.match(/^```/)){if(inCode){html+='</code></pre>';inCode=false}else{closeLists();html+='<pre style="background:#1e2b2d;color:#e4efed;padding:12px;border-radius:6px;overflow-x:auto;font-size:12px;line-height:1.5"><code>';inCode=true}continue;}
+if(inCode){html+=line+'\n';continue;}
+if(line.match(/^---+$/)){closeLists();html+='<hr style="border:0;border-top:1px solid #ddd;margin:12px 0">';continue;}
+if(line.match(/^###\s/)){closeLists();html+='<h4 style="font-size:14px;margin:12px 0 6px">'+inline(line.replace(/^###\s/,''))+'</h4>';continue;}
+if(line.match(/^##\s/)){closeLists();html+='<h3 style="font-size:15px;margin:14px 0 8px">'+inline(line.replace(/^##\s/,''))+'</h3>';continue;}
+if(line.match(/^#\s/)){closeLists();html+='<h3 style="font-size:16px;margin:14px 0 8px">'+inline(line.replace(/^#\s/,''))+'</h3>';continue;}
+if(line.match(/^>\s/)){if(!inQuote){html+='<blockquote style="border-left:3px solid var(--acc);margin:8px 0;padding:6px 12px;background:var(--sf);border-radius:0 4px 4px 0">';inQuote=true}html+='<p style="margin:0">'+inline(line.replace(/^>\s/,''))+'</p>';continue;}else if(inQuote){html+='</blockquote>';inQuote=false}
+if(line.match(/^\s*[-*]\s/)){if(!inUl){closeLists();html+='<ul style="margin:6px 0;padding-left:20px">';inUl=true}html+='<li style="margin:3px 0">'+inline(line.replace(/^\s*[-*]\s/,''))+'</li>';continue;}
+if(line.match(/^\s*\d+\.\s/)){if(!inOl){closeLists();html+='<ol style="margin:6px 0;padding-left:20px">';inOl=true}html+='<li style="margin:3px 0">'+inline(line.replace(/^\s*\d+\.\s/,''))+'</li>';continue;}
+if(line.trim()===''){closeLists();continue;}
+if(!inUl&&!inOl&&!inQuote){html+='<p style="margin:6px 0;line-height:1.7">'+inline(line)+'</p>';}
+else{html+=inline(line)+'<br>';}
+}
+closeLists();if(inCode)html+='</code></pre>';
+return html;}
 
-window.addEventListener('pointermove',e=>{document.documentElement.style.setProperty('--mx',`${(e.clientX/innerWidth*100).toFixed(1)}%`);document.documentElement.style.setProperty('--my',`${(e.clientY/innerHeight*100).toFixed(1)}%`)},{passive:true});
-const themePop=$('themePopover');$('themeBtn').onclick=e=>{e.stopPropagation();themePop.classList.toggle('open')};document.querySelectorAll('.theme-options button').forEach(b=>b.onclick=()=>{applyTheme(b.dataset.theme);themePop.classList.remove('open');toast('已切换：'+b.querySelector('span').textContent)});document.querySelectorAll('.theme-options button').forEach(b=>b.classList.toggle('selected',b.dataset.theme===localStorage.getItem('legal-theme')));document.addEventListener('click',e=>{if(!themePop.contains(e.target)&&e.target!==$('themeBtn'))themePop.classList.remove('open')});$('motionToggle').checked=localStorage.getItem('legal-reduce-motion')==='1';$('motionToggle').onchange=e=>{document.documentElement.classList.toggle('reduce-motion',e.target.checked);localStorage.setItem('legal-reduce-motion',e.target.checked?'1':'0')};if(localStorage.getItem('legal-reduce-motion')==='1')document.documentElement.classList.add('reduce-motion');
-const commands=[...Object.entries(labels).map(([id,name])=>({id,name,desc:'打开'+name})),{id:'upload',name:'上传材料',desc:'上传新的法律材料'}];function openCommands(){let p=$('commandPalette');p.classList.add('open');$('commandSearch').value='';renderCommands('');setTimeout(()=>$('commandSearch').focus(),0)}function closeCommands(){$('commandPalette').classList.remove('open')};async function renderCommands(q){let list=commands.filter(x=>(x.name+x.desc).includes(q));let html=list.map((x,i)=>`<div class="command-result ${i===0?'selected':''}" data-cmd="${x.id}"><span class="icon">${x.id==='upload'?'＋':'⌘'}</span><div><b>${x.name}</b><small>${x.desc}</small></div></div>`).join('');if(q && q.length>=1){try{let hits=(await api('/api/documents/search?q='+encodeURIComponent(q)+'&limit=8')).items||[];if(hits.length){html+=(html?'':'')+hits.map(h=>`<div class="command-result" data-doc="${h.document_id}"><span class="icon">▤</span><div><b>${esc(h.filename||'材料')}</b><small>${esc((h.snippet||'').slice(0,80))}</small></div></div>`).join('')}}catch(e){}} $('commandResults').innerHTML=html||'<div class="empty">没有匹配功能</div>';document.querySelectorAll('.command-result').forEach(x=>x.onclick=()=>{closeCommands();if(x.dataset.doc){showView('documents');setTimeout(()=>selectForReview(x.dataset.doc),0);toast('已定位材料')}else if(x.dataset.cmd==='upload')openModal();else showView(x.dataset.cmd)})};$('commandBtn').onclick=openCommands;$('commandPalette').onclick=e=>{if(e.target===$('commandPalette'))closeCommands()};$('commandSearch').oninput=e=>renderCommands(e.target.value.trim());document.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();openCommands()}if(e.key==='Escape'){closeCommands();themePop.classList.remove('open')}});
+async function api(path,opt){
+  opt=opt||{};
+  var headers=Object.assign({'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json'},opt.headers||{});
+  try{
+    var r=await fetch(API+path,Object.assign({},opt,{headers:headers}));
+    var t=await r.text();var d={};
+    try{d=t?JSON.parse(t):{}}catch(e){d={detail:t}}
+    if(!r.ok)throw Error(d.detail||('HTTP '+r.status));
+    return d;
+  }catch(e){throw e;}
+}
+function toast(msg){
+  var t=document.createElement('div');
+  t.style.cssText='position:fixed;right:20px;bottom:20px;background:#172226;color:#fff;border-radius:8px;padding:11px 14px;font-size:12px;z-index:999;opacity:.92;box-shadow:0 8px 24px rgba(0,0,0,.18)';
+  t.textContent=msg;t.style.transition='opacity .3s';
+  document.body.appendChild(t);
+  setTimeout(function(){t.style.opacity='0';setTimeout(function(){t.remove()},300)},2500);
+}
 
-async function api(path,opt={}){let h=Object.assign({'Authorization':'Bearer '+TOKEN},opt.headers||{});let r=await fetch(url(path),{...opt,headers:h});let t=await r.text(),d={};try{d=t?JSON.parse(t):{}}catch{d={detail:t}}if(!r.ok)throw Error(d.detail||r.statusText);return d}
-function toast(s){$('toast').textContent=s;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),2800)}
-function size(n){return n<1024?n+' B':n<1048576?(n/1024).toFixed(1)+' KB':(n/1048576).toFixed(1)+' MB'}
-function showView(name){document.querySelectorAll('.view').forEach(x=>x.classList.toggle('active',x.id==='view-'+name));document.querySelectorAll('#nav button').forEach(x=>x.classList.toggle('active',x.dataset.view===name));$('crumb').textContent=labels[name];$('sidebar').classList.remove('open');if(name==='overview')loadOverview();if(name==='matters')renderMatters();if(['documents','review','dossier','draft','report'].includes(name))loadDocs();if(name==='review')loadChecklists();if(name==='draft')loadTemplates();if(name==='history')loadHistory('reviews');if(name==='settings')loadSettings()}
-document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>showView(b.dataset.view));document.querySelectorAll('[data-view-go]').forEach(b=>b.onclick=()=>showView(b.dataset.viewGo));$('mobileToggle').onclick=()=>$('sidebar').classList.toggle('open');
-async function loadHealth(){try{let h=await api('/api/health');$('healthDot').className='dot '+(h.ai_configured?'ok':'bad');$('healthText').textContent=h.ai_configured?'API · '+h.ai_model:'API · LLM 未配置';$('statModel').textContent=h.ai_model||'未配置'}catch(e){$('healthDot').className='dot bad';$('healthText').textContent='API 未连接'}}
-async function loadDocs(){docs=(await api('/api/documents')).items||[];renderDocSelects();if(document.querySelector('#view-documents.active'))renderDocuments()}
-async function loadMatters(){matters=(await api('/api/matters')).items||[];renderMatterOptions();return matters}
-function renderMatterOptions(){['matterFilter','uploadMatter'].forEach(id=>{let el=$(id);if(!el)return;let first=id==='matterFilter'?'<option value="">全部案件</option>':'<option value="">暂不归入</option>';el.innerHTML=first+matters.map(m=>`<option value="${m.id}">${esc(m.title)}</option>`).join('')})}
-function renderDocSelects(){['reviewDocSelect','dossierDocSelect','draftDocSelect','reportDocSelect'].forEach(id=>{let el=$(id);if(!el)return;let first=id==='draftDocSelect'?'<option value="">不引用材料</option>':'<option value="">请选择</option>';el.innerHTML=first+docs.map(d=>`<option value="${d.id}">${esc(d.filename)}</option>`).join('')})}
-async function renderMatters(){await loadMatters();$('matterTable').innerHTML=matters.length?matters.map(m=>`<tr><td class="title-cell">${esc(m.title)}</td><td>${esc(m.client_name||'—')}</td><td>${m.doc_count||0} 份</td><td class="muted">${m.updated_at}</td><td><button class="btn link" onclick="openMatter('${m.id}')">查看</button></td></tr>`).join(''):'<tr><td colspan="5"><div class="empty">还没有案件夹。新建一个案件，把材料放进去。</div></td></tr>'}
-async function openMatter(id){let d=await api('/api/matters/'+id);currentMatter=d.matter;document.querySelectorAll('.view').forEach(x=>x.classList.toggle('active',x.id==='view-matter-detail'));document.querySelectorAll('#nav button').forEach(x=>x.classList.remove('active'));$('crumb').textContent='案件详情';$('matterDetailTitle').textContent=d.matter.title;$('matterDetailClient').textContent=(d.matter.client_name?'客户：'+d.matter.client_name:'未填写客户')+(d.matter.notes?' · '+d.matter.notes:'');$('matterDocCount').textContent=d.documents.length;$('matterReviewCount').textContent=(d.timeline||[]).length||((d.reviews||[]).length+(d.notes||[]).length+(d.drafts||[]).length);$('matterUpdated').textContent=d.matter.updated_at;$('matterIdDisplay').textContent=d.matter.id.slice(0,12);$('matterDocsMeta').textContent=d.documents.length+' 份';$('matterReviewsMeta').textContent=d.reviews.length+' 条';$('matterDocsList').innerHTML=d.documents.length?d.documents.map(x=>`<div class="doc-row"><div><strong>${esc(x.filename)}</strong><small>${esc(x.doc_kind)} · ${size(x.size_bytes)} · ${x.created_at}</small></div><div class="doc-actions"><button class="btn ghost" onclick="useMatterDoc('${x.id}','review')">审查</button><button class="btn ghost" onclick="useMatterDoc('${x.id}','dossier')">阅卷</button><button class="btn ghost" onclick="useMatterDoc('${x.id}','report')">检测</button></div></div>`).join(''):'<div class="empty">本案尚无材料</div>';$('matterReviewsList').innerHTML=(d.timeline&&d.timeline.length?d.timeline:d.reviews).length?(d.timeline||d.reviews.map(x=>({kind:x.kind,id:x.id,title:x.summary||x.kind,created_at:x.created_at,model:x.model}))).map(x=>{const label=x.kind==='document'?'材料':x.kind==='dossier'?'阅卷':x.kind==='draft'?'文书':x.kind==='compliance'?'检测':'审查';const open=x.kind==='document'?`useMatterDoc('${x.id}','review')`:x.kind==='dossier'?`openNote('${x.id}')`:x.kind==='draft'?`openDraft('${x.id}')`:`openRun('${x.id}')`;return `<div class="activity-item"><i class="activity-dot"></i><div><b>${label}</b> · ${esc(x.title||'')}<small>${esc(x.model||'')} · ${x.created_at}</small><div style="margin-top:6px"><button class="btn link" onclick="${open}">查看</button></div></div></div>`}).join(''):'<div class="empty">暂无工作记录</div>'}function useMatterDoc(id,target){showView(target);setTimeout(()=>{const map={review:'reviewDocSelect',dossier:'dossierDocSelect',report:'reportDocSelect',draft:'draftDocSelect'};const el=$(map[target]||'reviewDocSelect');if(el)el.value=id},0)}
-async function batchReadMatter(){if(!currentMatter)return toast('请先打开案件');const d=await api('/api/matters/'+currentMatter.id);const ids=(d.documents||[]).map(x=>x.id);if(!ids.length)return toast('本案没有可阅卷材料');toast('正在综合阅卷 '+ids.length+' 份材料…');showView('dossier');$('dossierResult').innerHTML='<div class="empty">多文档综合阅卷中…</div>';try{const r=await api('/api/dossier/read-batch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({document_ids:ids,matter_id:currentMatter.id,question:'请综合本案全部材料提炼主体、时间线、关键事实、主张与待核实问题。'})});const n=r.note;lastMd=r.notes_markdown;$('dossierMeta').textContent='多文档 · '+n.model+' · '+(n.document_count||ids.length)+' 份';$('dossierResult').innerHTML=`<div class="summary">${esc(n.overview)}</div><h3>主体</h3><p>${(n.parties||[]).map(x=>'<span class="pill gray" style="margin:3px">'+esc(x)+'</span>').join('')||'—'}</p><h3>时间线</h3><div>${(n.timeline||[]).map(x=>`<div class="report-check"><b>${esc(x.date)}</b><span>${esc(x.event)}</span></div>`).join('')||'—'}</div><h3>关键事实</h3><ul>${(n.key_facts||[]).map(x=>'<li>'+esc(x)+'</li>').join('')}</ul><h3>主张/义务</h3><ul>${(n.claims_or_demands||[]).map(x=>'<li>'+esc(x)+'</li>').join('')||'<li>—</li>'}</ul><h3>待核实问题</h3><ul>${(n.open_questions||[]).map(x=>'<li>'+esc(x)+'</li>').join('')||'<li>未生成</li>'}</ul><div class="actions" style="margin-top:15px">${resultDownload(r.download_md)}<button class="btn ghost" onclick="copyText(lastMd)">复制笔记</button></div><div class="markdown">${esc(lastMd)}</div>`;toast('综合阅卷完成')}catch(e){$('dossierResult').innerHTML=`<div class="empty">综合阅卷失败：${esc(e.message)}</div>`;toast(e.message)}}
-async function batchReviewMatter(){if(!currentMatter)return toast('请先打开案件');if(!confirm('将对案件内材料依次运行合同审查（可能耗时较长）。继续？'))return;const btn=$('matterBatchReviewBtn');btn.disabled=true;btn.textContent='审查中…';toast('批量审查启动…');try{const cl=$('checklistSelect')?$('checklistSelect').value:'default-contract';const r=await api('/api/matters/'+currentMatter.id+'/batch-review',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({checklist_id:cl||'default-contract',max_docs:8})});const lines=(r.items||[]).map(x=>x.ok?`✓ ${esc(x.filename)} · 风险 ${x.risk_count}`:`✗ ${esc(x.filename)} · ${esc(x.error||'失败')}`).join('<br>');$('matterReviewsList').innerHTML=`<div class="summary">批量审查完成：成功 ${r.ok}/${r.total}</div><div style="margin-top:10px;font-size:13px;line-height:1.7">${lines}</div><div class="actions" style="margin-top:12px"><button class="btn ghost" onclick="openMatter('${currentMatter.id}')">刷新时间线</button></div>`;toast(`批量审查完成 ${r.ok}/${r.total}`)}catch(e){toast(e.message)}finally{btn.disabled=false;btn.textContent='批量审查'}}
-async function batchComplianceMatter(){if(!currentMatter)return toast('请先打开案件');if(!confirm('将对案件内材料依次生成检测报告。继续？'))return;const btn=$('matterBatchComplianceBtn');btn.disabled=true;btn.textContent='检测中…';toast('批量检测启动…');try{const r=await api('/api/matters/'+currentMatter.id+'/batch-compliance',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({focus:'',max_docs:8})});const lines=(r.items||[]).map(x=>x.ok?`✓ ${esc(x.filename)} · 评分 ${x.score??'—'} ${esc(x.grade||'')}`:`✗ ${esc(x.filename)} · ${esc(x.error||'失败')}`).join('<br>');$('matterReviewsList').innerHTML=`<div class="summary">批量检测完成：成功 ${r.ok}/${r.total}</div><div style="margin-top:10px;font-size:13px;line-height:1.7">${lines}</div><div class="actions" style="margin-top:12px"><button class="btn ghost" onclick="openMatter('${currentMatter.id}')">刷新时间线</button></div>`;toast(`批量检测完成 ${r.ok}/${r.total}`)}catch(e){toast(e.message)}finally{btn.disabled=false;btn.textContent='批量检测'}}
-$('matterBackBtn').onclick=()=>showView('matters');$('matterUploadBtn').onclick=()=>{openModal();setTimeout(()=>{$('uploadMatter').value=currentMatter?.id||''},100)};async function exportMatterZip(){if(!currentMatter)return toast('请先打开案件');toast('正在打包导出…');try{await downloadMd('/api/matters/'+currentMatter.id+'/export.zip','导出 ZIP')}catch(e){toast(e.message)}}$('matterExportBtn').onclick=exportMatterZip;$('matterBatchReadBtn').onclick=batchReadMatter;$('matterBatchReviewBtn').onclick=batchReviewMatter;$('matterBatchComplianceBtn').onclick=batchComplianceMatter
-function renderDocuments(){let filter=$('matterFilter').value;let list=docs.filter(d=>!filter||d.matter_id===filter);$('documentsList').innerHTML=list.length?list.map(d=>`<div class="doc-row" data-doc="${d.id}"><div><strong>${esc(d.filename)}</strong><small>${esc(d.doc_kind||'other')} · ${size(d.size_bytes)} · ${d.text_chars} 字 · ${d.created_at}</small></div><div class="doc-actions"><button class="btn ghost" onclick="selectForReview('${d.id}')">使用</button><button class="btn danger" onclick="deleteDoc('${d.id}')">删除</button></div></div>`).join(''):'<div class="empty">没有匹配材料。</div>'}
-$('matterFilter').onchange=renderDocuments;$('docSearchBtn').onclick=async()=>{let q=$('docSearch').value.trim();if(!q)return;let d=await api('/api/documents/search?q='+encodeURIComponent(q));$('searchResults').innerHTML='<div style="margin-top:20px"><b style="font-size:13px">检索结果</b>'+((d.items||[]).map(x=>`<div class="risk" style="cursor:pointer" onclick="selectForReview('${x.document_id}')"><b>${esc(x.filename)}</b><p>${esc(x.snippet)}</p><div class="actions" style="margin-top:8px"><button class="btn link" onclick="event.stopPropagation();selectForReview('${x.document_id}')">去审查</button><button class="btn link" onclick="event.stopPropagation();useMatterDoc('${x.document_id}','dossier')">去阅卷</button></div></div>`).join('')||'<div class="empty">无命中</div>')+'</div>'};
-function selectForReview(id){showView('review');setTimeout(()=>$('reviewDocSelect').value=id,0)}
-async function deleteDoc(id){if(!confirm('删除这份材料及其相关记录？'))return;await api('/api/documents/'+id,{method:'DELETE'});toast('已删除');loadDocs()}
-async function loadChecklists(){let d=await api('/api/review/checklists');$('checklistSelect').innerHTML=(d.items||[]).map(x=>`<option value="${x.id}">${esc(x.name)} · ${x.item_count} 项</option>`).join('')}
-function riskHtml(r){return `<div class="risk"><div class="risk-top"><span class="pill ${r.severity==='high'?'red':r.severity==='medium'?'gold':r.severity==='low'?'green':'teal'}">${esc(r.severity)}</span><h4>${esc(r.title||r.checklist_id)}</h4></div><p>${esc(r.finding)}</p>${r.quote?`<p class="quote">原文：${esc(r.quote)}</p>`:''}<p><b>建议：</b>${esc(r.suggestion)}</p></div>`}
+// ============ 导航 ============
+var T={dashboard:'仪表盘',consult:'智能咨询',research:'法律检索',contract:'合同审查',calculator:'赔偿计算器',documents:'文书生成',evidence:'证据指引',dd:'尽职调查',knowledge:'知识库',anonymize:'脱敏工具',compare:'多平台对比',cases:'案件管理'};
+var cur='dashboard';
 
-let currentRisks=[];function renderRiskSummary(risks){currentRisks=risks||[];let counts={all:currentRisks.length,high:0,medium:0,low:0,info:0};currentRisks.forEach(x=>counts[x.severity]=(counts[x.severity]||0)+1);return `<div class="risk-toolbar"><button class="risk-filter active" data-sev="all">全部 ${counts.all}</button><button class="risk-filter" data-sev="high">高 ${counts.high}</button><button class="risk-filter" data-sev="medium">中 ${counts.medium}</button><button class="risk-filter" data-sev="low">低 ${counts.low}</button><button class="risk-filter" data-sev="info">提示 ${counts.info}</button></div><div id="riskList">${currentRisks.map(riskHtml).join('')}</div>`}function bindRiskFilters(){document.querySelectorAll('.risk-filter').forEach(b=>b.onclick=()=>{document.querySelectorAll('.risk-filter').forEach(x=>x.classList.toggle('active',x===b));let sev=b.dataset.sev;$('riskList').innerHTML=currentRisks.filter(x=>sev==='all'||x.severity===sev).map(riskHtml).join('')||'<div class="empty">该等级无风险</div>'})}
-function resultDownload(path,label='下载 Markdown'){return path?`<button class="btn ghost" onclick="downloadMd('${esc(path)}','${esc(label)}')">${label}</button>`:''}
-async function downloadMd(path,label='下载'){try{let r=await fetch(url(path),{headers:{Authorization:'Bearer '+TOKEN}});if(!r.ok)throw Error('下载失败 '+r.status);let blob=await r.blob(),a=document.createElement('a');a.href=URL.createObjectURL(blob);let name=path.split('/').pop()||'download.bin'; if(name.endsWith('.md')||name.endsWith('.zip')) a.download=name; else a.download=name+'.md';;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);toast(label+'完成')}catch(e){toast(e.message)}}
-$('reviewHistoryBtn').onclick=()=>{showView('history');setTimeout(()=>loadHistory('reviews'),0)};
-$('runReviewBtn').onclick=async()=>{let id=$('reviewDocSelect').value;if(!id)return toast('先选择合同材料');let b=$('runReviewBtn');b.disabled=true;b.textContent='审查中…';$('reviewResult').innerHTML='<div class="empty">正在按检查单分析材料，请稍候…</div>';try{let d=await api('/api/review/contract',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({document_id:id,checklist_id:$('checklistSelect').value,matter_id:resolveMatterId(id)})});lastMd=d.opinion_markdown;$('reviewRunMeta').textContent='刚刚完成 · '+d.review.model;$('reviewResult').innerHTML=`<div class="summary">${esc(d.review.summary)}</div>${renderRiskSummary(d.review.risks||[])}<div class="actions" style="margin-top:15px">${resultDownload(d.download_md)}<button class="btn ghost" onclick="copyText(lastMd)">复制意见书</button></div><div class="markdown">${esc(lastMd)}</div>`;bindRiskFilters();toast('审查完成，已保存到工作记录')}catch(e){$('reviewResult').innerHTML=`<div class="empty">审查失败：${esc(e.message)}</div>`;toast(e.message)}finally{b.disabled=false;b.textContent='运行合同审查'}};
-$('runDossierBtn').onclick=async()=>{let id=$('dossierDocSelect').value;if(!id)return toast('先选择阅卷材料');let b=$('runDossierBtn');b.disabled=true;b.textContent='阅卷中…';$('dossierResult').innerHTML='<div class="empty">正在提炼材料…</div>';try{let d=await api('/api/dossier/read',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({document_id:id,question:$('dossierQuestion').value,matter_id:resolveMatterId(id)})}),n=d.note;$('dossierMeta').textContent='刚刚完成 · '+n.model;$('dossierResult').innerHTML=`<div class="summary">${esc(n.overview)}</div><h3>主体</h3><p>${(n.parties||[]).map(x=>'<span class="pill gray" style="margin:3px">'+esc(x)+'</span>').join('')||'—'}</p><h3>时间线</h3><div>${(n.timeline||[]).map(x=>`<div class="report-check"><b>${esc(x.date)}</b><span>${esc(x.event)}</span></div>`).join('')||'—'}</div><h3>关键事实</h3><ul>${(n.key_facts||[]).map(x=>'<li>'+esc(x)+'</li>').join('')}</ul><h3>待核实问题</h3><ul>${(n.open_questions||[]).map(x=>'<li>'+esc(x)+'</li>').join('')||'<li>未生成</li>'}</ul><div class="actions" style="margin-top:15px">${resultDownload(d.download_md)}<button class="btn ghost" onclick="copyText(${JSON.stringify(d.notes_markdown)})">复制笔记</button></div>`;toast('阅卷完成，已保存笔记')}catch(e){$('dossierResult').innerHTML=`<div class="empty">阅卷失败：${esc(e.message)}</div>`;toast(e.message)}finally{b.disabled=false;b.textContent='开始阅卷'}};
-async function loadTemplates(){let d=await api('/api/draft/templates');$('draftTemplate').innerHTML=(d.items||[]).map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join('')}
-$('runDraftBtn').onclick=async()=>{let facts=$('draftFacts').value.trim();if(!facts)return toast('先输入事实与要求');let b=$('runDraftBtn');b.disabled=true;b.textContent='生成中…';$('draftResult').innerHTML='<div class="empty">正在生成文书草稿…</div>';try{let d=await api('/api/draft',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({template_id:$('draftTemplate').value,title:$('draftTitle').value,facts,source_document_id:$('draftDocSelect').value||null,matter_id:resolveMatterId($('draftDocSelect').value)|| (currentMatter&&currentMatter.id)||null})}),x=d.draft;$('draftMeta').textContent='刚刚完成 · '+x.model;window.currentDraftId=d.draft_id;lastMd=x.body_markdown||'';$('draftResult').innerHTML=`<div class="field"><label>标题</label><input class="input" id="draftEditTitle" style="width:100%" value="${esc(x.title||'')}"></div><div class="field"><label>正文（可编辑）</label><textarea class="textarea" id="draftEditBody" style="min-height:320px">${esc(x.body_markdown||'')}</textarea></div><p class="muted" style="font-size:11px">${esc(x.disclaimer||'')}</p><div class="actions"><button class="btn primary" onclick="saveDraftEdits()">保存修订</button>${resultDownload(d.download_md)}<button class="btn ghost" onclick="copyText(document.getElementById('draftEditBody').value)">复制正文</button></div>`;toast('草稿已保存')}catch(e){$('draftResult').innerHTML=`<div class="empty">生成失败：${esc(e.message)}</div>`;toast(e.message)}finally{b.disabled=false;b.textContent='生成文书草稿'}};
-$('runReportBtn').onclick=async()=>{let id=$('reportDocSelect').value;if(!id)return toast('先选择检测材料');let b=$('runReportBtn');b.disabled=true;b.textContent='检测中…';$('reportResult').innerHTML='<div class="empty">正在检查材料要素…</div>';try{let d=await api('/api/report/compliance',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({document_id:id,focus:$('reportFocus').value,matter_id:resolveMatterId(id)})}),r=d.report;$('reportMeta').textContent='刚刚完成 · '+r.model;$('reportResult').innerHTML=`<div class="score">${r.score}<span style="font-size:13px;color:var(--muted);font-weight:500"> / 100 · ${esc(r.grade)}</span></div><div class="summary">${esc(r.summary)}</div>${(r.checks||[]).map(c=>`<div class="report-check"><span class="pill ${c.status==='pass'?'green':c.status==='fail'?'red':c.status==='warn'?'gold':'gray'}">${esc(c.status)}</span><div><b>${esc(c.name||c.id)}</b><div class="muted" style="margin-top:5px">${esc(c.detail)}${c.quote?' · 原文：'+esc(c.quote):''}</div></div></div>`).join('')}<h3>行动项</h3><ul>${(r.action_items||[]).map(x=>'<li>'+esc(x)+'</li>').join('')||'<li>暂无</li>'}</ul><div class="actions">${resultDownload(d.download_md,'下载报告')}</div>`;toast('检测完成，已保存')}catch(e){$('reportResult').innerHTML=`<div class="empty">检测失败：${esc(e.message)}</div>`;toast(e.message)}finally{b.disabled=false;b.textContent='生成检测报告'}};
-let editingChecklist=null;async function loadSettings(){let d=await api('/api/review/checklists');const presets=new Set(['default-contract','employment-contract','nda','lease-commercial','equity-investment']);$('checklistLibrary').innerHTML=(d.items||[]).map(x=>`<button class="doc-row" style="width:100%;text-align:left" onclick="editChecklist('${esc(x.id)}')"><div><strong>${esc(x.name)}</strong><small>${esc(x.id)} · ${x.item_count} 项 · ${presets.has(x.id)?'内置模板':'自定义'}</small></div><span class="pill ${presets.has(x.id)?'teal':'gray'}">${presets.has(x.id)?'模板':'自定义'}</span></button>`).join('')||'<div class="empty">暂无检查单</div>'}async function editChecklist(id){let d=await api('/api/review/checklist?checklist_id='+encodeURIComponent(id));editingChecklist=d;$('editChecklistId').value=d.id;$('editChecklistName').value=d.name;$('editChecklistItems').value=JSON.stringify(d.items||[],null,2);$('checklistEditorTitle').textContent=d.name;$('checklistEditorMeta').textContent=(d.items||[]).length+' 项规则'}$('newChecklistBtn').onclick=()=>{editingChecklist=null;$('editChecklistId').value='';$('editChecklistName').value='';$('editChecklistItems').value='[\n  {\n    "id": "parties",\n    "title": "主体与签约资格",\n    "prompt": "检查合同当事方是否完整、名称是否明确。"\n  }\n]';$('checklistEditorTitle').textContent='新建检查单';$('checklistEditorMeta').textContent='未保存'};$('resetChecklistBtn').onclick=()=>{$('editChecklistId').value='';$('editChecklistName').value='';$('editChecklistItems').value='';$('checklistEditorTitle').textContent='选择一个检查单'};$('saveChecklistBtn').onclick=async()=>{let id=$('editChecklistId').value.trim(),name=$('editChecklistName').value.trim(),items;try{if(!id||!name)throw Error('请填写 ID 和名称');items=JSON.parse($('editChecklistItems').value);if(!Array.isArray(items)||!items.length)throw Error('规则项目不能为空');if(items.some(x=>!x.id||!x.title||!x.prompt))throw Error('每项必须包含 id、title、prompt')}catch(e){return toast(e.message)}let d=await api('/api/review/checklists/'+encodeURIComponent(id),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,items})});toast('检查单已保存：'+d.name);await loadSettings();await loadChecklists()};
-async function loadHistory(type){document.querySelectorAll('[data-history]').forEach(x=>x.classList.toggle('active',x.dataset.history===type));let head=$('historyHead'),body=$('historyBody');let d;if(type==='reviews'){d=await api('/api/review/runs?limit=100');head.innerHTML='<th>文件</th><th>类型</th><th>模型</th><th>结果</th><th>时间</th><th></th>';body.innerHTML=(d.items||[]).map(x=>`<tr><td class="title-cell">${esc(x.filename||'—')}</td><td><span class="pill teal">${esc(x.kind)}</span></td><td class="muted">${esc(x.model)}</td><td>${x.kind==='compliance'?esc(x.summary||'检测完成'):x.risk_count+' 条风险'}</td><td class="muted">${x.created_at}</td><td><button class="btn link" onclick="openRun('${x.id}')">查看</button></td></tr>`).join('')||'<tr><td colspan="6"><div class="empty">暂无记录</div></td></tr>'}else if(type==='notes'){d=await api('/api/dossier/notes?limit=100');head.innerHTML='<th>文件</th><th>模型</th><th>时间</th><th></th>';body.innerHTML=(d.items||[]).map(x=>`<tr><td class="title-cell">${esc(x.filename||'—')}</td><td>${esc(x.model)}</td><td class="muted">${x.created_at}</td><td><button class="btn link" onclick="openNote('${x.id}')">查看</button></td></tr>`).join('')||'<tr><td colspan="4"><div class="empty">暂无记录</div></td></tr>'}else if(type==='drafts'){d=await api('/api/drafts?limit=100');head.innerHTML='<th>标题</th><th>模板</th><th>模型</th><th>时间</th><th></th>';body.innerHTML=(d.items||[]).map(x=>`<tr><td class="title-cell">${esc(x.title)}</td><td>${esc(x.template_id)}</td><td>${esc(x.model)}</td><td class="muted">${x.created_at}</td><td><button class="btn link" onclick="openDraft('${x.id}')">查看</button></td></tr>`).join('')||'<tr><td colspan="5"><div class="empty">暂无记录</div></td></tr>'}else{d=await api('/api/audit?limit=100');const actMap={ 'matter.create':'创建案件','matter.update':'更新案件','matter.delete':'删除案件','matter.link_doc':'关联材料','matter.export':'导出案件包','matter.batch_review':'批量审查','matter.batch_compliance':'批量检测','document.upload':'上传材料','document.delete':'删除材料','review.contract':'合同审查','report.compliance':'检测报告','dossier.read':'阅卷','dossier.read_batch':'综合阅卷','draft.create':'生成文书','draft.update':'修订文书','checklist.save':'保存检查单','llm.probe':'模型探测'};head.innerHTML='<th>动作</th><th>资源</th><th>详情</th><th>时间</th>';body.innerHTML=(d.items||[]).map(x=>`<tr><td class="title-cell">${esc(actMap[x.action]||x.action)}</td><td>${esc(x.resource_type||'—')}</td><td class="muted">${esc(x.detail||'')}</td><td class="muted">${x.created_at}</td></tr>`).join('')||'<tr><td colspan="4"><div class="empty">暂无记录</div></td></tr>'}}
-document.querySelectorAll('[data-history]').forEach(b=>b.onclick=()=>loadHistory(b.dataset.history));async function openRun(id){let d=await api('/api/review/runs/'+id);lastMd=d.opinion_markdown||'';if(d.kind==='compliance'){showView('report');const r=d.review||{};$('reportMeta').textContent='历史记录 · '+(d.model||'');$('reportResult').innerHTML=`<div class="score">${r.score||'—'}<span style="font-size:13px;color:var(--muted);font-weight:500"> / 100 · ${esc(r.grade||'')}</span></div><div class="summary">${esc(r.summary||d.summary||'')}</div>${(r.checks||[]).map(c=>`<div class="report-check"><span class="pill ${c.status==='pass'?'green':c.status==='fail'?'red':c.status==='warn'?'gold':'gray'}">${esc(c.status)}</span><div><b>${esc(c.name||c.id)}</b><div class="muted" style="margin-top:5px">${esc(c.detail)}${c.quote?' · 原文：'+esc(c.quote):''}</div></div></div>`).join('')}<div class="actions" style="margin-top:15px">${resultDownload(d.download_md||('/api/review/runs/'+id+'/download.md'),'下载报告')}<button class="btn ghost" onclick="copyText(lastMd)">复制报告</button>${d.document_id?`<button class="btn primary" onclick="reRunCompliance('${d.document_id}')">重新检测</button>`:''}</div><div class="markdown">${esc(lastMd)}</div>`}else{showView('review');const r=d.review||{};$('reviewRunMeta').textContent='历史记录 · '+(d.model||'');$('reviewResult').innerHTML=`<div class="summary">${esc(r.summary||d.summary||'')}</div>${renderRiskSummary(r.risks||[])}<div class="actions" style="margin-top:15px">${resultDownload(d.download_md||('/api/review/runs/'+id+'/download.md'))}<button class="btn ghost" onclick="copyText(lastMd)">复制意见书</button>${d.document_id?`<button class="btn primary" onclick="reRunReview('${d.document_id}','${d.checklist_id||'default-contract'}')">重新审查</button>`:''}</div><div class="markdown">${esc(lastMd)}</div>`;bindRiskFilters()}}async function openNote(id){let d=await api('/api/dossier/notes/'+id);showView('dossier');let n=d.note||{};lastMd=d.notes_markdown||'';$('dossierMeta').textContent='历史笔记 · '+(d.model||'');$('dossierResult').innerHTML=`<div class="summary">${esc(n.overview||'')}</div><h3>主体</h3><p>${(n.parties||[]).map(x=>'<span class="pill gray" style="margin:3px">'+esc(x)+'</span>').join('')||'—'}</p><h3>时间线</h3><div>${(n.timeline||[]).map(x=>`<div class="report-check"><b>${esc(x.date)}</b><span>${esc(x.event)}</span></div>`).join('')||'—'}</div><h3>关键事实</h3><ul>${(n.key_facts||[]).map(x=>'<li>'+esc(x)+'</li>').join('')||'<li>—</li>'}</ul><div class="actions" style="margin-top:15px">${resultDownload(d.download_md||('/api/dossier/notes/'+id+'/download.md'))}<button class="btn ghost" onclick="copyText(lastMd)">复制笔记</button>${d.document_id?`<button class="btn primary" onclick="reRunDossier('${d.document_id}')">重新阅卷</button>`:''}</div><div class="markdown">${esc(lastMd)}</div>`}async function openDraft(id){let d=await api('/api/drafts/'+id);showView('draft');lastMd=d.body_markdown||'';window.currentDraftId=id;$('draftMeta').textContent='历史草稿 · '+(d.model||'');$('draftResult').innerHTML=`<div class="field"><label>标题</label><input class="input" id="draftEditTitle" style="width:100%" value="${esc(d.title||'')}"></div><div class="field"><label>正文（可编辑）</label><textarea class="textarea" id="draftEditBody" style="min-height:320px">${esc(lastMd)}</textarea></div><div class="actions"><button class="btn primary" onclick="saveDraftEdits()">保存修订</button>${resultDownload(d.download_md||('/api/drafts/'+id+'/download.md'))}<button class="btn ghost" onclick="copyText(document.getElementById('draftEditBody').value)">复制正文</button></div>`}async function saveDraftEdits(){if(!window.currentDraftId)return toast('没有可保存的草稿');const title=$('draftEditTitle').value.trim();const body=$('draftEditBody').value;if(!title||!body)return toast('标题和正文不能为空');const r=await api('/api/drafts/'+window.currentDraftId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({title,body_markdown:body})});lastMd=r.body_markdown;toast('草稿已保存');}
-async function reRunReview(docId,checklistId){$('reviewDocSelect').value=docId;if(checklistId)$('checklistSelect').value=checklistId;$('runReviewBtn').click()}async function reRunDossier(docId){$('dossierDocSelect').value=docId;$('runDossierBtn').click()}async function reRunCompliance(docId){$('reportDocSelect').value=docId;$('runReportBtn').click()}
-$('createMatterBtn').onclick=async()=>{let title=prompt('案件名称');if(!title)return;let client=prompt('客户名称（可选）')||'';await api('/api/matters',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title,client_name:client})});toast('案件已创建');renderMatters();loadMatters()};
-function openModal(){$('modal').classList.add('open');loadMatters()}function closeModal(){$('modal').classList.remove('open');selectedFile=null;$('uploadName').textContent='';$('uploadBtn').disabled=true}$('[data-open="upload"]').forEach(b=>b.onclick=openModal);$('modalClose').onclick=closeModal;$('modal').onclick=e=>{if(e.target===$('modal'))closeModal()};$('modalDrop').onclick=()=>$('fileInput').click();$('fileInput').onchange=e=>{selectedFile=e.target.files[0];$('uploadName').textContent=selectedFile?.name||'';$('uploadBtn').disabled=!selectedFile};$('modalDrop').ondragover=e=>{e.preventDefault();$('modalDrop').classList.add('drag')};$('modalDrop').ondragleave=()=>$('modalDrop').classList.remove('drag');$('modalDrop').ondrop=e=>{e.preventDefault();$('modalDrop').classList.remove('drag');selectedFile=e.dataTransfer.files[0];$('uploadName').textContent=selectedFile?.name||'';$('uploadBtn').disabled=!selectedFile};$('uploadBtn').onclick=async()=>{if(!selectedFile)return;let fd=new FormData();fd.append('file',selectedFile);let mid=$('uploadMatter').value;if(mid)fd.append('matter_id',mid);fd.append('doc_kind',$('uploadKind').value);let b=$('uploadBtn');b.disabled=true;b.textContent='上传中…';try{let r=await fetch(url('/api/documents'),{method:'POST',headers:{Authorization:'Bearer '+TOKEN},body:fd});let d=await r.json();if(!r.ok)throw Error(d.detail||'上传失败');toast('已上传 '+d.filename);closeModal();loadDocs();loadOverview()}catch(e){toast(e.message);b.disabled=false;b.textContent='上传材料'}};
-async function loadOverview(){try{let [m,d,r]=await Promise.all([api('/api/matters'),api('/api/documents'),api('/api/review/runs?limit=6')]);matters=m.items||[];docs=d.items||[];$('statMatters').textContent=matters.length;$('statDocs').textContent=docs.length;$('statReviews').textContent=(r.items||[]).length;$('recentActivity').innerHTML=(r.items||[]).map(x=>`<div class="activity-item"><i class="activity-dot"></i><div><b>${esc(x.filename||'材料')}</b> · ${x.kind==='compliance'?'检测报告':'合同审查'}<small>${x.risk_count||0} 个结果 · ${x.created_at}</small></div></div>`).join('')||'<div class="empty">还没有工作记录，从上传一份材料开始。</div>';renderMatterOptions()}catch(e){toast(e.message)}}async function copyText(t){await navigator.clipboard.writeText(t||'');toast('已复制')}
-loadHealth();loadOverview();loadDocs();
+// ============ 页面模板 ============
+var P={
+dashboard:'<div class="dg"><div class="st"><div class="st__i">📁</div><div class="st__v" id="statMatters">—</div><div class="st__l">进行中案件</div></div><div class="st"><div class="st__i">📄</div><div class="st__v" id="statDocs">—</div><div class="st__l">文档材料</div></div><div class="st"><div class="st__i">💬</div><div class="st__v" id="statConsults">—</div><div class="st__l">本月咨询</div></div><div class="st"><div class="st__i">🤖</div><div class="st__v" id="statModel" style="font-size:18px">—</div><div class="st__l">当前模型</div></div></div><div class="dr mb24"><div><div class="fs mb16" style="font-size:15px">快捷操作</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div class="qa" onclick="nav(\'consult\')"><div style="width:36px;height:36px;border-radius:6px;background:var(--pri-l);display:flex;align-items:center;justify-content:center;flex-shrink:0">💬</div><div><div class="qa__t">智能咨询</div><div class="qa__d">多轮对话分析</div></div></div><div class="qa" onclick="nav(\'calculator\')"><div style="width:36px;height:36px;border-radius:6px;background:oklch(0.92 0.04 145);display:flex;align-items:center;justify-content:center;flex-shrink:0">🧮</div><div><div class="qa__t">赔偿计算</div><div class="qa__d">经济补偿/二倍工资</div></div></div><div class="qa" onclick="nav(\'contract\')"><div style="width:36px;height:36px;border-radius:6px;background:oklch(0.94 0.04 70);display:flex;align-items:center;justify-content:center;flex-shrink:0">📋</div><div><div class="qa__t">合同审查</div><div class="qa__d">风险识别+批注</div></div></div><div class="qa" onclick="nav(\'documents\')"><div style="width:36px;height:36px;border-radius:6px;background:var(--accl);display:flex;align-items:center;justify-content:center;flex-shrink:0">📝</div><div><div class="qa__t">文书生成</div><div class="qa__d">仲裁申请书</div></div></div></div></div><div><div class="fs mb16" style="font-size:15px">系统状态</div><div class="cd"><div class="cd__b" id="systemStatus"><div class="tm ts">加载中…</div></div></div></div></div>',
+
+consult:'<div class="ch"><div class="cm"><div class="cmsg" id="consultMsgs"><div class="mg mg--b"><div class="mg__a" style="background:var(--pri)">AI</div><div class="mg__b">您好，我是法律智能助手。请描述您遇到的法律问题，我会帮您分析权益、匹配法条。<strong>先简要描述情况</strong>，我会逐步追问细节。<div class="csg"><span class="cs" onclick="fillConsult(\'我被辞退了，入职6个月没签劳动合同\')">入职未签合同被辞退</span><span class="cs" onclick="fillConsult(\'公司拖欠了3个月工资\')">拖欠工资</span><span class="cs" onclick="fillConsult(\'公司单方面调岗降薪\')">调岗降薪</span><span class="cs" onclick="fillConsult(\'工伤认定流程是什么\')">工伤认定</span></div></div></div></div><div class="cib"><textarea class="cin" id="consultInput" placeholder="输入您的问题... (Enter发送)" rows="1"></textarea><button class="btn btn--p" id="consultBtn" onclick="sendConsult()">发送</button></div></div><div class="cs__side"><div class="sc"><div class="sc__h">💡 使用提示</div><div class="sc__b" style="font-size:12px;line-height:1.8">1. 先描述基本情况<br>2. AI 会追问关键细节<br>3. 确认后给出法律分析<br>4. 建议同步使用计算器<br><br><span style="color:var(--dgr)">⚠️ AI 生成内容仅供参考，不构成法律意见。</span></div></div></div></div>',
+
+calculator:'<div class="cal"><div><div class="fs mb16" style="font-size:15px">输入案件信息</div><div class="fg"><label class="lbl">月工资（税前）</label><input class="in" type="number" id="calcSalary" value="12000" oninput="calcDamages()"></div><div class="fg"><label class="lbl">入职日期</label><input class="in" type="date" id="calcStart" value="2026-02-01" oninput="calcDamages()"></div><div class="fg"><label class="lbl">离职日期</label><input class="in" type="date" id="calcEnd" value="2026-08-05" oninput="calcDamages()"></div><div class="fg"><label class="lbl">离职原因</label><select class="in" id="calcReason" onchange="calcDamages()" style="appearance:auto"><option value="illegal">违法解除（转正不通过/无理由辞退）</option><option value="negotiate">协商解除</option><option value="personal">个人原因离职</option><option value="expire">合同到期不续签</option></select></div><div class="fg"><label class="lbl">是否签订书面劳动合同</label><select class="in" id="calcContract" onchange="calcDamages()" style="appearance:auto"><option value="unsigned">未签订</option><option value="signed">已签订</option></select></div></div><div><div class="fs mb16" style="font-size:15px">赔偿明细</div><div class="calr" id="calcResult"><div style="font-size:13px;opacity:.7">赔偿总额（预估）</div><div class="calr__t" id="calcTotal">¥0</div><div id="calcBreakdown" style="margin-top:16px"></div></div><div class="mt16" style="padding:14px;background:var(--sf);border-radius:var(--r);font-size:12px;color:var(--i2);line-height:1.7"><strong>⚠️ 注意：</strong><br>• 二倍工资起算：入职满1个月的次日<br>• 满6个月不满1年按1年计算<br>• 最终以仲裁委裁决为准</div></div></div>',
+
+contract:'<div class="flex aic jcb mb16"><div class="flex g8"><span class="bd bd--i">审查立场：乙方</span></div></div><div class="g2"><div><div class="fs mb16" style="font-size:15px">选择材料审查</div><div class="cd"><div class="cd__b"><div class="fg"><label class="lbl">选择已上传的合同</label><select class="in" id="reviewDocSelect" style="appearance:auto"><option value="">请先上传材料</option></select></div><div class="fg"><label class="lbl">审查清单</label><select class="in" id="checklistSelect" style="appearance:auto"></select></div><button class="btn btn--p" style="width:100%" id="reviewBtn" onclick="runReview()">运行合同审查</button></div></div></div><div><div class="fs mb16" style="font-size:15px">审查结果</div><div class="cd"><div class="cd__b" id="reviewResult"><div class="tm ts" style="text-align:center;padding:40px 0">选择材料后运行审查</div></div></div></div></div>',
+
+research:'<div class="flex g8 mb16"><input class="in" id="lawSearchInput" placeholder="输入法律问题或关键词..." onkeydown="if(event.key===\'Enter\')searchLaw()"><button class="btn btn--p" onclick="searchLaw()">检索</button></div><div class="cd"><div class="cd__b" id="lawResults"><div class="tm ts" style="text-align:center;padding:40px 0">输入关键词检索已上传的法律材料</div></div></div>',
+
+documents:'<div class="flex aic jcb mb16"><div class="fs" style="font-size:15px">文书生成</div></div><div class="dgrid"><div class="dcard" onclick="nav(\'consult\')"><div class="dcard__i">💬</div><div class="fs" style="font-size:14px">通过咨询生成</div><div class="qa__d">先咨询法律问题，再生成文书</div></div><div class="dcard" onclick="loadDraftTemplates()"><div class="dcard__i">📄</div><div class="fs" style="font-size:14px">从模板生成</div><div class="qa__d">选择模板+输入事实生成草稿</div></div></div><div class="mt16"><div class="fs mb16" style="font-size:15px">文书草稿列表</div><div class="cd"><div class="cd__b" id="draftList"><div class="tm ts" style="text-align:center;padding:30px 0">加载中…</div></div></div></div>',
+
+evidence:'<div class="fs mb16" style="font-size:15px">证据指引</div><div class="fg"><label class="lbl">主张类型</label><select class="in" id="evidenceType" onchange="renderEvidence()" style="appearance:auto"><option value="illegal">违法解除劳动合同</option><option value="unsigned">未签劳动合同二倍工资</option><option value="overtime">加班费</option><option value="injury">工伤认定</option></select></div><div id="evidenceList"></div>',
+
+dd:'<div class="flex g8 mb16"><select class="in" id="ddDocSelect" style="appearance:auto"><option value="">选择已上传材料</option></select><button class="btn btn--p" onclick="runDossier()">开始阅卷</button></div><div class="cd"><div class="cd__h">阅卷笔记</div><div class="cd__b" id="ddResult"><div class="tm ts" style="text-align:center;padding:40px 0">选择材料后开始阅卷，AI 将提炼主体、时间线、争点</div></div></div>',
+
+knowledge:'<div class="kbl"><div class="kbt"><div class="tm" style="font-size:10px;font-weight:600;text-transform:uppercase;padding:8px 10px 4px">法律法规</div><div class="kbn kbn--a" onclick="showLaw(\'labor\')">劳动法</div><div class="kbn kbn--s" onclick="showLaw(\'lsc\')">劳动合同法</div><div class="kbn kbn--s" onclick="showLaw(\'civil\')">民法典</div></div><div class="kbc" id="kbContent"><h3>《劳动合同法》第八十二条</h3><h4>不订立书面合同的法律责任</h4><div class="kq">用人单位自用工之日起超过一个月不满一年未订立书面劳动合同的，应当向劳动者每月支付二倍的工资。</div><h4>解读</h4><p><strong>起算点：</strong>用工之日起满一个月的次日。</p><p><strong>上限：</strong>最多11个月。</p><p><strong>仲裁时效：</strong>一年。</p></div></div>',
+
+anonymize:'<div class="fs mb16" style="font-size:15px">文件脱敏（开发中）</div><div class="g2"><div><div style="border:2px dashed var(--bds);border-radius:var(--rl);padding:40px;text-align:center"><span style="font-size:13px;font-weight:500;color:var(--i2)">上传文件(PDF/Word/图片)</span><br><span class="tm ts">本地处理，不上传服务器</span></div></div><div><div style="font-size:12px;font-weight:600;margin-bottom:8px">脱敏类型</div><div class="flex g8" style="flex-wrap:wrap"><span class="bd bd--i">人名✓</span><span class="bd bd--i">手机号✓</span><span class="bd bd--i">身份证✓</span><span class="bd bd--i">银行账号✓</span><span class="bd bd--i">金额✓</span></div></div></div>',
+
+compare:'<div class="fs mb16" style="font-size:15px">多平台AI对比</div><div class="tm ts mb16">基于 Web Lawyer 社区测试数据 · 合同审查场景</div><div class="cpg"><div class="cpc"><div class="cpc__h">🟢 Codex(GPT)</div><div class="cpc__b"><div class="cpsc">5.0</div>条款修订最细最专业。Agent执行力最强。</div></div><div class="cpc"><div class="cpc__h">🔵 WorkBuddy(GLM)</div><div class="cpc__b"><div class="cpsc">4.2</div>法律逻辑清晰。Plan模式先拆解再执行。</div></div><div class="cpc"><div class="cpc__h">🟡 Kimi Work</div><div class="cpc__b"><div class="cpsc">3.0</div>检索能力有提升，法律分析偏浅。</div></div><div class="cpc"><div class="cpc__h">🟠 Trae(豆包)</div><div class="cpc__b"><div class="cpsc">3.5</div>免费版可用，Skill调用正常。</div></div></div>',
+
+cases:'<div class="flex aic jcb mb16"><div class="fs" style="font-size:15px">案件管理</div><button class="btn btn--p ts" onclick="createMatter()">新建案件</button></div><div class="cd"><div class="cd__b" id="caseList"><div class="tm ts" style="text-align:center;padding:40px 0">加载中…</div></div></div>'
+};
+
+// ============ 页面初始化（导航后自动调用）============
+var pageInit={
+  dashboard:loadDashboard,'_init':loadCaseSelector,
+  calculator:calcDamages,
+  evidence:renderEvidence,
+  documents:loadDrafts,
+  contract:loadContractPage,
+  dd:loadDDPage,
+  cases:loadMatters
+};
+
+// ===== 案件选择器 =====
+var currentCase='';
+function loadCaseSelector(){
+  api('/api/matters').then(function(d){
+    var items=(d.items||d||[]);
+    var sel=$('caseSelector');if(!sel)return;
+    sel.innerHTML='<option value="">全部案件</option>'+items.map(function(m){return '<option value="'+(m.id||'')+'">'+esc(m.name||m.title||'')+'</option>'}).join('');
+  }).catch(function(){});
+}
+function selectCase(id){currentCase=id;toast(id?'已切换案件':'已切回全部');if(cur==='documents')loadDrafts();if(cur==='cases')loadMatters();}
+
+// ===== 草稿详情 =====
+async function openDraft(id){
+  if(!id){toast('草稿ID无效');return;}
+  $('ct').innerHTML='<div class="cd"><div class="cd__h"><button class="btn btn--g ts" onclick="nav(\'documents\')">← 返回</button><button class="btn btn--p ts" onclick="downloadDraft(\''+id+'\')">下载 Markdown</button></div><div class="cd__b" id="draftDetail"><div class="tm ts" style="text-align:center;padding:40px 0">加载中…</div></div></div>';
+  try{
+    var d=await api('/api/drafts/'+id);
+    var content=d.body_markdown||d.content||d.markdown||d.text||d.body||d.draft&&(typeof d.draft==='string'?d.draft:JSON.stringify(d.draft,null,2))||'(草稿内容为空)';
+    $('draftDetail').innerHTML='<div style="font-size:13px;line-height:1.8">'+mdToHtml(content)+'</div>';
+    lastDraftContent=content;lastDraftId=id;
+  }catch(e){
+    $('draftDetail').innerHTML='<div class="bd bd--d" style="padding:14px">加载失败：'+esc(e.message)+'</div>';
+  }
+}
+var lastDraftContent='',lastDraftId='';
+function downloadDraft(id){
+  if(!lastDraftContent){toast('草稿内容为空');return;}
+  var blob=new Blob([lastDraftContent],{type:'text/markdown'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='draft.md';a.click();
+  toast('已下载');
+}
+
+// ===== 案件详情 =====
+async function openCase(id){
+  if(!id)return;
+  $('pt').textContent='案件详情';
+  $('ct').innerHTML='<div><button class="btn btn--g ts mb16" onclick="nav(\'cases\')">← 返回案件列表</button><div class="cd mb16"><div class="cd__h">案件信息</div><div class="cd__b" id="caseDetail"><div class="tm ts">加载中…</div></div></div><div class="cd"><div class="cd__h">案件材料</div><div class="cd__b" id="caseDocs"><div class="tm ts">加载中…</div></div></div></div>';
+  try{
+    var d=await api('/api/matters/'+id);
+    var m=d.matter||d;
+  var docs=d.documents||[];
+  var reviews=d.reviews||[];
+  var drafts=d.drafts||[];
+  var notes=d.notes||[];
+  var tl=d.timeline||[];
+  var info='<div style="display:grid;gap:10px;font-size:13px"><div><span class="tm">案件名称：</span>'+(m.name||m.title||'')+'</div><div><span class="tm">客户：</span>'+(m.client_name||m.client||'—')+'</div><div><span class="tm">创建时间：</span>'+((m.created_at||'').substring(0,10))+'</div></div><div class="flex g8 mt16"><span class="bd bd--i">材料 '+docs.length+'</span><span class="bd bd--w">审查 '+reviews.length+'</span><span class="bd bd--s">草稿 '+drafts.length+'</span><span class="bd bd--m">笔记 '+notes.length+'</span></div>';
+    $('caseDetail').innerHTML=info;
+  }catch(e){$('caseDetail').innerHTML='<div class="bd bd--d">加载失败：'+esc(e.message)+'</div>';}
+  try{
+    // 材料已在详情 API 返回
+    var items=(docs.items||docs||[]);
+    if(!items.length){$('caseDocs').innerHTML='<div class="tm ts" style="padding:20px 0;text-align:center">暂无材料</div>';return;}
+    $('caseDocs').innerHTML=items.map(function(x){return '<div class="ci"><div style="flex:1"><div class="ci__t">'+esc(x.filename||x.title||'')+'</div><div class="ci__m">'+(x.kind||x.doc_kind||'')+'</div></div></div>'}).join('');
+  }catch(e){$('caseDocs').innerHTML='<div class="tm ts">暂无材料</div>';}
+}
+
+function nav(p){
+  cur=p;
+  $('ct').innerHTML=P[p]||'<div class="tm ts" style="padding:40px;text-align:center">页面建设中…</div>';
+  $('pt').textContent=T[p]||'';
+  document.querySelectorAll('.ni').forEach(function(n){n.classList.toggle('act',n.dataset.p===p)});
+  window.scrollTo(0,0);
+  if(pageInit[p])setTimeout(pageInit[p],50);
+}
+
+// ============ 仪表盘 ============
+async function loadDashboard(){
+  try{
+    var h=await api('/api/health');
+    if($('statModel'))$('statModel').textContent=(h.ai_model||h.ai_base||'已连接').substring(0,12);
+    if($('systemStatus'))$('systemStatus').innerHTML='<div style="display:flex;gap:20px;flex-wrap:wrap"><div><span class="bd bd--s">●</span> <span class="ts">系统正常</span></div><div class="tm ts">AI: '+(h.ai_configured?'已配置':'未配置')+'</div><div class="tm ts">数据: '+(h.data_dir||'')+'</div></div>';
+  }catch(e){
+    if($('systemStatus'))$('systemStatus').innerHTML='<div class="bd bd--d">连接失败</div>';
+  }
+  try{var m=await api('/api/matters');if($('statMatters'))$('statMatters').textContent=(m.items||m||[]).length||0;}catch(e){if($('statMatters'))$('statMatters').textContent='0';}
+  try{var d=await api('/api/documents');if($('statDocs'))$('statDocs').textContent=(d.items||d||[]).length||0;}catch(e){if($('statDocs'))$('statDocs').textContent='0';}
+  if($('statConsults'))$('statConsults').textContent='—';
+}
+
+// ============ 智能咨询 ============
+var consultHistory=[];
+async function sendConsult(){
+  var input=$('consultInput');if(!input)return;
+  var q=input.value.trim();if(!q)return;
+  var btn=$('consultBtn');btn.disabled=true;btn.textContent='思考中…';
+  var msgs=$('consultMsgs');
+  msgs.insertAdjacentHTML('beforeend','<div class="mg mg--u"><div class="mg__a" style="background:var(--acc)">我</div><div class="mg__b">'+esc(q)+'</div></div>');
+  input.value='';
+  msgs.insertAdjacentHTML('beforeend','<div class="mg mg--b" id="thinkingMsg"><div class="mg__a" style="background:var(--pri)">AI</div><div class="mg__b">正在分析…</div></div>');
+  msgs.scrollTop=msgs.scrollHeight;
+  try{
+    var d=await api('/api/consult',{method:'POST',body:JSON.stringify({question:q,history:consultHistory})});
+    var t=$('thinkingMsg');if(t)t.remove();
+    var reply=mdToHtml(d.reply);
+    msgs.insertAdjacentHTML('beforeend','<div class="mg mg--b"><div class="mg__a" style="background:var(--pri)">AI</div><div class="mg__b">'+reply+'</div></div>');
+    consultHistory.push({role:'user',content:q},{role:'assistant',content:d.reply});
+    msgs.scrollTop=msgs.scrollHeight;
+  }catch(e){
+    var t=$('thinkingMsg');if(t)t.querySelector('.mg__b').textContent='❌ '+e.message;
+  }
+  btn.disabled=false;btn.textContent='发送';
+  input.focus();
+}
+function fillConsult(t){var i=$('consultInput');if(i){i.value=t;i.focus();}}
+
+// ============ 赔偿计算器 ============
+function calcDamages(){
+  var s=$('calcSalary'),e=$('calcEnd'),st=$('calcStart');
+  if(!s||!e||!st)return;
+  var salary=parseFloat(s.value)||0;
+  var start=new Date(st.value),end=new Date(e.value);
+  if(!start.getTime()||!end.getTime())return;
+  var days=(end-start)/86400000;
+  var months=days/30.44;
+  var years=months/12;
+  var reason=$('calcReason').value,contract=$('calcContract').value;
+  var n=years<0.5?0.5:Math.ceil(years);
+  var items=[];
+  if(contract==='unsigned'&&months>1){
+    var dm=Math.min(Math.floor(months)-1,11);
+    if(dm>0)items.push(['二倍工资差额','§82·入职满1月至离职',salary*dm]);
+  }
+  if(reason==='illegal'){items.push(['违法解除赔偿金(2N)','§87·'+n+'×2×月工资',salary*n*2]);}
+  else if(reason==='negotiate'||reason==='expire'){items.push(['经济补偿金(N)','§47·'+n+'×月工资',salary*n]);}
+  var total=items.reduce(function(s,i){return s+i[2]},0);
+  $('calcTotal').textContent='¥'+total.toLocaleString();
+  $('calcBreakdown').innerHTML=items.map(function(i){return '<div class="cln"><div><div style="opacity:.8">'+i[0]+'</div><div style="font-size:11px;opacity:.6">'+i[1]+'</div></div><div>¥'+i[2].toLocaleString()+'</div></div>'}).join('')||'<div class="cln"><div style="opacity:.8">暂无赔偿项</div><div>¥0</div></div>';
+}
+
+// ============ 法律检索 ============
+async function searchLaw(){
+  var q=$('lawSearchInput').value.trim();if(!q)return;
+  var el=$('lawResults');el.innerHTML='<div class="tm ts" style="text-align:center;padding:30px 0">检索中…</div>';
+  try{
+    var d=await api('/api/documents/search?q='+encodeURIComponent(q));
+    var results=d.items||d.results||d||[];
+    if(!results.length){el.innerHTML='<div class="tm ts" style="text-align:center;padding:30px 0">未找到相关材料。请先上传法律条文。</div>';return;}
+    el.innerHTML=results.map(function(r){return '<div class="ri"><div style="font-size:13px;font-weight:600">'+esc(r.filename||r.title||'未命名')+'</div><div class="tm ts" style="line-height:1.6;margin-top:6px">'+esc((r.snippet||r.content||'').substring(0,200))+'</div></div>'}).join('');
+  }catch(e){el.innerHTML='<div class="bd bd--d" style="padding:14px">检索失败：'+esc(e.message)+'</div>';}
+}
+
+// ============ 合同审查 ============
+async function loadContractPage(){
+  try{
+    var d=await api('/api/documents');
+    var docs=(d.items||d||[]).filter(function(x){return true});
+    var sel=$('reviewDocSelect');
+    if(sel){sel.innerHTML='<option value="">请选择</option>'+docs.map(function(x){return '<option value="'+x.id+'">'+esc(x.filename||x.title)+'</option>'}).join('');}
+    var c=await api('/api/review/checklists');
+    var cl=(c.items||c||[]);
+    var cs=$('checklistSelect');
+    if(cs){cs.innerHTML=cl.map(function(x){return '<option value="'+(x.id||'')+'">'+esc(x.name||x.id||'')+'</option>'}).join('');}
+  }catch(e){}
+}
+async function runReview(){
+  var docId=$('reviewDocSelect').value,clId=$('checklistSelect').value;
+  if(!docId){toast('请先选择材料');return;}
+  var btn=$('reviewBtn');btn.disabled=true;btn.textContent='审查中…';
+  $('reviewResult').innerHTML='<div class="tm ts" style="text-align:center;padding:40px 0">AI 审查中，请稍候…</div>';
+  try{
+    var body={document_id:docId};
+    if(clId)body.checklist_id=clId;
+    var d=await api('/api/review/contract',{method:'POST',body:JSON.stringify(body)});
+    var risks=(d.risks||d.items||[]);
+    var html='<div class="flex aic jcb mb16"><span class="fs">审查完成</span><span class="bd '+(risks.length>3?'bd--d':'bd--w')+'">'+risks.length+' 项风险</span></div>';
+    html+=risks.map(function(r){return '<div style="border:1px solid var(--bd);border-radius:var(--rs);padding:14px;margin-bottom:10px"><div class="flex aic jcb mb8"><div class="fs ts">'+esc(r.title||r.category||'')+'</div><span class="bd '+(r.severity==='high'?'bd--d':r.severity==='medium'?'bd--w':'bd--s')+'">'+(r.severity||'')+'</span></div><div class="tm ts" style="line-height:1.7">'+esc(r.description||r.detail||r.suggestion||'')+'</div></div>'}).join('');
+    if(!risks.length)html+='<div class="bd bd--s" style="padding:14px">未发现明显风险</div>';
+    $('reviewResult').innerHTML=html;
+  }catch(e){$('reviewResult').innerHTML='<div class="bd bd--d" style="padding:14px">审查失败：'+esc(e.message)+'</div>';}
+  btn.disabled=false;btn.textContent='运行合同审查';
+}
+
+// ============ 文书生成 ============
+async function loadDrafts(){
+  try{
+    var d=await api('/api/drafts');
+    var items=d.items||d||[];
+    if(!items.length){$('draftList').innerHTML='<div class="tm ts" style="text-align:center;padding:20px 0">暂无草稿。先通过咨询或模板生成。</div>';return;}
+    $('draftList').innerHTML=items.map(function(x){var did=x.id||x.draft_id||'';return '<div class="ci" onclick="openDraft(\''+did+'\')" style="cursor:pointer"><div style="flex:1"><div class="ci__t">'+esc(x.title||'未命名草稿')+'</div><div class="ci__m">'+esc((x.created_at||'').substring(0,10))+'</div></div><span class="bd bd--i">草稿</span></div>'}).join('');
+  }catch(e){$('draftList').innerHTML='<div class="tm ts" style="text-align:center;padding:20px 0">加载失败</div>';}
+}
+async function loadDraftTemplates(){
+  try{
+    var t=await api('/api/draft/templates');
+    var items=t.items||t||[];
+    toast('可用模板：'+(items.length||0)+' 个。请通过后端 API 创建草稿。');
+  }catch(e){toast('模板加载失败');}
+}
+
+// ============ 证据指引 ============
+var EVIDENCE_DATA={
+  illegal:[['劳动合同（如有）','证明劳动关系——如未签订需其他证据替代','关键'],['工资流水/银行转账记录','证明工资标准及劳动关系','关键'],['考勤记录','可从钉钉/企业微信/飞书导出','重要'],['工作群聊天记录','微信/钉钉——含工作安排、汇报记录','重要'],['辞退通知/解除证明','书面通知最佳；如无，录音也可','关键'],['社保缴纳记录','社保局APP或网站查询下载','重要'],['工作证/门禁卡/名片','证明身份归属','补充']],
+  unsigned:[['工资发放记录','证明事实劳动关系存在','关键'],['工作证/工牌','证明用人单位认可你的员工身份','关键'],['招聘记录/入职通知','邮件/聊天记录中的入职沟通','重要'],['考勤打卡记录','证明你遵守用人单位的管理制度','重要'],['同事证言','其他员工证明你在该单位工作','补充']],
+  overtime:[['考勤记录','证明加班时间——打卡记录/系统截图','关键'],['加班审批单','主管签字的加班申请','重要'],['工作成果记录','加班时间完成的工作','重要'],['工资条','证明是否已支付加班费','关键'],['劳动合同/规章制度','确认工时制度和加班费计算方式','补充']],
+  injury:[['医疗诊断证明','医院出具的受伤诊断书','关键'],['工伤认定决定书','社保部门出具（需在30日内申请）','关键'],['事故发生证据','现场照片/监控/目击者证言','关键'],['劳动合同/劳动关系证明','证明受伤时存在劳动关系','重要'],['医疗费用票据','所有与工伤相关的医疗费用凭证','重要']]
+};
+function renderEvidence(){
+  var type=$('evidenceType');if(!type)return;
+  var list=EVIDENCE_DATA[type.value]||[];
+  $('evidenceList').innerHTML=list.map(function(e,i){return '<div class="di"><div class="dck" onclick="this.style.background=this.style.background?\'\':\'var(--suc)\'"></div><div style="flex:1"><div style="font-size:13px;font-weight:500">'+e[0]+'</div><div class="tm ts">'+e[1]+'</div></div><span class="bd '+(e[2]==='关键'?'bd--d':e[2]==='重要'?'bd--w':'bd--m')+'">'+e[2]+'</span></div>'}).join('');
+}
+
+// ============ 尽职调查/阅卷 ============
+async function loadDDPage(){
+  try{
+    var d=await api('/api/documents');
+    var docs=d.items||d||[];
+    var sel=$('ddDocSelect');
+    if(sel)sel.innerHTML='<option value="">请选择</option>'+docs.map(function(x){return '<option value="'+x.id+'">'+esc(x.filename||x.title)+'</option>'}).join('');
+  }catch(e){}
+}
+async function runDossier(){
+  var docId=$('ddDocSelect').value;if(!docId){toast('请先选择材料');return;}
+  $('ddResult').innerHTML='<div class="tm ts" style="text-align:center;padding:40px 0">AI 阅卷中…</div>';
+  try{
+    var d=await api('/api/dossier/read',{method:'POST',body:JSON.stringify({document_id:docId})});
+    var note=d.note||d.markdown||d.content||d.summary||JSON.stringify(d,null,2);
+    $('ddResult').innerHTML='<div style="font-size:13px;line-height:1.8">'+mdToHtml(note)+'</div>';
+  }catch(e){$('ddResult').innerHTML='<div class="bd bd--d" style="padding:14px">阅卷失败：'+esc(e.message)+'</div>';}
+}
+
+// ============ 案件管理 ============
+async function loadMatters(){
+  try{
+    var d=await api('/api/matters');
+    var items=d.items||d||[];
+    if(!items.length){$('caseList').innerHTML='<div class="tm ts" style="text-align:center;padding:40px 0">暂无案件。点击右上角新建。</div>';return;}
+    $('caseList').innerHTML=items.map(function(m){var mid=m.id||m.matter_id||'';return '<div class="ci" onclick="openCase(\''+mid+'\')" style="cursor:pointer"><div style="flex:1"><div class="ci__t">'+esc(m.name||m.title||'未命名案件')+'</div><div class="ci__m">'+esc(m.client_name||m.client||'')+(m.updated_at?(' · '+m.updated_at.substring(0,10)):'')+'</div></div><span class="bd bd--w">进行中</span></div>'}).join('');
+  }catch(e){$('caseList').innerHTML='<div class="tm ts" style="text-align:center;padding:40px 0">加载失败：'+esc(e.message)+'</div>';}
+}
+async function createMatter(){
+  var name=prompt('案件名称：');if(!name)return;
+  try{
+    await api('/api/matters',{method:'POST',body:JSON.stringify({name:name})});
+    toast('案件已创建');loadMatters();
+  }catch(e){toast('创建失败：'+e.message);}
+}
+
+// ============ 知识库 ============
+function showLaw(type){
+  var data={
+    labor:'<h3>《劳动法》</h3><p>劳动法是调整劳动关系以及与劳动关系密切联系的社会关系的法律规范总称。</p>',
+    lsc:'<h3>《劳动合同法》</h3><h4>第八十二条 不订立书面合同的责任</h4><div class="kq">用人单位自用工之日起超过一个月不满一年未与劳动者订立书面劳动合同的，应当向劳动者每月支付二倍的工资。</div><h4>第八十七条 违法解除</h4><div class="kq">用人单位违反本法规定解除或者终止劳动合同的，应当依照本法第四十七条规定的经济补偿标准的二倍向劳动者支付赔偿金。</div><h4>第四十七条 经济补偿</h4><div class="kq">经济补偿按劳动者在本单位工作的年限，每满一年支付一个月工资的标准向劳动者支付。六个月以上不满一年的，按一年计算；不满六个月的，向劳动者支付半个月工资的经济补偿。</div>',
+    civil:'<h3>《民法典》</h3><h4>第一百五十八条 附条件民事法律行为</h4><div class="kq">民事法律行为可以附条件...附生效条件的，自条件成就时生效。</div>'
+  };
+  if($('kbContent'))$('kbContent').innerHTML=data[type]||'<p>暂无内容</p>';
+}
+
+// ============ 初始化 ============
+document.getElementById('nav').addEventListener('click',function(e){var t=e.target.closest('.ni');if(t&&t.dataset.p)nav(t.dataset.p);});
+// Enter 键发送咨询
+document.addEventListener('keydown',function(e){
+  if(e.key==='Enter'&&!e.shiftKey&&e.target&&e.target.id==='consultInput'){e.preventDefault();sendConsult();}
+});
+loadCaseSelector();nav('dashboard');
 </script>
-</body></html>
+</body>
+</html>
