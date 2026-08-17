@@ -26,11 +26,15 @@ jobs:
 
       - name: Install agent-core deps
         working-directory: agent-core
-        run: pnpm install --no-frozen-lockfile
+        run: pnpm install --no-frozen-lockfile --ignore-scripts
 
       - name: Install desktop deps
         working-directory: desktop
-        run: pnpm install --no-frozen-lockfile
+        run: pnpm install --no-frozen-lockfile --ignore-scripts
+
+      - name: Fetch Electron binary (postinstall was skipped)
+        working-directory: desktop
+        run: node node_modules/electron/install.js
 
       - name: Build
         working-directory: desktop
