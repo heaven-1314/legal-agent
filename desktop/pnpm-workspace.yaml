@@ -1,7 +1,0 @@
-packages:
-  - .
-onlyBuiltDependencies:
-  - electron
-  - esbuild
-  - protobufjs
-  - "@google/genai"
