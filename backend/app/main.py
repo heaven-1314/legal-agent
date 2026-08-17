@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from app.api import documents, dossier, draft, matters, review, system
+from app.api import consult, documents, dossier, draft, labor, matters, review, system
 from app.config import ensure_data_dirs, get_settings
 from app.db import init_db
 from app.services.checklist import ensure_default_checklist_file
@@ -53,11 +53,13 @@ app.add_middleware(
 )
 
 app.include_router(system.router)
+app.include_router(consult.router)
 app.include_router(documents.router)
 app.include_router(matters.router)
 app.include_router(review.router)
 app.include_router(dossier.router)
 app.include_router(draft.router)
+app.include_router(labor.router)
 
 if _STATIC.is_dir():
     app.mount("/assets", StaticFiles(directory=str(_STATIC)), name="assets")
