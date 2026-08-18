@@ -30,6 +30,8 @@ contextBridge.exposeInMainWorld("legalAgent", {
     ipcRenderer.invoke("api", req) as Promise<{ ok: boolean; status: number; data: T }>,
   getSettings: (): Promise<SettingsView> => ipcRenderer.invoke("settings:get"),
   testConnection: () => ipcRenderer.invoke("settings:test") as Promise<{ ai: string; backend: string }>,
+  fetchModels: (req?: { aiBase?: string; aiKey?: string }) =>
+    ipcRenderer.invoke("settings:models", req ?? {}) as Promise<{ ok: boolean; models?: string[]; message?: string }>,
   setSettings: (patch: Partial<SettingsView>) => ipcRenderer.invoke("settings:set", patch),
   uiReady: () => ipcRenderer.send("ui:ready"),
   onEvent: (callback: (msg: Record<string, unknown>) => void) => {

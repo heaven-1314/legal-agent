@@ -36,6 +36,7 @@ interface LegalAgentBridge {
   }>;
   getSettings: () => Promise<SettingsView>;
   testConnection: () => Promise<{ ai: string; backend: string }>;
+  fetchModels: (req?: { aiBase?: string; aiKey?: string }) => Promise<{ ok: boolean; models?: string[]; message?: string }>;
   setSettings: (patch: Partial<SettingsView>) => Promise<{ ok: boolean }>;
   uiReady: () => void;
   onEvent: (cb: (msg: Record<string, any>) => void) => () => void;

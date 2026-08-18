@@ -375,6 +375,28 @@ app.whenReady().then(async () => {
   );
 
   /** 设置页「测试连接」：AI 网关连通性 + 工具后端健康，一次给出可读结论。 */
+  /** 获取模型：拉网关 /models 返回可选模型 id 列表。 */
+  ipcMain.handle("settings:models", async (_e, req: { aiBase?: string; aiKey?: string }) => {
+    const s = loadSettings();
+    const base = (req.aiBase || s.aiBase).replace(/\/+$/, "");
+    const key = req.aiKey && !req.aiKey.includes("…") ? req.aiKey : s.aiKey;
+    try {
+      const res = await fetch(`${base}/models`, {
+        headers: { Authorization: `Bearer ${key}` },
+        signal: AbortSignal.timeout(10000),
+      });
+      const text = await res.text();
+      if (!res.ok) {
+        return { ok: false, message: res.status === 401 ? "认证失败（401）：API Key 无效或已过期" : `网关响应异常（${res.status}）` };
+      }
+      const data = JSON.parse(text);
+      const ids: string[] = (data.data ?? []).map((m: { id: string }) => m.id).filter(Boolean);
+      return { ok: true, models: ids };
+    } catch {
+      return { ok: false, message: "无法连接网关：请检查地址（本机填 127.0.0.1，远程填公网地址）" };
+    }
+  });
+
   ipcMain.handle("settings:test", async () => {
     const s = loadSettings();
     const out: { ai: string; backend: string } = { ai: "", backend: "" };
