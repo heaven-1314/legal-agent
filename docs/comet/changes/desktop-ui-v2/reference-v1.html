@@ -1,0 +1,2139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>法律工作台 · 产品框架原型</title>
+<style>
+/* ============ 案卷室 Design Tokens ============ */
+:root{
+  --bg:            oklch(0.972 0.003 140);   /* 冷白纸页底 */
+  --surface:       oklch(1 0 0);
+  --surface-2:     oklch(0.967 0.004 145);   /* 嵌套浅层 */
+  --surface-3:     oklch(0.945 0.005 148);   /* hover 层 */
+  --fg:            oklch(0.26 0.014 160);    /* 墨色 */
+  --fg-strong:     oklch(0.20 0.016 160);
+  --muted:         oklch(0.50 0.014 158);
+  --border:        oklch(0.905 0.006 150);
+  --border-strong: oklch(0.845 0.008 150);
+  --accent:        oklch(0.40 0.075 152);    /* 品牌墨绿 */
+  --accent-hover:  oklch(0.345 0.075 152);
+  --accent-deep:   oklch(0.32 0.068 152);
+  --accent-soft:   oklch(0.955 0.019 152);
+  --accent-line:   oklch(0.875 0.035 152);
+  --on-accent:     oklch(0.985 0.004 152);
+  --risk-high:     oklch(0.50 0.155 28);
+  --risk-high-bg:  oklch(0.962 0.022 28);
+  --risk-mid:      oklch(0.53 0.108 70);
+  --risk-mid-bg:   oklch(0.962 0.032 88);
+  --risk-low:      oklch(0.46 0.082 152);
+  --risk-low-bg:   oklch(0.955 0.020 152);
+  --neutral-bg:    oklch(0.955 0.005 150);
+  --ease-out:      cubic-bezier(.2,0,0,1);   /* 动效统一减速曲线 */
+  --t-state: color .12s var(--ease-out),background-color .12s var(--ease-out),border-color .12s var(--ease-out),box-shadow .12s var(--ease-out); /* 状态色过渡族 */
+  --font-body: "PingFang SC","Microsoft YaHei","Source Han Sans SC","Noto Sans SC",system-ui,sans-serif;
+  --font-display: "Songti SC","STSong","SimSun","Noto Serif SC",serif;
+  --font-mono: "SF Mono","JetBrains Mono","Cascadia Code",Consolas,monospace;
+  --r-sm: 4px; --r-md: 6px; --r-lg: 9px;
+  --shadow-1: 0 1px 2px oklch(0.26 0.014 160 / .06), 0 1px 6px oklch(0.26 0.014 160 / .05);
+  --shadow-2: 0 2px 8px oklch(0.26 0.014 160 / .10), 0 8px 28px oklch(0.26 0.014 160 / .10);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  font-family:var(--font-body); color:var(--fg); background:var(--bg);
+  font-size:13px; line-height:1.6; -webkit-font-smoothing:antialiased;
+  overflow:hidden;
+}
+::selection{background:var(--accent-line);color:var(--fg-strong)}
+button{font-family:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit;color:var(--fg)}
+svg.ic{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+
+/* ============ 桌面窗口舞台 ============ */
+#desk{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+  background:oklch(0.905 0.005 145)}
+#stage{width:1120px;height:740px;flex:none;display:flex;flex-direction:column;
+  background:var(--bg);border:1px solid var(--border-strong);border-radius:10px;
+  box-shadow:var(--shadow-2);overflow:hidden;position:relative;transform-origin:center center}
+
+/* 标题栏 */
+.tb{height:38px;flex:none;display:flex;align-items:center;gap:10px;padding:0 12px;
+  background:var(--surface);border-bottom:1px solid var(--border);user-select:none}
+.tb-mark{width:22px;height:22px;border-radius:5px;background:var(--accent);color:var(--on-accent);
+  display:flex;align-items:center;justify-content:center;font-family:var(--font-display);
+  font-size:13px;font-weight:700;line-height:1}
+.tb-name{font-size:13px;font-weight:600;letter-spacing:.02em}
+.tb-chip{font-size:11px;color:var(--accent);background:var(--accent-soft);
+  border:1px solid var(--accent-line);border-radius:99px;padding:1px 8px;line-height:1.5}
+.tb-drag{flex:1;height:100%}
+.tb-btns{display:flex;gap:4px}
+.tb-btn{width:40px;height:26px;border:none;background:transparent;border-radius:5px;
+  color:var(--muted);display:flex;align-items:center;justify-content:center;position:relative}
+.tb-btn:hover{background:var(--surface-3);color:var(--fg)}
+.tb-btn.close:hover{background:var(--risk-high);color:#fff}
+.tb-btn svg{width:11px;height:11px;stroke-width:1.4}
+
+/* ============ 侧栏 ============ */
+#shell{flex:1;display:flex;min-height:0}
+.sb{width:214px;flex:none;background:var(--surface);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;padding:10px 10px 8px;gap:2px;overflow-y:auto}
+.sb-cap{font-size:11px;color:var(--muted);letter-spacing:.14em;padding:12px 10px 4px;font-weight:500}
+.sb-item{display:flex;align-items:center;gap:9px;height:31px;padding:0 9px;border-radius:6px;
+  border:none;background:transparent;color:var(--fg);font-size:13px;width:100%;text-align:left;
+  position:relative;flex:none;transition:var(--t-state)}
+.sb-item svg.ic{width:15px;height:15px;color:var(--muted);transition:color .12s var(--ease-out),transform .1s var(--ease-out)}
+.sb-item:active svg.ic{transform:scale(.88)}
+.sb-item:hover{background:var(--surface-3)}
+.sb-item:hover svg.ic{color:var(--fg)}
+.sb-item.active{background:var(--accent-soft);color:var(--accent-deep);font-weight:600}
+.sb-item.active svg.ic{color:var(--accent)}
+.sb-item.active::before{content:"";position:absolute;left:-10px;top:6px;bottom:6px;width:3px;
+  border-radius:0 2px 2px 0;background:var(--accent);animation:sbBar .18s var(--ease-out) both}
+.sb-count{margin-left:auto;font-size:11px;color:var(--muted);background:var(--surface-2);
+  border-radius:99px;padding:0 7px;line-height:1.6}
+.sb-item.active .sb-count{color:var(--accent);background:oklch(0.93 0.028 152)}
+.sb-spacer{flex:1;min-height:8px}
+/* 内核品牌位 */
+.kernel{border:1px solid var(--border);border-radius:8px;padding:9px 10px 8px;cursor:pointer;
+  background:var(--surface);transition:var(--t-state)}
+.kernel:hover{border-color:var(--accent-line)}
+.kernel-top{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600}
+.kdot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex:none}
+.kernel-top .ver{margin-left:auto;font-size:10px;color:var(--muted);font-weight:400;font-family:var(--font-mono)}
+.kernel-meta{margin-top:4px;font-size:11px;color:var(--muted);display:flex;gap:6px;flex-wrap:wrap}
+.kernel-meta b{color:var(--accent);font-weight:600}
+.sb-item.sb-settings{border-top:1px solid var(--border);border-radius:6px;margin-top:6px;height:33px}
+
+/* ============ 主区与页面骨架 ============ */
+.main{flex:1;min-width:0;min-height:0;display:flex;flex-direction:column;background:var(--bg)}
+.page{flex:1;min-height:0;overflow-y:auto;display:none;flex-direction:column}
+.page.show{display:flex}
+.pg-head{flex:none;display:flex;align-items:flex-end;gap:14px;padding:20px 26px 14px;
+  border-bottom:1px solid var(--border-strong);background:var(--surface);position:relative}
+.pg-head::after{content:"";position:absolute;left:0;right:0;bottom:-4px;height:1px;
+  background:var(--border);pointer-events:none}
+.pg-head .grow{flex:1;min-width:0}
+.pg-title{font-family:var(--font-display);font-size:21px;font-weight:700;line-height:1.3;
+  color:var(--fg-strong);letter-spacing:.01em}
+.pg-sub{font-size:12px;color:var(--muted);margin-top:3px}
+.pg-body{flex:1;min-height:0;padding:18px 26px 24px;display:flex;flex-direction:column;gap:16px}
+:is(button,a,input,select,textarea,[tabindex]):focus-visible{outline:2px solid var(--accent);
+  outline-offset:1px;border-radius:4px}
+
+/* ============ 按钮 ============ */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:32px;
+  padding:0 14px;border-radius:6px;font-size:13px;border:1px solid transparent;
+  background:var(--surface-2);color:var(--fg);white-space:nowrap;transition:var(--t-state)}
+.btn svg.ic{width:14px;height:14px}
+.btn:hover{background:var(--surface-3)}
+.btn:active{background:var(--border)}
+.btn.primary{background:var(--accent);color:var(--on-accent);font-weight:600}
+.btn.primary:hover{background:var(--accent-hover)}
+.btn.primary:active{background:var(--accent-deep)}
+.btn.outline{background:var(--surface);border-color:var(--border-strong)}
+.btn.outline:hover{background:var(--surface-2);border-color:var(--muted)}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn.ghost:hover{background:var(--accent-soft)}
+.btn.sm{height:26px;padding:0 10px;font-size:12px;border-radius:5px}
+.btn:disabled,.btn.disabled{background:var(--surface-2);color:oklch(0.66 0.008 150);
+  border-color:var(--border);cursor:not-allowed}
+.btn.primary:disabled{background:oklch(0.82 0.03 152);color:oklch(0.96 0.004 152);border-color:transparent}
+.btn.loading{pointer-events:none;position:relative;color:transparent!important}
+.btn.loading::after{content:"";position:absolute;width:13px;height:13px;border-radius:50%;
+  border:2px solid oklch(1 0 0 / .45);border-top-color:#fff;animation:spin .7s linear infinite}
+.btn.loading{color:transparent}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ============ 徽章 ============ */
+.badge{display:inline-flex;align-items:center;gap:4px;height:20px;padding:0 8px;border-radius:4px;
+  font-size:11px;line-height:1;border:1px solid var(--border);background:var(--neutral-bg);
+  color:var(--muted);white-space:nowrap;font-weight:500}
+.badge::before{content:"";width:5px;height:5px;border-radius:50%;background:currentColor;flex:none}
+.badge.b-neutral{background:var(--neutral-bg);color:var(--muted);border-color:var(--border)}
+.badge.b-high{background:var(--risk-high-bg);color:var(--risk-high);border-color:oklch(0.88 0.05 28)}
+.badge.b-mid{background:var(--risk-mid-bg);color:var(--risk-mid);border-color:oklch(0.87 0.06 85)}
+.badge.b-low{background:var(--risk-low-bg);color:var(--risk-low);border-color:var(--accent-line)}
+.badge.b-accent{background:var(--accent-soft);color:var(--accent-deep);border-color:var(--accent-line)}
+.badge:not(.b-high):not(.b-mid):not(.b-low)::before{display:none}
+
+/* ============ 表单控件 ============ */
+.field{display:flex;flex-direction:column;gap:5px}
+.field>label{font-size:12px;font-weight:600;color:var(--fg)}
+.field .hint{font-size:11px;color:var(--muted);font-weight:400}
+.input,.select,.textarea{width:100%;height:32px;padding:0 10px;font-size:13px;
+  background:var(--surface);border:1px solid var(--border-strong);border-radius:6px;transition:var(--t-state)}
+.textarea{height:auto;padding:8px 10px;resize:none;line-height:1.6}
+.input:hover,.select:hover,.textarea:hover{border-color:var(--muted)}
+.input:focus,.select:focus,.textarea:focus{outline:2px solid var(--accent);outline-offset:-1px;border-color:var(--accent)}
+.input:disabled{background:var(--surface-2);color:var(--muted);cursor:not-allowed;border-color:var(--border)}
+.input.mono{font-family:var(--font-mono);font-size:12px}
+.select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23506b5f' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+.check{display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;user-select:none}
+.check input{appearance:none;width:15px;height:15px;border:1.5px solid var(--border-strong);border-radius:4px;
+  background:var(--surface);cursor:pointer;flex:none;position:relative;transition:var(--t-state)}
+.check input:hover{border-color:var(--accent)}
+.check input:checked{background:var(--accent);border-color:var(--accent)}
+.check input:checked::after{content:"";position:absolute;left:4.2px;top:1.4px;width:4px;height:8px;
+  border:solid #fff;border-width:0 1.8px 1.8px 0;transform:rotate(43deg)}
+.check input:disabled{background:var(--surface-2);border-color:var(--border);cursor:not-allowed}
+.switch{display:inline-flex;align-items:center;gap:8px;cursor:pointer;user-select:none;font-size:13px}
+.switch input{appearance:none;width:34px;height:19px;border-radius:99px;background:var(--border-strong);
+  position:relative;cursor:pointer;transition:background .15s;flex:none;margin:0}
+.switch input::after{content:"";position:absolute;left:2px;top:2px;width:15px;height:15px;border-radius:50%;
+  background:#fff;transition:transform .15s var(--ease-out);box-shadow:0 1px 2px oklch(0 0 0 / .25)}
+.switch input:checked{background:var(--accent)}
+.switch input:checked::after{transform:translateX(15px)}
+.switch input:disabled{opacity:.45;cursor:not-allowed}
+/* ============ 卡片 / 统计 / 快捷操作 ============ */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);
+  box-shadow:var(--shadow-1);padding:16px 18px}
+.card-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.card-title{font-size:14px;font-weight:600;color:var(--fg-strong)}
+.card-head .more{margin-left:auto;font-size:12px;color:var(--accent);background:none;border:none;padding:2px 4px;border-radius:4px}
+.card-head .more:hover{text-decoration:underline}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);background:var(--surface);
+  border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow-1);overflow:hidden}
+.stat{border:none;background:none;box-shadow:none;border-radius:0;
+  padding:14px 18px 12px;display:flex;flex-direction:column;gap:2px}
+.stat+.stat{border-left:1px solid var(--border)}
+.stat-label{font-size:12px;color:var(--muted)}
+.stat-num{font-family:var(--font-display);font-size:30px;font-weight:700;line-height:1.15;
+  color:var(--fg-strong);font-variant-numeric:tabular-nums}
+.stat-num small{font-size:13px;font-weight:400;color:var(--muted);margin-left:2px}
+.stat-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.stat-sub em{font-style:normal;font-weight:600}
+.stat-sub .up{color:var(--accent)} .stat-sub .hot{color:var(--risk-high)}
+.quick{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+.qa{display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:12px 12px 11px;
+  background:var(--surface);border:1px solid var(--border);border-radius:8px;text-align:left;
+  font-size:13px;color:var(--fg);transition:var(--t-state)}
+.qa svg.ic{color:var(--accent)}
+.qa:hover{border-color:var(--accent-line);background:var(--accent-soft)}
+.qa small{font-size:11px;color:var(--muted)}
+.qa:disabled{cursor:not-allowed;background:var(--surface-2)}
+.qa:disabled svg.ic{color:oklch(0.66 0.008 150)}
+.qa:disabled small,.qa:disabled{color:var(--muted)}
+
+/* ============ 表格 ============ */
+.table{width:100%;border-collapse:collapse;font-size:12.5px}
+.table th{text-align:left;font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.05em;
+  padding:6px 10px;border-bottom:1px solid var(--border-strong);white-space:nowrap}
+.table td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
+.table tbody tr{transition:background .1s}
+.table tbody tr:hover{background:var(--surface-2)}
+.table tbody tr:last-child td{border-bottom:none}
+.t-case{font-weight:600;color:var(--fg-strong)}
+.t-case small{display:block;font-size:11px;color:var(--muted);font-weight:400}
+.due{font-variant-numeric:tabular-nums;white-space:nowrap}
+.due.urgent{color:var(--risk-high);font-weight:600}
+.due.soon{color:var(--risk-mid);font-weight:600}
+/* 迷你 8 阶段点 */
+.dots8{display:inline-flex;align-items:center;gap:2.5px}
+.dots8 i{width:9px;height:4px;border-radius:2px;background:var(--border-strong)}
+.dots8 i.on{background:var(--accent)}
+.dots8 i.cur{background:var(--accent);outline:1.5px solid var(--accent-line);outline-offset:1.5px}
+
+/* ============ 案件详情：8 阶段横向进度 ============ */
+.stagebar{display:grid;grid-template-columns:repeat(8,1fr);gap:0;padding:6px 4px 2px}
+.stg{display:flex;flex-direction:column;align-items:center;gap:7px;position:relative}
+.stg::before,.stg::after{content:"";position:absolute;top:11px;height:2px;width:50%;background:var(--border-strong)}
+.stg::before{left:0}.stg::after{right:0}
+.stg:first-child::before,.stg:last-child::after{display:none}
+.stg.done::before,.stg.cur::before,.stg.done::after{background:var(--accent)}
+.stg-node{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:600;z-index:1;border:2px solid var(--border-strong);background:var(--surface);color:var(--muted)}
+.stg.done .stg-node{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.stg.done .stg-node svg{width:12px;height:12px;stroke-width:2.4}
+.stg.cur .stg-node{border-color:var(--accent);color:var(--accent);background:var(--surface);
+  box-shadow:0 0 0 3px var(--accent-soft)}
+.stg-label{font-size:11px;color:var(--muted);text-align:center;line-height:1.3}
+.stg.done .stg-label{color:var(--fg)}
+.stg.cur .stg-label{color:var(--accent-deep);font-weight:700}
+.case-meta{display:grid;grid-template-columns:repeat(4,1fr);gap:10px 18px;font-size:12.5px}
+.case-meta .k{font-size:11px;color:var(--muted);margin-bottom:1px}
+.case-meta .v{font-weight:500}
+.case-meta .v.mono{font-family:var(--font-mono);font-size:12px}
+.countdown{display:flex;align-items:baseline;gap:8px}
+.countdown b{font-family:var(--font-display);font-size:34px;font-weight:700;color:var(--risk-mid);font-variant-numeric:tabular-nums}
+.countdown span{font-size:12px;color:var(--muted)}
+
+/* ============ 待办清单 ============ */
+.todo{display:flex;flex-direction:column}
+.todo-item{display:flex;align-items:flex-start;gap:11px;padding:10px 10px;border-radius:7px;
+  border-bottom:1px solid var(--border);transition:background .1s}
+.todo-item:last-child{border-bottom:none}
+.todo-item:hover{background:var(--surface-2)}
+.todo-main{flex:1;min-width:0}
+.todo-title{font-size:13px;font-weight:500}
+.todo-meta{display:flex;gap:10px;font-size:11px;color:var(--muted);margin-top:2px;flex-wrap:wrap}
+.todo-meta .due-urgent{color:var(--risk-high);font-weight:600}
+.todo-item.done .todo-title{color:var(--muted);text-decoration:line-through}
+.todo-item.done .todo-meta{opacity:.7}
+.todo-add{margin-top:10px;width:100%;height:30px;border:1px dashed var(--border-strong);border-radius:6px;
+  background:none;color:var(--muted);font-size:12px;display:flex;align-items:center;justify-content:center;gap:5px}
+.todo-add:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+
+/* 规则参考卡 */
+.rule{border-left:none;border:1px solid var(--accent-line);background:var(--accent-soft);
+  border-radius:8px;padding:10px 12px}
+.rule-title{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--accent-deep)}
+.rule-body{font-size:11.5px;color:var(--fg);margin-top:5px;line-height:1.65}
+.rule-src{font-size:10.5px;color:var(--muted);margin-top:4px}
+/* ============ 智能咨询 ============ */
+.pg-consult{display:none;flex:1;min-height:0}
+.pg-consult.show{display:flex}
+.sessions{width:212px;flex:none;border-right:1px solid var(--border);background:var(--surface);
+  display:flex;flex-direction:column;padding:12px 10px}
+.ssn{display:block;text-align:left;width:100%;background:none;border:none;border-radius:6px;
+  padding:8px 10px;margin-top:2px;color:var(--fg)}
+.ssn:hover{background:var(--surface-3)}
+.ssn.active{background:var(--accent-soft)}
+.ssn-t{font-size:12.5px;font-weight:600;line-height:1.4;color:var(--fg-strong);
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ssn.active .ssn-t{color:var(--accent-deep)}
+.ssn-m{font-size:11px;color:var(--muted);margin-top:2px;display:flex;gap:6px}
+.ssn-m .cnt{margin-left:auto;background:var(--surface-2);border-radius:99px;padding:0 6px}
+.chat{flex:1;min-width:0;display:flex;flex-direction:column;background:var(--bg)}
+.chat-scroll{flex:1;min-height:0;overflow-y:auto;padding:20px 26px;display:flex;flex-direction:column;gap:18px}
+.msg{display:flex;gap:10px;max-width:760px}
+.msg.user{align-self:flex-end;flex-direction:row-reverse}
+.avatar{width:30px;height:30px;border-radius:8px;flex:none;display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:600}
+.avatar.bot{background:var(--accent);color:var(--on-accent);font-family:var(--font-display);font-size:13px}
+.avatar.human{background:var(--surface-2);border:1px solid var(--border-strong);color:var(--muted)}
+.bubble{min-width:0;border-radius:10px;padding:10px 14px;font-size:13px;line-height:1.75}
+.msg.user .bubble{background:var(--surface-2);border:1px solid var(--border);border-top-right-radius:4px}
+.msg.bot .bubble{background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow-1);
+  border-top-left-radius:4px;flex:1}
+.bubble p+p{margin-top:8px}
+.bubble .lead{font-size:14px;font-weight:700;color:var(--fg-strong)}
+.bubble ul{padding-left:18px;margin:6px 0}
+.bubble li{margin:3px 0}
+.bubble .law{color:var(--accent-deep);font-weight:600}
+.bubble .calc{font-family:var(--font-mono);font-size:12px;background:var(--surface-2);
+  border:1px solid var(--border);border-radius:6px;padding:8px 12px;margin:8px 0;line-height:1.8}
+.bubble .disc{font-size:11px;color:var(--muted);border-top:1px dashed var(--border);margin-top:10px;padding-top:8px}
+.bubble .acts{display:flex;gap:8px;margin-top:10px}
+/* 工具调用轨迹 */
+.trace{border:1px solid var(--border);border-radius:8px;background:var(--surface-2);overflow:hidden;margin:10px 0 2px}
+.trace-cap{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);padding:6px 10px}
+.trace-row{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--surface);
+  border-top:1px solid var(--border);font-size:12px;cursor:pointer}
+.trace-row:hover{background:var(--surface-2)}
+.trace-row svg.ic{width:14px;height:14px;color:var(--accent)}
+.trace-row .t-name{font-weight:600}
+.trace-row .t-desc{color:var(--muted);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.trace-row .t-time{font-family:var(--font-mono);font-size:10.5px;color:var(--muted);flex:none}
+.trace-row.running svg.ic{color:var(--accent);animation:spin 1s linear infinite}
+.trace-detail{display:none;padding:7px 12px 9px 32px;background:var(--surface);
+  border-top:1px dashed var(--border);font-size:11.5px;color:var(--muted);line-height:1.7}
+.trace-row.open+.trace-detail{display:block}
+.kw{display:inline-block;font-size:11px;background:var(--surface-2);border:1px solid var(--border);
+  border-radius:4px;padding:0 6px;margin:2px 3px 0 0;font-family:var(--font-mono);color:var(--fg)}
+.typing{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);padding:2px 0}
+.typing i{width:5px;height:5px;border-radius:50%;background:var(--accent);animation:blink 1.2s infinite}
+.typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,70%,100%{opacity:.25}35%{opacity:1}}
+/* 输入区 */
+.composer{flex:none;border-top:1px solid var(--border);background:var(--surface);padding:12px 26px 14px}
+.composer-tools{display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:11px;color:var(--muted);flex-wrap:wrap}
+.tool-chip{display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 9px;border-radius:99px;
+  border:1px solid var(--border-strong);background:var(--surface);font-size:11px;color:var(--fg)}
+.tool-chip:hover{border-color:var(--accent);color:var(--accent)}
+.tool-chip svg.ic{width:12px;height:12px}
+.composer-box{display:flex;gap:10px;align-items:flex-end}
+.composer-box .textarea{min-height:44px;max-height:96px;flex:1}
+.composer-box .btn{height:44px;width:52px;padding:0;border-radius:8px}
+
+/* ============ 合同审查 ============ */
+.split{display:grid;grid-template-columns:318px 1fr;gap:16px;flex:1;min-height:0}
+.doc{display:flex;align-items:center;gap:10px;padding:9px 10px;border:1px solid var(--border);
+  border-radius:8px;margin-bottom:8px;cursor:pointer;background:var(--surface);text-align:left;width:100%;transition:var(--t-state)}
+.doc:hover{border-color:var(--muted)}
+.doc.sel{border-color:var(--accent);background:var(--accent-soft)}
+.doc svg.ic{width:20px;height:20px;color:var(--accent)}
+.doc-t{font-size:12.5px;font-weight:600;line-height:1.4}
+.doc-m{font-size:11px;color:var(--muted);margin-top:1px}
+.doc .radio{margin-left:auto;width:15px;height:15px;border-radius:50%;border:1.5px solid var(--border-strong);flex:none}
+.doc.sel .radio{border-width:5px;border-color:var(--accent)}
+.upload{width:100%;border:1.5px dashed var(--border-strong);border-radius:8px;background:none;
+  padding:13px 10px;font-size:12px;color:var(--muted);display:flex;align-items:center;justify-content:center;gap:6px}
+.upload:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.dims{display:flex;flex-direction:column;gap:9px}
+.report-head{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.score{display:flex;align-items:baseline;gap:6px}
+.score b{font-family:var(--font-display);font-size:38px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.score span{font-size:12px;color:var(--muted)}
+.dist{display:flex;align-items:center;gap:8px;flex:1;min-width:240px}
+.dist-bar{flex:1;height:8px;border-radius:4px;overflow:hidden;display:flex;background:var(--surface-2)}
+.dist-bar i{height:100%}
+.dist-bar .h{background:var(--risk-high)} .dist-bar .m{background:var(--risk-mid)} .dist-bar .l{background:var(--risk-low)}
+.dist-legend{display:flex;gap:10px;font-size:11px;color:var(--muted);white-space:nowrap}
+.dist-legend b{font-weight:700;font-variant-numeric:tabular-nums}
+.finding{border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-bottom:10px;overflow:hidden}
+.f-head{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer}
+.f-head:hover{background:var(--surface-2)}
+.f-loc{font-weight:600;font-size:13px;color:var(--fg-strong)}
+.f-loc small{color:var(--muted);font-weight:400;margin-left:6px;font-size:11px}
+.f-head .badge{margin-left:auto}
+.f-body{display:none;padding:2px 14px 13px;border-top:1px solid var(--border);font-size:12.5px;line-height:1.75}
+.finding.open .f-body{display:block}
+.f-quote{background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:8px 12px;
+  margin:9px 0;color:var(--muted);font-size:12px}
+.f-quote::before{content:"原文 · ";font-weight:600;color:var(--muted)}
+.f-sug{color:var(--fg)}
+.f-sug::before{content:"建议 · ";font-weight:700;color:var(--accent-deep)}
+.f-acts{display:flex;gap:8px;margin-top:10px}
+.f-note{font-size:11.5px;color:var(--muted);text-align:center;padding:4px 0 2px}
+/* ============ 设置 ============ */
+.set-grid{max-width:820px;display:flex;flex-direction:column;gap:16px}
+.set-sec{font-size:12px;font-weight:700;color:var(--accent-deep);letter-spacing:.1em;
+  display:flex;align-items:center;gap:8px}
+.set-sec::after{content:"";flex:1;height:1px;background:var(--border)}
+.form-row{display:grid;grid-template-columns:180px 1fr;gap:14px 18px;align-items:center}
+.form-row .field-row{display:flex;gap:10px;align-items:center}
+.form-row .lbl{font-size:13px;font-weight:500;text-align:right}
+.form-row .lbl small{display:block;font-size:11px;color:var(--muted);font-weight:400}
+.form-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
+/* 连接诊断 */
+.diag{display:flex;flex-direction:column}
+.diag-row{display:flex;align-items:center;gap:10px;padding:8px 2px;border-bottom:1px solid var(--border);font-size:12.5px}
+.diag-row:last-child{border-bottom:none}
+.diag-ic{width:17px;height:17px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none}
+.diag-ic.ok{background:var(--risk-low-bg);color:var(--risk-low)}
+.diag-ic.err{background:var(--risk-high-bg);color:var(--risk-high)}
+.diag-ic svg{width:11px;height:11px;stroke-width:2.6}
+.diag-name{font-weight:500}
+.diag-ms{margin-left:auto;font-family:var(--font-mono);font-size:11px;color:var(--muted)}
+.diag-row .btn{height:24px;font-size:11px;padding:0 9px}
+.diag-row.err .diag-name{color:var(--risk-high)}
+.diag-hint{font-size:11px;color:var(--muted);margin-top:8px;display:flex;align-items:center;gap:6px}
+/* 内核信息 */
+.kv{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
+.kv .cell{background:var(--surface-2);border:1px solid var(--border);border-radius:7px;padding:8px 12px}
+.kv .k{font-size:11px;color:var(--muted)}
+.kv .v{font-size:13px;font-weight:600;margin-top:1px;font-variant-numeric:tabular-nums}
+.toolgroups{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.tg{border:1px solid var(--border);border-radius:7px;padding:8px 11px;font-size:11.5px;background:var(--surface)}
+.tg b{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--fg-strong)}
+.tg b .n{margin-left:auto;font-family:var(--font-mono);color:var(--accent);font-size:11px}
+.tg span{color:var(--muted);display:block;margin-top:3px;line-height:1.6}
+
+/* ============ 滚动条 / 杂项 ============ */
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:99px;border:2px solid transparent;background-clip:padding-box}
+::-webkit-scrollbar-thumb:hover{background-color:var(--muted)}
+::-webkit-scrollbar-track{background:transparent}
+.row{display:flex;align-items:center;gap:10px}
+.row.wrap{flex-wrap:wrap}
+.grow{flex:1;min-width:0}
+.muted{color:var(--muted)} .small{font-size:11.5px} .mono{font-family:var(--font-mono)}
+.crumb{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.crumb a{color:var(--muted);text-decoration:none;border-radius:4px}
+.crumb a:hover{color:var(--accent);text-decoration:underline}
+.crumb .cur{color:var(--fg-strong);font-weight:600}
+.banner-error{display:none;gap:10px;align-items:flex-start;background:var(--risk-high-bg);border:1px solid oklch(0.88 0.05 28);border-radius:var(--r-md);padding:10px 12px;font-size:12px;color:var(--risk-high);line-height:1.6}
+.banner-error.show{display:flex}
+.banner-error svg.ic{flex:none;margin-top:1px}
+.spin{display:none;width:13px;height:13px;border:2px solid oklch(0.985 0.004 152/.4);border-top-color:oklch(0.985 0.004 152);border-radius:50%;animation:rot .7s linear infinite}
+.btn.loading .spin{display:inline-block}
+.dd-step .spin,.dd-step .ic{display:none;width:14px;height:14px}
+.dd-step.run .spin{display:block;border-color:var(--accent-line);border-top-color:var(--accent)}
+.gw-row{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
+.gw-row .field{margin-bottom:0;flex:1;min-width:220px}
+.dd-wrap{position:relative}
+.dd-trigger{display:flex;align-items:center;gap:8px;width:100%;height:36px;border:1px solid var(--border-strong);border-radius:var(--r-md);padding:0 12px;background:var(--surface);cursor:pointer;font-size:12.5px;transition:var(--t-state)}
+.dd-trigger:hover{border-color:var(--muted)}
+.dd-trigger .lbl{color:var(--muted);font-size:11.5px}
+.dd-trigger .val{font-family:var(--font-mono);font-weight:600}
+.dd-trigger .badge{margin-left:auto}
+.dd-trigger .chev{transition:transform .15s var(--ease-out)}
+.dd-trigger[aria-expanded="true"] .chev{transform:rotate(90deg)}
+.dd-menu{display:none;position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--surface);border:1px solid var(--border-strong);border-radius:8px;box-shadow:var(--shadow-2);z-index:30;overflow:hidden;transform-origin:top center;animation:menuIn .16s var(--ease-out) both}
+.dd-menu.open{display:block}
+.dd-menu-h{display:flex;align-items:center;font-size:11px;color:var(--muted);padding:9px 12px;border-bottom:1px solid var(--border);letter-spacing:.05em}
+.dd-item{display:flex;align-items:center;gap:9px;padding:9px 12px;font-size:12.5px;cursor:pointer;border:none;background:none;width:100%;text-align:left;animation:ddItem .16s var(--ease-out) both}
+.dd-item:hover{background:var(--surface-2)}
+.dd-item.on{background:var(--accent-soft)}
+.dd-item .mname{font-family:var(--font-mono);font-weight:600}
+.dd-item .mmeta{font-size:11px;color:var(--muted)}
+.dd-item .ic{margin-left:auto;display:none;color:var(--accent)}
+.dd-item.on .ic{display:block}
+.dd-item:nth-child(3){animation-delay:.025s}
+.dd-item:nth-child(4){animation-delay:.05s}
+.dd-item:nth-child(5){animation-delay:.075s}
+.dd-item:nth-child(6){animation-delay:.1s}
+.dd-item:nth-child(7){animation-delay:.125s}
+.dd-item:nth-child(8){animation-delay:.15s}
+
+/* ============ 第二辑页面样式（检索 / 计算器 / 文书 / 尽调 / 证据 / 知识库 / 脱敏） ============ */
+.page.show{animation:pageIn .2s var(--ease-out) both}
+@keyframes pageIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes sbBar{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+@keyframes menuIn{from{opacity:0;transform:translateY(-4px) scale(.985)}to{opacity:1;transform:none}}
+@keyframes ddItem{from{opacity:0;transform:translateY(-3px)}}
+.ph{padding:20px 26px 14px;display:flex;align-items:flex-end;gap:14px;flex:none;
+  border-bottom:1px solid var(--border-strong);background:var(--surface);position:relative}
+.ph::after{content:"";position:absolute;left:0;right:0;bottom:-4px;height:1px;
+  background:var(--border);pointer-events:none}
+.ph h1{font-family:var(--font-display);font-size:21px;font-weight:700;line-height:1.3;
+  color:var(--fg-strong);letter-spacing:.01em}
+.ph-desc{font-size:12px;color:var(--muted);margin-top:3px}
+.ph-acts{margin-left:auto;display:flex;gap:8px;align-items:center;padding-top:2px}
+.pb{flex:1;min-height:0;overflow-y:auto;padding:18px 26px 24px;display:flex;flex-direction:column;gap:16px}
+.lab{font-size:12px;font-weight:600;color:var(--fg);margin-bottom:5px;display:flex;justify-content:space-between;align-items:baseline}
+.hint{font-size:11px;color:var(--muted);font-weight:400}
+.f-err{display:none;font-size:11px;color:var(--risk-high);margin-top:4px}
+.f-err.show{display:block}
+mark{background:var(--accent-soft);color:var(--accent-deep);border-radius:2px;padding:0 2px;font-weight:600}
+.cap{font-size:11px;color:var(--muted);letter-spacing:.06em;margin-right:2px}
+.chip{height:26px;padding:0 12px;border-radius:999px;border:1px solid var(--border-strong);background:var(--surface);font-size:12px;color:var(--fg);cursor:pointer;transition:var(--t-state)}
+.chip:hover{border-color:var(--accent-line);background:var(--accent-soft);color:var(--accent-deep)}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--border);flex:none}
+.tab{height:36px;padding:0 14px;font-size:13px;color:var(--muted);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;margin-bottom:-1px;transition:var(--t-state)}
+.tab b{font-weight:600;font-size:11px;margin-left:3px}
+.tab:hover{color:var(--fg)}
+.tab.on{color:var(--accent-deep);font-weight:600;border-bottom-color:var(--accent)}
+.empty{display:none;flex-direction:column;align-items:center;justify-content:center;padding:44px 0;gap:7px;text-align:center}
+.empty.show{display:flex}
+.empty-t{font-size:13.5px;font-weight:600;color:var(--fg-strong)}
+.empty-d{font-size:12px;color:var(--muted);max-width:380px;line-height:1.7}
+.empty .btn{margin-top:6px}
+@keyframes rot{to{transform:rotate(360deg)}}
+.linkish{background:none;border:none;padding:0;font-size:11.5px;color:var(--accent);cursor:pointer;font-family:inherit}
+.linkish:hover{text-decoration:underline}
+.disc{font-size:11px;color:var(--muted);line-height:1.7}
+.sw{width:34px;height:20px;border-radius:999px;background:var(--border-strong);position:relative;border:none;cursor:pointer;transition:background .15s var(--ease-out);flex:none}
+.sw::after{content:"";position:absolute;width:14px;height:14px;border-radius:50%;background:var(--surface);top:3px;left:3px;transition:transform .15s var(--ease-out);box-shadow:0 1px 2px oklch(0.26 0.014 160/.25)}
+.sw.on{background:var(--accent)}
+.sw.on::after{transform:translateX(14px)}
+.sw:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.pill{height:30px;padding:0 14px;border-radius:999px;border:1px solid var(--border-strong);background:var(--surface);font-size:12.5px;cursor:pointer;color:var(--fg);transition:var(--t-state)}
+.pill.on{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent-deep);font-weight:600}
+/* ============ P1 法律检索 ============ */
+.sbar{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border-strong);border-radius:8px;padding:4px 6px 4px 12px;box-shadow:var(--shadow-1);transition:border-color .15s}
+.sbar:focus-within{border-color:var(--accent)}
+.sbar .ic{color:var(--muted)}
+.sbar .input{border:none;background:transparent;height:38px;font-size:14px;box-shadow:none}
+.sbar .input:focus{outline:none}
+.slist{display:flex;flex-direction:column;gap:8px}
+.sres{display:flex;gap:12px;padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface);cursor:pointer;transition:border-color .15s,background .15s}
+.sres:hover{border-color:var(--accent-line);background:var(--surface-2)}
+.sres-ic{width:34px;height:34px;border-radius:7px;background:var(--surface-2);display:flex;align-items:center;justify-content:center;color:var(--accent);flex:none}
+.sres:hover .sres-ic{background:var(--accent-soft)}
+.sres-t{font-size:13.5px;font-weight:600;font-family:var(--font-display);line-height:1.5;margin-bottom:3px;color:var(--fg-strong)}
+.sres-s{font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:6px}
+.sres-m{display:flex;gap:8px;align-items:center;font-size:11px;color:var(--muted)}
+.sres-m .badge{height:18px;font-size:10.5px}
+/* ============ P2 赔偿计算器 ============ */
+.fm{position:relative}
+.fm .pre{position:absolute;left:10px;top:0;height:32px;display:flex;align-items:center;font-size:12px;color:var(--muted)}
+.fm .input{padding-left:24px;font-variant-numeric:tabular-nums}
+.tc-cap{font-size:11px;letter-spacing:.12em;color:var(--muted);font-weight:600}
+.tc-num{font-family:var(--font-display);font-size:34px;font-weight:700;color:var(--fg-strong);line-height:1.15;margin:6px 0 4px;font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.tc-sub{font-size:11.5px;color:var(--muted)}
+.tc-sub b{color:var(--fg)}
+.bk{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.bk:last-child{border-bottom:none;padding-bottom:2px}
+.bk:first-child{padding-top:2px}
+.bk-n{font-size:12.5px;font-weight:600}
+.bk-b{font-size:11px;color:var(--muted);margin-top:2px}
+.bk-v{margin-left:auto;font-family:var(--font-mono);font-size:14px;font-weight:600;color:var(--fg-strong);white-space:nowrap}
+.bk .badge{height:18px;font-size:10.5px}
+.note-li{display:flex;gap:9px;font-size:12px;line-height:1.7;color:var(--fg);padding:5px 0}
+.note-li svg.ic{width:14px;height:14px;color:var(--risk-mid);flex:none;margin-top:3px}
+/* ============ P3 文书生成 ============ */
+.tpls{display:flex;gap:10px}
+.tpl{flex:1;display:flex;gap:10px;align-items:flex-start;border:1px solid var(--border);border-radius:var(--r-md);background:var(--surface);padding:12px 13px;text-align:left;cursor:pointer;position:relative;transition:var(--t-state);box-shadow:var(--shadow-1)}
+.tpl svg.ic{width:18px;height:18px;color:var(--muted);margin-top:1px}
+.tpl:hover{border-color:var(--border-strong);background:var(--surface-2)}
+.tpl.on{border-color:var(--accent);background:var(--accent-soft)}
+.tpl.on>svg.ic{color:var(--accent)}
+.tpl-n{font-size:13px;font-weight:700;font-family:var(--font-display)}
+.tpl-d{font-size:11px;color:var(--muted);margin-top:3px}
+.tpl .tick{position:absolute;top:7px;right:7px;width:14px;height:14px;color:var(--accent);visibility:hidden}
+.tpl.on .tick{visibility:visible}
+.md-body{font-size:12.8px;line-height:1.85;color:var(--fg)}
+.md-body h1{font-family:var(--font-display);font-size:17px;font-weight:700;color:var(--fg-strong);margin-bottom:10px;letter-spacing:.02em}
+.md-body h2{font-family:var(--font-display);font-size:13.5px;font-weight:700;color:var(--fg-strong);margin:12px 0 6px}
+.md-body p{margin-bottom:8px}
+.md-body ol{padding-left:20px}
+.md-body li{margin-bottom:5px}
+.md-q{background:var(--surface-2);border-radius:var(--r-md);padding:9px 12px;font-size:11.5px;color:var(--muted);margin:10px 0;line-height:1.7}
+.md-sign{text-align:right;margin-top:14px;color:var(--fg-strong)}
+.pv-wrap{flex:1;min-height:0;overflow-y:auto;max-height:430px}
+.mat{display:flex;align-items:center;gap:9px;padding:8px 9px;border:1px solid var(--border);border-radius:7px;margin-bottom:6px;cursor:pointer;transition:border-color .15s}
+.mat:hover{border-color:var(--border-strong)}
+.mat input{width:15px;height:15px;accent-color:var(--accent);cursor:pointer;flex:none}
+.mat input:disabled{cursor:not-allowed}
+.mn{font-size:12.5px;font-weight:500}
+.mm{margin-left:auto}
+.seg{background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:11px 13px;margin-bottom:10px}
+.seg:last-child{margin-bottom:0}
+.seg-h{font-size:12.5px;font-weight:700;font-family:var(--font-display);margin-bottom:9px;display:flex;gap:8px;align-items:center;color:var(--fg-strong)}
+.tl{position:relative;padding-left:16px}
+.tl::before{content:"";position:absolute;left:3px;top:6px;bottom:6px;width:1px;background:var(--border-strong)}
+.tl-i{position:relative;padding-bottom:10px;font-size:12px;line-height:1.65}
+.tl-i:last-child{padding-bottom:2px}
+.tl-i::before{content:"";position:absolute;left:-16.5px;top:4px;width:8px;height:8px;border-radius:50%;background:var(--surface-2);border:1.5px solid var(--border-strong)}
+.tl-i.key::before{background:var(--accent);border-color:var(--accent)}
+.tl-d{font-family:var(--font-mono);font-size:11px;color:var(--muted);margin-right:8px}
+.dd-step{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--muted);padding:7px 0}
+.dd-step .st{width:16px;height:16px;flex:none;display:flex;align-items:center;justify-content:center}
+.dd-step .dot{width:6px;height:6px;border-radius:50%;background:var(--border-strong)}
+.dd-step.run{color:var(--fg-strong);font-weight:600}
+.dd-step.run .dot,.dd-step.done .dot{display:none}
+.dd-step.done{color:var(--fg)}
+.dd-step.done .ic{display:block;color:var(--accent)}
+.note{display:flex;gap:10px;align-items:center;padding:9px 2px;border-bottom:1px solid var(--border);font-size:12px}
+.note:last-child{border-bottom:none}
+.note .nd{font-family:var(--font-mono);font-size:11px;color:var(--muted);flex:none}
+.note .nt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* ============ P6 知识库 ============ */
+.kn-item{display:flex;align-items:center;gap:8px;width:100%;height:32px;padding:0 10px;border:none;background:none;border-radius:6px;font-size:12.5px;color:var(--fg);cursor:pointer;text-align:left}
+.kn-item:hover{background:var(--surface-3)}
+.kn-item.on{background:var(--accent-soft);color:var(--accent-deep);font-weight:600}
+.kn-item .badge{margin-left:auto;height:18px;font-size:10.5px}
+.kbc{border:1px solid var(--border);border-radius:8px;background:var(--surface);padding:13px 15px;margin-bottom:10px}
+.kbc-h{display:flex;align-items:center;gap:9px;margin-bottom:8px;flex-wrap:wrap}
+.kbc-no{font-family:var(--font-display);font-size:14.5px;font-weight:700;color:var(--fg-strong)}
+.kbc-n{font-size:12px;color:var(--muted)}
+.kbc-h .badge{margin-left:auto}
+.law-quote{font-family:var(--font-display);font-size:13px;line-height:1.9;background:var(--surface-2);border-radius:var(--r-md);padding:10px 14px;color:var(--fg-strong);margin:2px 0 8px}
+.kbc-r{font-size:12px;line-height:1.75;color:var(--fg)}
+.kbc-r b{color:var(--accent-deep)}
+.kbc-l{margin-top:8px;font-size:11px;color:var(--muted);display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+/* ============ P7 脱敏工具 ============ */
+.msw{display:flex;align-items:center;gap:11px;border:1px solid var(--border);border-radius:8px;background:var(--surface);padding:10px 13px}
+.msw-n{font-size:12.5px;font-weight:600}
+.msw-d{font-size:11px;color:var(--muted);margin-top:2px}
+.msw .badge{margin-left:auto}
+.mout{white-space:pre-wrap;font-size:12.5px;line-height:2;background:var(--surface-2);border-radius:var(--r-md);padding:12px 14px;min-height:200px}
+.mk{background:var(--accent-soft);color:var(--accent-deep);border-radius:3px;padding:0 3px;font-family:var(--font-mono);font-size:11.5px}
+.mstat{font-size:11.5px;color:var(--muted)}
+.mstat b{color:var(--accent-deep);font-family:var(--font-mono)}
+@media (prefers-reduced-motion: reduce){
+  .page.show,.dd-menu.open,.dd-item,.sb-item.active::before{animation:none}
+  *,*::before,*::after{transition-duration:0s!important;animation-duration:0.01s!important;animation-iteration-count:1!important;animation-delay:0s!important}
+}
+/* 与主框架共类的定向修正（仅作用于第二辑页面，不改设置页等原有样式） */
+#pg-search .field,#pg-calc .field,#pg-docgen .field,#pg-dd .field,#pg-evidence .field,#pg-kb .field,#pg-mask .field{display:block;margin-bottom:12px}
+#pg-dd .kv{display:flex;gap:10px;font-size:12px;padding:3px 0;line-height:1.65}
+#pg-dd .kv .k{width:62px;flex:none;color:var(--muted)}
+#pg-dd .kv .v{flex:1}
+</style>
+</head>
+<body>
+<div id="desk">
+<div id="stage" data-od-id="app-window">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.5"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M5 4h14a2 2 0 012 2v9a2 2 0 01-2 2h-8.5L6 20.5V17H5a2 2 0 01-2-2V6a2 2 0 012-2z"/><path d="M8.5 9.5h7M8.5 12.5h4"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 012-2h4.2l2 2.3H19a2 2 0 012 2V17a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></symbol>
+  <symbol id="i-contract" viewBox="0 0 24 24"><path d="M6 3h8l4 4v13a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M14 3v4h4M9 14l2 2 4-4.5"/></symbol>
+  <symbol id="i-pen" viewBox="0 0 24 24"><path d="M14.5 4.5l5 5L8 21H3v-5L14.5 4.5z"/><path d="M12.5 6.5l5 5"/></symbol>
+  <symbol id="i-scan" viewBox="0 0 24 24"><path d="M4 8V6a2 2 0 012-2h2M16 4h2a2 2 0 012 2v2M20 16v2a2 2 0 01-2 2h-2M8 20H6a2 2 0 01-2-2v-2"/><path d="M7 12h10"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20.5 20.5l-4.8-4.8"/></symbol>
+  <symbol id="i-calc" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 7.5h6"/><path d="M9 12h.01M12 12h.01M15 12h.01M9 16h.01M12 16h.01M15 16h.01" stroke-width="2.6"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7.5 3v5.2c0 4.6-3.1 7.6-7.5 9.3-4.4-1.7-7.5-4.7-7.5-9.3V6L12 3z"/><path d="M9 12l2.2 2.2L15.5 9.8"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6h.01M4 12h.01M4 18h.01" stroke-width="2.6"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M12 5.5C10 4 7 4 4.5 5v13.5C7 17.5 10 17.5 12 19c2-1.5 5-1.5 7.5-.5V5C17 4 14 4 12 5.5z"/><path d="M12 5.5V19"/></symbol>
+  <symbol id="i-compare" viewBox="0 0 24 24"><path d="M5 20v-8M10 20V4M15 20v-11M20 20V8"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h8.5M17.5 7H20M4 17h2.5M11.5 17H20"/><circle cx="15" cy="7" r="2.2"/><circle cx="8.5" cy="17" r="2.2"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M21 3L11 13"/><path d="M21 3l-7 18-3-7.5L3 10.5 21 3z"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l5 5L19.5 7"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9.5 6l6 6-6 6"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 4l9.5 16.5h-19L12 4z"/><path d="M12 10.5v4M12 17.8h.01" stroke-width="2.2"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 10h16M8.5 3v4M15.5 3v4"/></symbol>
+  <symbol id="i-doc" viewBox="0 0 24 24"><path d="M7 3h9l4 4v13a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M15 3v4h4.5"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M4 4v6h6"/><path d="M20 20v-6h-6"/><path d="M20 9a8 8 0 00-13.7-3.6L4 10"/><path d="M4 15a8 8 0 0013.7 3.6L20 14"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5.5L8.5 12l6.5 6.5"/></symbol>
+  <symbol id="i-wmin" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+  <symbol id="i-wmax" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="1"/></symbol>
+  <symbol id="i-wclose" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+</svg>
+
+<!-- 标题栏 -->
+<header class="tb" data-od-id="titlebar">
+  <div class="tb-mark">律</div>
+  <span class="tb-name">法律工作台</span>
+  <span class="tb-chip">Pi Agent 内核</span>
+  <div class="tb-drag"></div>
+  <div class="tb-btns">
+    <button class="tb-btn" aria-label="最小化"><svg class="ic"><use href="#i-wmin"/></svg></button>
+    <button class="tb-btn" aria-label="最大化"><svg class="ic"><use href="#i-wmax"/></svg></button>
+    <button class="tb-btn close" aria-label="关闭"><svg class="ic"><use href="#i-wclose"/></svg></button>
+  </div>
+</header>
+
+<div id="shell" data-od-id="app-shell">
+  <!-- 侧栏 -->
+  <nav class="sb" data-od-id="sidebar" aria-label="主导航">
+    <div class="sb-cap">工作台</div>
+    <button class="sb-item active" data-page="dashboard"><svg class="ic"><use href="#i-grid"/></svg>仪表盘</button>
+    <button class="sb-item" data-page="consult"><svg class="ic"><use href="#i-chat"/></svg>智能咨询</button>
+    <div class="sb-cap">办案</div>
+    <button class="sb-item" data-page="case"><svg class="ic"><use href="#i-folder"/></svg>案件管理<span class="sb-count">12</span></button>
+    <button class="sb-item" data-page="contract"><svg class="ic"><use href="#i-contract"/></svg>合同审查<span class="sb-count">5</span></button>
+    <button class="sb-item" data-page="docgen"><svg class="ic"><use href="#i-pen"/></svg>文书生成</button>
+    <button class="sb-item" data-page="dd"><svg class="ic"><use href="#i-scan"/></svg>尽职调查</button>
+    <button class="sb-item" data-page="research"><svg class="ic"><use href="#i-search"/></svg>法律检索</button>
+    <div class="sb-cap">工具</div>
+    <button class="sb-item" data-page="calc"><svg class="ic"><use href="#i-calc"/></svg>赔偿计算器</button>
+    <button class="sb-item" data-page="mask"><svg class="ic"><use href="#i-shield"/></svg>脱敏工具</button>
+    <div class="sb-cap">参考</div>
+    <button class="sb-item" data-page="evidence"><svg class="ic"><use href="#i-list"/></svg>证据指引</button>
+    <button class="sb-item" data-page="kb"><svg class="ic"><use href="#i-book"/></svg>知识库</button>
+    <div class="sb-spacer"></div>
+    <div class="kernel" data-page="settings" data-od-id="kernel-status" role="button" tabindex="0">
+      <div class="kernel-top"><span class="kdot"></span>Pi 内核 · 运行中<span class="ver">v1.4.2</span></div>
+      <div class="kernel-meta"><span>模型 <b>GLM-5.3</b></span><span>工具 <b>16/16</b></span></div>
+    </div>
+    <button class="sb-item sb-settings" data-page="settings"><svg class="ic"><use href="#i-sliders"/></svg>设置</button>
+  </nav>
+  <div class="main" data-od-id="main-area">
+
+  <!-- ① 仪表盘 -->
+  <section class="page show" id="pg-dashboard" data-od-id="page-dashboard">
+    <div class="pg-head">
+      <div class="grow">
+        <h1 class="pg-title">仪表盘</h1>
+        <div class="pg-sub">2026年8月18日 星期二 · 下午好，周律师</div>
+      </div>
+      <button class="btn outline"><svg class="ic"><use href="#i-doc"/></svg>导出周报</button>
+      <button class="btn primary"><svg class="ic"><use href="#i-plus"/></svg>新建案件</button>
+    </div>
+    <div class="pg-body">
+      <div class="stats" data-od-id="dashboard-stats">
+        <div class="stat" data-od-id="stat-cases">
+          <span class="stat-label">在办案件</span>
+          <span class="stat-num">12<small>件</small></span>
+          <span class="stat-sub">劳动仲裁 8 · 合同纠纷 3 · 其他 1</span>
+        </div>
+        <div class="stat" data-od-id="stat-consult">
+          <span class="stat-label">本月咨询</span>
+          <span class="stat-num">47<small>次</small></span>
+          <span class="stat-sub"><em class="up">本周 9 次</em> · 已归档 41</span>
+        </div>
+        <div class="stat" data-od-id="stat-todos">
+          <span class="stat-label">待办事项</span>
+          <span class="stat-num">9<small>项</small></span>
+          <span class="stat-sub"><em class="hot">今日到期 3 项</em> · 已逾期 0</span>
+        </div>
+        <div class="stat" data-od-id="stat-review">
+          <span class="stat-label">待审查合同</span>
+          <span class="stat-num">5<small>份</small></span>
+          <span class="stat-sub">高风险 2 · 平均用时 6 分钟</span>
+        </div>
+      </div>
+
+      <div class="card" data-od-id="quick-actions">
+        <div class="card-head"><span class="card-title">快捷操作</span></div>
+        <div class="quick">
+          <button class="qa" data-page="consult"><svg class="ic"><use href="#i-chat"/></svg>发起智能咨询<small>Agent 对话 · 16 工具</small></button>
+          <button class="qa" data-page="case"><svg class="ic"><use href="#i-folder"/></svg>新建劳动仲裁案<small>8 阶段全流程</small></button>
+          <button class="qa" data-page="contract"><svg class="ic"><use href="#i-contract"/></svg>审查合同<small>高 / 中 / 低风险分级</small></button>
+          <button class="qa" data-page="docgen"><svg class="ic"><use href="#i-pen"/></svg>生成文书<small>申请书 · 答辩状 · 函件</small></button>
+          <button class="qa" data-page="calc"><svg class="ic"><use href="#i-calc"/></svg>赔偿计算<small>经济补偿 · 工伤 · 加班费</small></button>
+          <button class="qa" disabled><svg class="ic"><use href="#i-shield"/></svg>卷宗脱敏<small>队列处理中 · 2 份</small></button>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 318px;gap:16px;flex:1;min-height:0">
+        <div class="card" data-od-id="recent-cases" style="padding:8px 6px 4px">
+          <div class="card-head" style="padding:6px 12px 8px;margin-bottom:4px">
+            <span class="card-title">最近案件</span>
+            <button class="more" data-page="case">全部 12 件 →</button>
+          </div>
+          <table class="table">
+            <thead><tr><th>案件</th><th>类型</th><th>阶段（8 阶段）</th><th>下一步待办</th><th>时限</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><div class="t-case">张某 诉 恒晟电子科技<small>杭劳人仲〔2026〕第0312号</small></div></td>
+                <td><span class="badge b-accent">劳动仲裁</span></td>
+                <td><span class="dots8"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="cur"></i><i></i><i></i></span><small class="muted" style="margin-left:6px">开庭审理</small></td>
+                <td>提交质证意见</td>
+                <td class="due soon">08-21</td>
+              </tr>
+              <tr>
+                <td><div class="t-case">李某 诉 云帆物流<small>杭劳人仲〔2026〕第0335号</small></div></td>
+                <td><span class="badge b-accent">劳动仲裁</span></td>
+                <td><span class="dots8"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="cur"></i><i></i><i></i><i></i></span><small class="muted" style="margin-left:6px">受理答辩</small></td>
+                <td>答辩期内提交证据</td>
+                <td class="due urgent">08-19</td>
+              </tr>
+              <tr>
+                <td><div class="t-case">王某 诉 蓝郡置业<small>杭劳人仲〔2026〕第0301号</small></div></td>
+                <td><span class="badge b-accent">劳动仲裁</span></td>
+                <td><span class="dots8"><i class="on"></i><i class="on"></i><i class="cur"></i><i></i><i></i><i></i><i></i><i></i></span><small class="muted" style="margin-left:6px">申请准备</small></td>
+                <td>核对仲裁请求金额</td>
+                <td class="due">08-26</td>
+              </tr>
+              <tr>
+                <td><div class="t-case">陈某 诉 汇智软件<small>杭劳人仲〔2026〕第0287号</small></div></td>
+                <td><span class="badge b-accent">劳动仲裁</span></td>
+                <td><span class="dots8"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="cur"></i><i></i></span><small class="muted" style="margin-left:6px">裁决</small></td>
+                <td>领取裁决书并评估起诉</td>
+                <td class="due">09-02</td>
+              </tr>
+              <tr>
+                <td><div class="t-case">刘某 诉 鸿业商贸<small>（2026）浙0108民初4417号</small></div></td>
+                <td><span class="badge b-neutral plain">合同纠纷</span></td>
+                <td><span class="dots8"><i class="on"></i><i class="on"></i><i class="cur"></i><i></i><i></i><i></i><i></i><i></i></span><small class="muted" style="margin-left:6px">诉前准备</small></td>
+                <td>补充证据清单</td>
+                <td class="due">09-05</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div class="card" data-od-id="today-todos">
+            <div class="card-head"><span class="card-title">今日待办</span><span class="badge b-mid plain" style="margin-left:auto">3 项到期</span></div>
+            <div class="todo">
+              <div class="todo-item">
+                <label class="check" style="padding-top:1px"><input type="checkbox" aria-label="完成待办"></label>
+                <div class="todo-main">
+                  <div class="todo-title">云帆物流案 · 提交答辩证据</div>
+                  <div class="todo-meta"><span class="due-urgent"><svg class="ic" style="width:11px;height:11px;vertical-align:-1.5px"><use href="#i-clock"/></svg> 今日 18:00 截止</span><span>负责人 周律师</span></div>
+                </div>
+              </div>
+              <div class="todo-item">
+                <label class="check" style="padding-top:1px"><input type="checkbox" checked aria-label="完成待办"></label>
+                <div class="todo-main">
+                  <div class="todo-title">恒晟案 · 回复当事人电话</div>
+                  <div class="todo-meta"><span>已完成 15:20</span></div>
+                </div>
+              </div>
+              <div class="todo-item">
+                <label class="check" style="padding-top:1px"><input type="checkbox" aria-label="完成待办"></label>
+                <div class="todo-main">
+                  <div class="todo-title">技术服务合同 · 输出审查意见</div>
+                  <div class="todo-meta"><span class="due-urgent">今日 20:00 截止</span><span>负责人 郑助理</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card" data-od-id="agent-brief" style="flex:1">
+            <div class="card-head"><span class="card-title">内核动态</span></div>
+            <div style="font-size:12px;color:var(--muted);line-height:2">
+              <div class="row" style="justify-content:space-between"><span>今日工具调用</span><b class="mono" style="color:var(--fg-strong)">132 次</b></div>
+              <div class="row" style="justify-content:space-between"><span>文书草稿生成</span><b class="mono" style="color:var(--fg-strong)">6 篇</b></div>
+              <div class="row" style="justify-content:space-between"><span>卷宗解析队列</span><b class="mono" style="color:var(--fg-strong)">2 份</b></div>
+              <div class="row" style="justify-content:space-between"><span>本地法条索引</span><b class="mono" style="color:var(--fg-strong)">已就绪</b></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ② 智能咨询 -->
+  <section class="page" id="pg-consult" data-od-id="page-consult" style="overflow:hidden">
+    <div class="pg-consult show" style="flex:1;min-height:0">
+      <aside class="sessions" data-od-id="session-list">
+        <button class="btn primary" style="width:100%;margin-bottom:10px"><svg class="ic"><use href="#i-plus"/></svg>新建咨询</button>
+        <button class="ssn active"><span class="ssn-t">工资拖欠与经济补偿主张</span><span class="ssn-m">今天 14:02<span class="cnt">6</span></span></button>
+        <button class="ssn"><span class="ssn-t">竞业限制范围是否过宽</span><span class="ssn-m">今天 09:47<span class="cnt">3</span></span></button>
+        <button class="ssn"><span class="ssn-t">工伤认定申请时限</span><span class="ssn-m">昨天 16:31</span></button>
+        <button class="ssn"><span class="ssn-t">试用期解除的赔偿边界</span><span class="ssn-m">08-15</span></button>
+        <button class="ssn"><span class="ssn-t">租赁合同违约金上限</span><span class="ssn-m">08-13</span></button>
+      </aside>
+      <div class="chat" data-od-id="chat-area">
+        <div class="pg-head" style="padding:14px 26px 12px">
+          <div class="grow">
+            <h1 class="pg-title" style="font-size:17px">工资拖欠与经济补偿主张</h1>
+            <div class="pg-sub">会话 #A-2026-0818-06 · 关联工具：法律检索、赔偿计算器、知识库</div>
+          </div>
+          <button class="btn ghost sm">存为案件笔记</button>
+          <button class="btn outline sm">导出对话</button>
+        </div>
+        <div class="chat-scroll" data-od-id="chat-stream">
+          <div class="msg user">
+            <div class="avatar human">周</div>
+            <div class="bubble"><p>律师您好，公司拖欠我三个月工资了。如果我以这个理由主动离职，还能拿到经济补偿吗？我月工资 8500 元，已经工作了 3 年 2 个月。</p></div>
+          </div>
+          <div class="msg bot">
+            <div class="avatar bot">律</div>
+            <div class="bubble">
+              <p class="lead">结论：可以。拖欠工资属于「被迫解除」情形，您仍有权主张经济补偿。</p>
+              <div class="trace" data-od-id="tool-trace">
+                <div class="trace-cap"><svg class="ic" style="width:12px;height:12px"><use href="#i-refresh"/></svg>工具调用轨迹 · 3 次调用 · 共 2.6s</div>
+                <div class="trace-row open" data-toggle="trace">
+                  <svg class="ic"><use href="#i-search"/></svg>
+                  <span class="t-name">法律检索</span>
+                  <span class="t-desc">《劳动合同法》第 38 / 46 / 47 条 · 现行有效</span>
+                  <span class="t-time">0.8s ✓</span>
+                </div>
+                <div class="trace-detail">检索关键词：<span class="kw">被迫解除</span><span class="kw">未及时足额支付劳动报酬</span><span class="kw">经济补偿年限</span><br>命中法条 3 条 · 全国人大现行有效文本 · 含 2012 修正版</div>
+                <div class="trace-row" data-toggle="trace">
+                  <svg class="ic"><use href="#i-calc"/></svg>
+                  <span class="t-name">赔偿计算器</span>
+                  <span class="t-desc">经济补偿金测算 · N = 3.5 个月</span>
+                  <span class="t-time">1.2s ✓</span>
+                </div>
+                <div class="trace-row" data-toggle="trace">
+                  <svg class="ic"><use href="#i-book"/></svg>
+                  <span class="t-name">知识库</span>
+                  <span class="t-desc">本地案例库 · 命中同类裁判 12 篇</span>
+                  <span class="t-time">0.6s ✓</span>
+                </div>
+              </div>
+              <p><b>一、依据</b></p>
+              <ul>
+                <li><span class="law">《劳动合同法》第 38 条</span>：用人单位未及时足额支付劳动报酬的，劳动者可以解除劳动合同；</li>
+                <li><span class="law">第 46 条</span>：依第 38 条解除的，用人单位应当支付经济补偿；</li>
+                <li><span class="law">第 47 条</span>：经济补偿按工作年限计算，每满一年支付一个月工资；六个月以上不满一年的，按一年计算。</li>
+              </ul>
+              <p><b>二、测算</b>（工作 3 年 2 个月 → 按 3.5 个月计）</p>
+              <div class="calc">经济补偿 = 8,500 × 3.5 = <b style="color:var(--accent-deep)">29,750 元</b><br>另可主张：拖欠工资 8,500 × 3 = 25,500 元</div>
+              <p><b>三、行动建议</b></p>
+              <ul>
+                <li>先以 EMS 书面催告工资支付，保留凭证；</li>
+                <li>以第 38 条为由发出《被迫解除劳动合同通知书》，切勿写「个人原因离职」；</li>
+                <li>自劳动关系终止之日起 1 年内申请劳动仲裁，主张拖欠工资与经济补偿。</li>
+              </ul>
+              <div class="acts">
+                <button class="btn primary sm" data-page="calc"><svg class="ic"><use href="#i-calc"/></svg>查看完整测算</button>
+                <button class="btn outline sm"><svg class="ic"><use href="#i-folder"/></svg>转为案件办理</button>
+                <button class="btn ghost sm"><svg class="ic"><use href="#i-doc"/></svg>生成咨询笔录</button>
+              </div>
+              <p class="disc">以上内容由 Pi Agent 生成，仅供参考，正式意见请以承办律师复核为准。</p>
+            </div>
+          </div>
+          <div class="msg user">
+            <div class="avatar human">周</div>
+            <div class="bubble"><p>那如果我不提离职，直接申请仲裁要工资，可以吗？</p></div>
+          </div>
+          <div class="msg bot">
+            <div class="avatar bot">律</div>
+            <div class="bubble">
+              <div class="trace">
+                <div class="trace-cap"><svg class="ic" style="width:12px;height:12px"><use href="#i-refresh"/></svg>工具调用轨迹 · 进行中</div>
+                <div class="trace-row running">
+                  <svg class="ic"><use href="#i-refresh"/></svg>
+                  <span class="t-name">法律检索</span>
+                  <span class="t-desc">检索本地案例库「仲裁期间 劳动关系存续」</span>
+                  <span class="t-time">进行中…</span>
+                </div>
+              </div>
+              <div class="typing"><i></i><i></i><i></i>正在整理检索结果…</div>
+            </div>
+          </div>
+        </div>
+        <div class="composer" data-od-id="composer">
+          <div class="composer-tools">
+            <span>已启用 16 个法律工具</span>
+            <button class="tool-chip"><svg class="ic"><use href="#i-search"/></svg>/法条</button>
+            <button class="tool-chip"><svg class="ic"><use href="#i-calc"/></svg>/计算</button>
+            <button class="tool-chip"><svg class="ic"><use href="#i-book"/></svg>/案例</button>
+            <button class="tool-chip"><svg class="ic"><use href="#i-doc"/></svg>/文书</button>
+            <span style="margin-left:auto">Enter 发送 · Shift+Enter 换行</span>
+          </div>
+          <div class="composer-box">
+            <textarea class="textarea" rows="1" placeholder="输入法律问题，或使用 / 唤起工具…"></textarea>
+            <button class="btn primary" aria-label="发送"><svg class="ic"><use href="#i-send"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- ③ 劳动仲裁案件详情 -->
+  <section class="page" id="pg-case" data-od-id="page-case">
+    <div class="pg-head">
+      <button class="btn ghost sm" aria-label="返回案件列表"><svg class="ic"><use href="#i-back"/></svg>返回</button>
+      <div class="grow">
+        <div class="crumb" style="margin-bottom:2px"><a href="#" data-page="case">案件管理</a><svg class="ic" style="width:11px;height:11px"><use href="#i-chev"/></svg><span class="cur">张某 诉 恒晟电子科技</span></div>
+        <h1 class="pg-title" style="font-size:19px">张某 与 恒晟电子科技劳动争议仲裁案</h1>
+        <div class="pg-sub">杭劳人仲〔2026〕第0312号 · 标的 ¥58,400 · 代理申请人</div>
+      </div>
+      <span class="badge b-accent" style="height:24px">开庭审理 · 第 6 / 8 阶段</span>
+      <button class="btn outline"><svg class="ic"><use href="#i-doc"/></svg>导出案卷</button>
+    </div>
+    <div class="pg-body">
+      <div class="card" data-od-id="stage-progress" style="padding:14px 18px 12px">
+        <div class="card-head" style="margin-bottom:4px">
+          <span class="card-title">仲裁进度</span>
+          <span class="small muted" style="margin-left:auto">2026-06-12 立案 · 已进行 67 天</span>
+        </div>
+        <div class="stagebar" data-od-id="stagebar-8">
+          <div class="stg done"><div class="stg-node"><svg class="ic"><use href="#i-check"/></svg></div><span class="stg-label">咨询评估</span></div>
+          <div class="stg done"><div class="stg-node"><svg class="ic"><use href="#i-check"/></svg></div><span class="stg-label">证据收集</span></div>
+          <div class="stg done"><div class="stg-node"><svg class="ic"><use href="#i-check"/></svg></div><span class="stg-label">申请准备</span></div>
+          <div class="stg done"><div class="stg-node"><svg class="ic"><use href="#i-check"/></svg></div><span class="stg-label">提交仲裁委</span></div>
+          <div class="stg done"><div class="stg-node"><svg class="ic"><use href="#i-check"/></svg></div><span class="stg-label">受理答辩</span></div>
+          <div class="stg cur"><div class="stg-node">6</div><span class="stg-label">开庭审理</span></div>
+          <div class="stg"><div class="stg-node">7</div><span class="stg-label">裁决</span></div>
+          <div class="stg"><div class="stg-node">8</div><span class="stg-label">执行结案</span></div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 318px;gap:16px;flex:1;min-height:0">
+        <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
+          <div class="card" data-od-id="case-info">
+            <div class="card-head"><span class="card-title">案件信息</span></div>
+            <div class="case-meta">
+              <div><div class="k">申请人</div><div class="v">张某（1989-03 生 · 入职 2022-06）</div></div>
+              <div><div class="k">被申请人</div><div class="v">恒晟电子科技有限公司</div></div>
+              <div><div class="k">争议类型</div><div class="v">违法解除 + 工资差额</div></div>
+              <div><div class="k">仲裁请求</div><div class="v">赔偿金 46,400 元 + 工资 12,000 元</div></div>
+              <div><div class="k">立案日期</div><div class="v">2026-06-12</div></div>
+              <div><div class="k">开庭日期</div><div class="v" style="color:var(--risk-mid);font-weight:600">2026-08-26 14:30 · 第3仲裁庭</div></div>
+              <div><div class="k">举证期限</div><div class="v">2026-08-21（仲裁委指定）</div></div>
+              <div><div class="k">办案团队</div><div class="v">周律师（主办）· 郑助理</div></div>
+            </div>
+          </div>
+
+          <div class="card" data-od-id="case-todos" style="flex:1">
+            <div class="card-head">
+              <span class="card-title">待办清单</span>
+              <span class="badge b-mid plain" style="margin-left:auto">6 项 · 2 项今日到期</span>
+              <button class="btn outline sm"><svg class="ic"><use href="#i-plus"/></svg>新增</button>
+            </div>
+            <div class="todo">
+              <div class="todo-item">
+                <label class="check" style="padding-top:2px"><input type="checkbox" aria-label="完成待办"></label>
+                <div class="todo-main">
+                  <div class="todo-title">整理质证意见（对被申请人证据一至四）</div>
+                  <div class="todo-meta"><span class="due-urgent"><svg class="ic" style="width:11px;height:11px;vertical-align:-1.5px"><use href="#i-clock"/></svg> 08-21 截止</span><span>开庭前必办</span><span>负责人 周律师</span></div>
+                </div>
+                <span class="badge b-high">紧急</span>
+              </div>
+              <div class="todo-item">
+                <label class="check" style="padding-top:2px"><input type="checkbox" aria-label="完成待办"></label>
+                <div class="todo-main">
+                  <div class="todo-title">与当事人确认工资流水明细（2026-03 至 05）</div>
+                  <div class="todo-meta"><span class="due-urgent">今日 18:00 截止</span><span>负责人 郑助理</span></div>
+                </div>
+                <span class="badge b-high">紧急</span>
+              </div>
+              <div class="todo-item">
+                <label class="check" style="padding-top:2px"><input type="checkbox" aria-label="完成待办"></label>
+                <div class="todo-main">
+                  <div class="todo-title">补充证据：辞退通知微信记录公证</div>
+                  <div class="todo-meta"><span>08-20 截止</span><span>证据组 B</span></div>
+                </div>
+                <span class="badge b-mid">高</span>
+              </div>
+              <div class="todo-item done">
+                <label class="check" style="padding-top:2px"><input type="checkbox" checked aria-label="完成待办"></label>
+                <div class="todo-main">
+                  <div class="todo-title">提交《仲裁申请书》及证据清单</div>
+                  <div class="todo-meta"><span>已于 06-12 完成 · 仲裁委已接收</span></div>
+                </div>
+                <span class="badge b-neutral plain">已完成</span>
+              </div>
+              <div class="todo-item">
+                <label class="check" style="padding-top:2px"><input type="checkbox" aria-label="完成待办"></label>
+                <div class="todo-main">
+                  <div class="todo-title">庭审提纲初稿（可用文书生成起草）</div>
+                  <div class="todo-meta"><span>08-24 截止</span><span>负责人 周律师</span></div>
+                </div>
+                <span class="badge b-neutral plain">普通</span>
+              </div>
+            </div>
+            <button class="todo-add"><svg class="ic" style="width:13px;height:13px"><use href="#i-plus"/></svg>添加待办事项</button>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div class="card" data-od-id="case-deadline" style="border-color:oklch(0.88 0.05 75)">
+            <div class="card-head" style="margin-bottom:6px"><span class="card-title">开庭倒计时</span></div>
+            <div class="countdown"><b>8</b><span>天<br>2026-08-26 14:30</span></div>
+            <div class="small muted" style="margin-top:8px;display:flex;gap:6px;align-items:center">
+              <svg class="ic" style="width:13px;height:13px;color:var(--risk-mid)"><use href="#i-alert"/></svg>
+              举证期限 08-21 截止，先于开庭
+            </div>
+          </div>
+          <div class="card" data-od-id="rule-reference">
+            <div class="card-head"><span class="card-title">规则参考</span><span class="small muted" style="margin-left:auto">Agent 生成</span></div>
+            <div class="rule">
+              <div class="rule-title"><svg class="ic" style="width:13px;height:13px"><use href="#i-book"/></svg>审理期限</div>
+              <div class="rule-body">仲裁庭裁决劳动争议案件，应当自受理仲裁申请之日起四十五日内结束；案情复杂需要延期的，经批准可延长并书面通知当事人，延长期限不得超过十五日。</div>
+              <div class="rule-src">《劳动争议调解仲裁法》第 43 条</div>
+            </div>
+            <div class="rule" style="margin-top:8px">
+              <div class="rule-title"><svg class="ic" style="width:13px;height:13px"><use href="#i-book"/></svg>举证责任</div>
+              <div class="rule-body">与争议事项有关的证据属于用人单位掌握管理的，用人单位应当提供；不提供的，应当承担不利后果。</div>
+              <div class="rule-src">《劳动争议调解仲裁法》第 6 条 · 最高法解释一第 44 条</div>
+            </div>
+            <div class="rule" style="margin-top:8px">
+              <div class="rule-title"><svg class="ic" style="width:13px;height:13px"><use href="#i-book"/></svg>一裁终局</div>
+              <div class="rule-body">本案标的未超当地月最低工资标准十二个月金额，属第 47 条一裁终局范围，双方救济路径不同，需提前向当事人释明。</div>
+              <div class="rule-src">《劳动争议调解仲裁法》第 47 / 48 / 49 条</div>
+            </div>
+          </div>
+          <div class="card" data-od-id="case-docs">
+            <div class="card-head"><span class="card-title">关联文书</span></div>
+            <div class="row" style="justify-content:space-between;padding:5px 0;font-size:12.5px">
+              <span class="row" style="gap:7px"><svg class="ic" style="color:var(--accent)"><use href="#i-doc"/></svg>仲裁申请书</span><span class="badge b-low">已定稿</span>
+            </div>
+            <div class="row" style="justify-content:space-between;padding:5px 0;font-size:12.5px">
+              <span class="row" style="gap:7px"><svg class="ic" style="color:var(--accent)"><use href="#i-doc"/></svg>证据清单（12 项）</span><span class="badge b-mid">待核对</span>
+            </div>
+            <div class="row" style="justify-content:space-between;padding:5px 0;font-size:12.5px">
+              <span class="row" style="gap:7px"><svg class="ic" style="color:var(--accent)"><use href="#i-pen"/></svg>质证意见</span><span class="badge b-neutral plain">未开始</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- ④ 合同审查 -->
+  <section class="page" id="pg-contract" data-od-id="page-contract" style="overflow:hidden">
+    <div class="pg-head">
+      <div class="grow">
+        <h1 class="pg-title">合同审查</h1>
+        <div class="pg-sub">文档比对 + 风险分级报告 · 支持批量队列</div>
+      </div>
+      <button class="btn outline"><svg class="ic"><use href="#i-doc"/></svg>审查历史</button>
+      <button class="btn primary"><svg class="ic"><use href="#i-plus"/></svg>新建审查任务</button>
+    </div>
+    <div class="pg-body">
+      <div class="split">
+        <div style="display:flex;flex-direction:column;gap:16px;min-height:0;overflow-y:auto;padding-right:2px">
+          <div class="card" data-od-id="doc-select">
+            <div class="card-head"><span class="card-title">选择文档</span><button class="more">文档库</button></div>
+            <button class="doc sel">
+              <svg class="ic"><use href="#i-contract"/></svg>
+              <span><span class="doc-t">《技术服务合同》恒晟电子.pdf</span><span class="doc-m">24 页 · 1.8 MB · 今天 13:40 上传</span></span>
+              <span class="radio" aria-hidden="true"></span>
+            </button>
+            <button class="doc">
+              <svg class="ic"><use href="#i-doc"/></svg>
+              <span><span class="doc-t">《保密协议》模板 v3.docx</span><span class="doc-m">6 页 · 210 KB · 08-16</span></span>
+              <span class="radio" aria-hidden="true"></span>
+            </button>
+            <button class="doc">
+              <svg class="ic"><use href="#i-doc"/></svg>
+              <span><span class="doc-t">《房屋租赁合同》滨江店.pdf</span><span class="doc-m">11 页 · 960 KB · 08-14</span></span>
+              <span class="radio" aria-hidden="true"></span>
+            </button>
+            <button class="upload"><svg class="ic" style="width:14px;height:14px"><use href="#i-plus"/></svg>上传新文档（PDF / DOCX）</button>
+          </div>
+          <div class="card" data-od-id="review-config">
+            <div class="card-head"><span class="card-title">审查设置</span></div>
+            <div class="field" style="margin-bottom:12px">
+              <label>审查维度<small class="hint"> · 可多选</small></label>
+              <div class="dims">
+                <label class="check"><input type="checkbox" checked>主体资格与签署效力</label>
+                <label class="check"><input type="checkbox" checked>违约责任与赔偿上限</label>
+                <label class="check"><input type="checkbox" checked>知识产权归属</label>
+                <label class="check"><input type="checkbox" checked>付款与验收条件</label>
+                <label class="check"><input type="checkbox">竞业限制与保密</label>
+                <label class="check"><input type="checkbox" disabled>争议解决条款（队列中）</label>
+              </div>
+            </div>
+            <div class="form-row" style="grid-template-columns:88px 1fr;margin-bottom:12px">
+              <span class="lbl">审查口径</span>
+              <select class="select"><option>标准（适合常规商务合同）</option><option>严格（诉讼视角，逐条排查）</option><option>宽松（仅标记重大风险）</option></select>
+            </div>
+            <div class="form-row" style="grid-template-columns:88px 1fr">
+              <span class="lbl">我方立场</span>
+              <select class="select"><option>乙方（服务提供方）</option><option>甲方（委托方）</option></select>
+            </div>
+            <div class="form-actions" style="justify-content:stretch;border:none;margin-top:12px;padding-top:0">
+              <button class="btn outline" style="flex:1"><svg class="ic"><use href="#i-refresh"/></svg>重新审查</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" data-od-id="risk-report" style="min-height:0;display:flex;flex-direction:column">
+          <div class="card-head" style="margin-bottom:8px">
+            <span class="card-title">风险报告</span>
+            <span class="small muted" style="margin-left:auto">审查完成 13:47 · 用时 6 分 12 秒</span>
+            <button class="btn outline sm"><svg class="ic"><use href="#i-doc"/></svg>导出报告</button>
+          </div>
+          <div class="report-head" style="margin-bottom:12px" data-od-id="risk-summary">
+            <span class="badge b-mid" style="height:26px;font-size:12.5px">综合评级 · 中风险</span>
+            <div class="score"><b style="color:var(--risk-mid)">62</b><span>/ 100</span></div>
+            <div class="dist">
+              <div class="dist-bar"><i class="h" style="width:18%"></i><i class="m" style="width:27%"></i><i class="l" style="width:55%"></i></div>
+              <div class="dist-legend">
+                <span>高 <b style="color:var(--risk-high)">2</b></span>
+                <span>中 <b style="color:var(--risk-mid)">3</b></span>
+                <span>低 <b style="color:var(--risk-low)">5</b></span>
+              </div>
+            </div>
+          </div>
+          <div style="overflow-y:auto;min-height:0;padding-right:2px" data-od-id="findings">
+            <div class="finding open">
+              <div class="f-head" data-toggle="finding">
+                <span class="f-loc">第 12.1 条<small>争议解决 · 管辖</small></span>
+                <span class="badge b-high">高风险</span>
+                <svg class="ic" style="width:13px;height:13px;color:var(--muted)"><use href="#i-chev"/></svg>
+              </div>
+              <div class="f-body">
+                <div class="f-quote">因本合同发生争议，双方协商不成的，由甲方住所地人民法院管辖。</div>
+                <div class="f-sug">删除单方住所地管辖约定，改为「被告住所地或合同履行地人民法院管辖」；如需确定性，可约定杭州仲裁委仲裁条款。</div>
+                <div class="small muted" style="margin-top:6px">依据：《民事诉讼法》第 35 条协议管辖范围 · 本地案例库命中 7 篇</div>
+                <div class="f-acts">
+                  <button class="btn primary sm"><svg class="ic"><use href="#i-check"/></svg>采纳修改</button>
+                  <button class="btn outline sm">标记忽略</button>
+                  <button class="btn ghost sm">查看原文定位</button>
+                </div>
+              </div>
+            </div>
+            <div class="finding">
+              <div class="f-head" data-toggle="finding">
+                <span class="f-loc">第 5.3 条<small>知识产权归属</small></span>
+                <span class="badge b-high">高风险</span>
+                <svg class="ic" style="width:13px;height:13px;color:var(--muted)"><use href="#i-chev"/></svg>
+              </div>
+              <div class="f-body">
+                <div class="f-quote">本项目全部交付成果（含源代码、文档）的知识产权自交付起归甲方所有。</div>
+                <div class="f-sug">改为「甲方获得永久使用许可」，或对知识产权转让单独约定对价；保留乙方通用技术与工具的权利。</div>
+                <div class="f-acts">
+                  <button class="btn primary sm"><svg class="ic"><use href="#i-check"/></svg>采纳修改</button>
+                  <button class="btn outline sm">标记忽略</button>
+                </div>
+              </div>
+            </div>
+            <div class="finding">
+              <div class="f-head" data-toggle="finding">
+                <span class="f-loc">第 8.2 条<small>违约金</small></span>
+                <span class="badge b-mid">中风险</span>
+                <svg class="ic" style="width:13px;height:13px;color:var(--muted)"><use href="#i-chev"/></svg>
+              </div>
+              <div class="f-body">
+                <div class="f-quote">任何一方违约的，应向守约方支付合同总额 30% 的违约金。</div>
+                <div class="f-sug">30% 上限超出司法常见支持比例（损失的 30%），建议下调至 20% 并加「以实际损失为限」表述。</div>
+                <div class="f-acts"><button class="btn primary sm"><svg class="ic"><use href="#i-check"/></svg>采纳修改</button><button class="btn outline sm">标记忽略</button></div>
+              </div>
+            </div>
+            <div class="finding">
+              <div class="f-head" data-toggle="finding">
+                <span class="f-loc">第 4.1 条<small>付款条件</small></span>
+                <span class="badge b-mid">中风险</span>
+                <svg class="ic" style="width:13px;height:13px;color:var(--muted)"><use href="#i-chev"/></svg>
+              </div>
+            </div>
+            <div class="finding">
+              <div class="f-head" data-toggle="finding">
+                <span class="f-loc">第 10.2 条<small>保密期限</small></span>
+                <span class="badge b-mid">中风险</span>
+                <svg class="ic" style="width:13px;height:13px;color:var(--muted)"><use href="#i-chev"/></svg>
+              </div>
+            </div>
+            <div class="finding">
+              <div class="f-head" data-toggle="finding">
+                <span class="f-loc">第 3.2 条<small>通知送达</small></span>
+                <span class="badge b-low">低风险</span>
+                <svg class="ic" style="width:13px;height:13px;color:var(--muted)"><use href="#i-chev"/></svg>
+              </div>
+            </div>
+            <div class="f-note">另有 4 项低风险提示已折叠 · 展开查看全部 10 项</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- 第二辑并入：文书生成 · 尽职调查 · 法律检索 · 赔偿计算器 · 脱敏工具 · 证据指引 · 知识库 -->
+
+      <!-- P3 文书生成 -->
+      <section class="page" id="pg-docgen" data-od-id="page-docgen">
+        <div class="ph">
+          <div><h1>文书生成</h1><p class="ph-desc">模板 + 案件事实 → 结构化初稿 · 承办律师审签后生效</p></div>
+        </div>
+        <div class="pb">
+          <div class="tpls" data-od-id="tpl-cards">
+            <button class="tpl on" data-tpl="arbitration" data-od-id="tpl-arbitration"><svg class="ic"><use href="#i-doc"/></svg><div><div class="tpl-n">仲裁申请书</div><div class="tpl-d">劳动争议立案必备</div></div><span class="badge b-accent">高频</span><svg class="ic tick"><use href="#i-check"/></svg></button>
+            <button class="tpl" data-tpl="defense" data-od-id="tpl-defense"><svg class="ic"><use href="#i-contract"/></svg><div><div class="tpl-n">答辩状</div><div class="tpl-d">被申请人抗辩主张</div></div><svg class="ic tick"><use href="#i-check"/></svg></button>
+            <button class="tpl" data-tpl="lawyer" data-od-id="tpl-lawyer-letter"><svg class="ic"><use href="#i-pen"/></svg><div><div class="tpl-n">律师函</div><div class="tpl-d">交涉 · 告知 · 限期履行</div></div><svg class="ic tick"><use href="#i-check"/></svg></button>
+            <button class="tpl" data-tpl="demand" data-od-id="tpl-demand-letter"><svg class="ic"><use href="#i-clock"/></svg><div><div class="tpl-n">催告函</div><div class="tpl-d">工资与补偿支付催告</div></div><svg class="ic tick"><use href="#i-check"/></svg></button>
+          </div>
+          <div style="display:flex;gap:14px;min-height:0">
+            <div class="card" style="width:392px;flex:none" data-od-id="docgen-facts">
+              <div class="card-head"><span class="card-title">案件事实输入</span></div>
+              <div class="field"><div class="lab">申请人 / 委托人</div><input class="input" id="dparty1" value="张某"></div>
+              <div class="field"><div class="lab">被申请人 / 相对方</div><input class="input" id="dparty2" value="恒晟电子科技有限公司"></div>
+              <div class="field"><div class="lab">事实与理由要点<span class="hint">供 Agent 组织文书结构</span></div>
+                <textarea class="textarea" id="dfacts" rows="9">张某于 2019 年 7 月 1 日入职恒晟电子科技有限公司，担任产线质检员，月平均工资 8,000 元，工资按月转账发放。公司始终未与张某签订书面劳动合同。2024 年 6 月 28 日主管口头通知班组解散；6 月 30 日人事通过微信送达解除通知，理由为“组织架构调整”，未支付任何经济补偿，亦未出具离职证明。</textarea>
+              </div>
+              <div class="row" style="gap:8px">
+                <button class="btn primary" id="dgen"><span class="spin"></span><svg class="ic"><use href="#i-pen"/></svg><span>生成文书</span></button>
+                <button class="btn ghost sm" id="dclear">恢复示例事实</button>
+              </div>
+            </div>
+            <div class="card" style="flex:1;min-width:0;display:flex;flex-direction:column" data-od-id="docgen-preview">
+              <div class="card-head">
+                <span class="card-title">生成预览</span>
+                <span class="badge b-low" id="dmeta">已生成 · 刚刚</span>
+                <div class="row" style="gap:6px;margin-left:auto">
+                  <button class="btn ghost sm" id="dcopy">复制文本</button>
+                  <button class="btn primary sm" id="dexport"><svg class="ic"><use href="#i-doc"/></svg>导出 Word</button>
+                </div>
+              </div>
+              <div class="pv-wrap"><div class="md-body" id="dbody"></div></div>
+              <p class="disc" style="margin-top:8px">初稿由 Pi Agent 依据模板与事实要点生成，主体信息、金额与日期须人工核对，正式提交前由承办律师审签。</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- P4 尽职调查（阅卷） -->
+      <section class="page" id="pg-dd" data-od-id="page-dd">
+        <div class="ph">
+          <div><h1>尽职调查（阅卷）</h1><p class="ph-desc">材料解析 → 主体 · 时间线 · 争点 → 沉淀办案笔记</p></div>
+        </div>
+        <div class="pb" style="flex-direction:row;gap:14px">
+          <div style="width:332px;flex:none;display:flex;flex-direction:column;gap:12px">
+            <div class="card" data-od-id="dd-materials">
+              <div class="card-head"><span class="card-title">材料选择</span><span class="badge b-neutral plain" id="dmat-n">4 / 6 份</span></div>
+              <label class="mat"><input type="checkbox" disabled><span class="mn">劳动合同</span><span class="badge b-high mm">未提供</span></label>
+              <label class="mat"><input type="checkbox" checked><span class="mn">工资银行流水</span><span class="badge b-low mm">24 个月</span></label>
+              <label class="mat"><input type="checkbox" checked><span class="mn">社保缴纳记录</span><span class="badge b-low mm">已归档</span></label>
+              <label class="mat"><input type="checkbox" checked><span class="mn">解除通知微信记录</span><span class="badge b-low mm">已固定</span></label>
+              <label class="mat"><input type="checkbox" checked><span class="mn">考勤记录截图</span><span class="badge b-low mm">18 张</span></label>
+              <label class="mat"><input type="checkbox"><span class="mn">证人证言笔录</span><span class="badge b-mid mm">待补充</span></label>
+            </div>
+            <div class="card" data-od-id="dd-questions">
+              <div class="card-head"><span class="card-title">针对性问题</span><span class="hint">引导阅卷重点</span></div>
+              <textarea class="textarea" id="ddq" rows="5">重点核查：① 入职时间与社保起缴时间是否一致；② 解除通知的发出主体、形式与送达时间；③ 工资流水中是否存在加班费科目；④ 是否存在关联公司混同用工。</textarea>
+              <button class="btn primary" id="ddgo" style="width:100%;margin-top:10px"><span class="spin"></span><svg class="ic"><use href="#i-scan"/></svg><span>开始阅卷（4 份材料）</span></button>
+            </div>
+          </div>
+          <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:12px">
+            <div class="card" data-od-id="dd-result">
+              <div class="card-head">
+                <span class="card-title">AI 阅卷结果</span>
+                <span class="badge b-low" id="ddmeta">已完成 · 4 份材料</span>
+                <button class="btn outline sm" id="ddre" style="margin-left:auto"><svg class="ic"><use href="#i-refresh"/></svg>重新阅卷</button>
+              </div>
+              <div id="ddprog" style="display:none" data-od-id="dd-progress">
+                <div class="dd-step"><span class="st"><i class="dot"></i><span class="spin"></span><svg class="ic"><use href="#i-check"/></svg></span>解析材料文本（4 份 · 6.2 MB）</div>
+                <div class="dd-step"><span class="st"><i class="dot"></i><span class="spin"></span><svg class="ic"><use href="#i-check"/></svg></span>抽取主体信息与关键日期</div>
+                <div class="dd-step"><span class="st"><i class="dot"></i><span class="spin"></span><svg class="ic"><use href="#i-check"/></svg></span>归纳争议焦点并匹配法条依据</div>
+              </div>
+              <div id="ddres" data-od-id="dd-result-body">
+                <div class="seg" data-od-id="dd-subjects">
+                  <div class="seg-h"><svg class="ic" style="color:var(--accent)"><use href="#i-shield"/></svg>主体识别</div>
+                  <div class="kv"><span class="k">申请人</span><span class="v">张某 · 女 · 1990.04 · 产线质检员</span></div>
+                  <div class="kv"><span class="k">被申请人</span><span class="v">恒晟电子科技有限公司 · 存续 · 社保开户与工资发放主体一致 <span class="badge b-low">已核验</span></span></div>
+                  <div class="kv"><span class="k">用工形式</span><span class="v">事实劳动关系（未签书面合同）<span class="badge b-high">关注</span></span></div>
+                </div>
+                <div class="seg" data-od-id="dd-timeline">
+                  <div class="seg-h"><svg class="ic" style="color:var(--accent)"><use href="#i-clock"/></svg>时间线</div>
+                  <div class="tl">
+                    <div class="tl-i"><span class="tl-d">2019-07-01</span>入职，建立事实劳动关系</div>
+                    <div class="tl-i"><span class="tl-d">2019-08</span>社保改由关联公司代缴 <span class="badge b-mid" style="height:17px;font-size:10px">待核实</span></div>
+                    <div class="tl-i"><span class="tl-d">2024-06-28</span>主管口头通知班组解散（有录音）</div>
+                    <div class="tl-i key"><span class="tl-d">2024-06-30</span>微信送达《解除通知》，理由“组织架构调整”</div>
+                    <div class="tl-i"><span class="tl-d">2024-07-15</span>委托立案，未获任何补偿</div>
+                  </div>
+                </div>
+                <div class="seg" data-od-id="dd-issues">
+                  <div class="seg-h"><svg class="ic" style="color:var(--accent)"><use href="#i-list"/></svg>争点归纳</div>
+                  <div class="kv"><span class="k">争点一</span><span class="v"><b>是否构成违法解除</b> <span class="badge b-high">高</span> <span class="badge b-neutral plain">§87</span><br>单位以“组织架构调整”解除但未举证岗位撤销必要性，证据由单位掌握。</span></div>
+                  <div class="kv"><span class="k">争点二</span><span class="v"><b>二倍工资差额与时效</b> <span class="badge b-high">高</span> <span class="badge b-neutral plain">§82</span><br>2019-08 至 2020-06 共 11 个月可主张，但距离职已超 1 年，存在时效抗辩风险。</span></div>
+                  <div class="kv"><span class="k">争点三</span><span class="v"><b>加班费基数与举证</b> <span class="badge b-mid">中</span> <span class="badge b-neutral plain">劳动法 §44</span><br>流水中无加班费科目，需以考勤记录补强单位安排加班的事实。</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="card" data-od-id="dd-notes">
+              <div class="card-head"><span class="card-title">历史笔记</span><button class="more" data-page="consult">全部 23 条 →</button></div>
+              <div class="note"><span class="nd">08-12</span><span class="nt">庭前会议要点：仲裁请求第 2 项金额按 11 个月重新核对</span><span class="badge b-accent" style="height:18px;font-size:10.5px">庭审</span><button class="linkish">查看</button></div>
+              <div class="note"><span class="nd">08-05</span><span class="nt">与张某二次会见：补充微信原始载体与录音备份</span><span class="badge b-neutral" style="height:18px;font-size:10.5px">会见</span><button class="linkish">查看</button></div>
+              <div class="note"><span class="nd">07-30</span><span class="nt">阅卷 v1：缺在职证明与工资条原件，已通知委托人补充</span><span class="badge b-neutral" style="height:18px;font-size:10.5px">阅卷</span><button class="linkish">查看</button></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- P1 法律检索 -->
+      <section class="page" id="pg-search" data-od-id="page-search">
+        <div class="ph">
+          <div><h1>法律检索</h1><p class="ph-desc">全文检索案卷、法条与判例 · 本地索引 2,483 份文档</p></div>
+          <div class="ph-acts"><button class="btn outline sm"><svg class="ic"><use href="#i-refresh"/></svg>重建索引</button></div>
+        </div>
+        <div class="pb">
+          <div class="sbar" data-od-id="search-bar">
+            <svg class="ic"><use href="#i-search"/></svg>
+            <input id="sq" class="input" placeholder="输入关键词，如：违法解除 赔偿金" value="违法解除" aria-label="检索关键词">
+            <button id="sgo" class="btn primary" style="height:34px">检索</button>
+          </div>
+          <div class="row" style="gap:6px;flex-wrap:wrap" data-od-id="search-history">
+            <span class="cap">历史关键词</span>
+            <button class="chip" data-q="违法解除">违法解除</button>
+            <button class="chip" data-q="二倍工资">未签合同 二倍工资</button>
+            <button class="chip" data-q="加班费">加班费 计算基数</button>
+            <button class="chip" data-q="时效">仲裁时效</button>
+            <button class="chip" data-q="社保">社保补缴</button>
+          </div>
+          <div class="tabs" id="stabs" data-od-id="search-type-tabs">
+            <button class="tab on" data-ty="all">全部<b>6</b></button>
+            <button class="tab" data-ty="law">法条<b>2</b></button>
+            <button class="tab" data-ty="case">判例<b>2</b></button>
+            <button class="tab" data-ty="doc">裁决文书<b>1</b></button>
+            <button class="tab" data-ty="note">案件笔记<b>1</b></button>
+          </div>
+          <div class="row" style="justify-content:space-between;font-size:11.5px;color:var(--muted)"><span>共 <b id="scount" style="color:var(--fg-strong)">6</b> 条结果</span><span>按相关度排序</span></div>
+          <div class="slist" id="sres" data-od-id="search-results"></div>
+          <div class="empty" id="sempty" data-od-id="search-empty">
+            <svg class="ic" style="width:36px;height:36px;color:var(--border-strong)"><use href="#i-search"/></svg>
+            <div class="empty-t" id="sempty-t">没有找到相关文档</div>
+            <p class="empty-d">尝试更短的关键词，或切换上方文档类型；案卷类文档需先在「尽职调查」中归档入库。</p>
+            <button class="btn ghost sm" id="sclear">清空关键词</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- P2 赔偿计算器 -->
+      <section class="page" id="pg-calc" data-od-id="page-calc">
+        <div class="ph">
+          <div><h1>赔偿计算器</h1><p class="ph-desc">经济补偿 · 赔偿金 · 二倍工资差额 · 联动即时测算</p></div>
+          <div class="ph-acts"><button class="btn outline sm" id="cexport"><svg class="ic"><use href="#i-doc"/></svg>导出测算报告</button></div>
+        </div>
+        <div class="pb" style="flex-direction:row;gap:16px">
+          <div class="card" style="width:352px;flex:none" data-od-id="calc-form">
+            <div class="field">
+              <div class="lab">月平均工资<span class="hint">离职前 12 个月应发口径</span></div>
+              <div class="fm"><span class="pre">¥</span><input id="cwage" class="input" type="number" min="0" step="100" value="8000" aria-label="月平均工资"></div>
+              <div class="f-err" id="cwage-err">请输入大于 0 的月平均工资</div>
+            </div>
+            <div class="field">
+              <div class="lab">入职日期</div>
+              <input id="cstart" class="input" type="date" value="2019-07-01" aria-label="入职日期">
+            </div>
+            <div class="field">
+              <div class="lab">离职日期</div>
+              <input id="cend" class="input" type="date" value="2024-06-30" aria-label="离职日期">
+              <div class="f-err" id="cdate-err">离职日期需晚于入职日期</div>
+            </div>
+            <div class="field">
+              <div class="lab">离职原因</div>
+              <select id="creason" class="select" aria-label="离职原因">
+                <option value="weifa" selected>用人单位违法解除</option>
+                <option value="hefa">无过失性辞退（未提前 30 日通知）</option>
+                <option value="xieshang">协商一致解除（单位提出）</option>
+                <option value="daoqi">合同到期终止（单位不续签）</option>
+                <option value="cizhi">劳动者主动辞职</option>
+              </select>
+            </div>
+            <div class="field">
+              <div class="lab">书面劳动合同</div>
+              <div class="row" style="gap:8px">
+                <button class="pill on" id="pcon-no" type="button">未签订</button>
+                <button class="pill" id="pcon-yes" type="button">已签订</button>
+              </div>
+            </div>
+            <div class="row" style="gap:8px;margin-top:4px">
+              <button class="btn outline sm" id="creset"><svg class="ic"><use href="#i-refresh"/></svg>恢复示例值</button>
+              <span class="hint" style="margin-left:auto">修改任意项即时重算</span>
+            </div>
+          </div>
+          <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:12px" data-od-id="calc-result-col">
+            <div class="banner-error" id="cal-invalid" data-od-id="calc-invalid"><svg class="ic"><use href="#i-alert"/></svg><span>表单尚未完整：请补全左侧标红字段后查看测算结果。</span></div>
+            <div class="card" data-od-id="calc-result">
+              <span class="tc-cap">预计主张总额</span>
+              <div class="tc-num" id="ctotal">—</div>
+              <div class="tc-sub" id="csub">工龄口径与构成见分项明细</div>
+            </div>
+            <div class="card" data-od-id="calc-breakdown">
+              <div class="card-head"><span class="card-title">分项明细</span><span class="badge b-neutral plain">依据条款已标注</span></div>
+              <div id="cbreak"></div>
+            </div>
+            <div class="card" data-od-id="calc-notes">
+              <div class="card-head"><span class="card-title">注意事项</span></div>
+              <div class="note-li"><svg class="ic"><use href="#i-alert"/></svg><span>月工资高于当地社平工资 3 倍的，按 3 倍封顶计算，且补偿年限最高不超过 12 年（§47）。</span></div>
+              <div class="note-li"><svg class="ic"><use href="#i-alert"/></svg><span>二倍工资差额多数地区按 11 个月封顶；用工满一年未订立的视为无固定期限合同（§14），此后不再支持。</span></div>
+              <div class="note-li"><svg class="ic"><use href="#i-alert"/></svg><span>违法解除赔偿金（2N）与要求继续履行劳动合同系择一主张，不可并行（§48）。</span></div>
+              <div class="note-li"><svg class="ic"><use href="#i-alert"/></svg><span>劳动仲裁时效为 1 年，自劳动关系终止之日起算；二倍工资的时效起算各地口径不一，主张前需核查。</span></div>
+              <p class="disc" style="margin-top:6px">测算结果为初步估算，正式主张前请结合当地司法口径与证据情况复核。</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- P7 脱敏工具 -->
+      <section class="page" id="pg-mask" data-od-id="page-mask">
+        <div class="ph">
+          <div><h1>脱敏工具</h1><p class="ph-desc">手机号 · 身份证 · 银行卡一键脱敏 · 全程本地处理</p></div>
+        </div>
+        <div class="pb">
+          <div style="display:flex;gap:12px" data-od-id="mask-switches">
+            <div class="msw"><button class="sw on" role="switch" aria-checked="true" data-msk="phone" aria-label="手机号脱敏开关"></button><div><div class="msw-n">手机号</div><div class="msw-d">保留前 3 位与后 4 位</div></div><span class="badge" id="cnt-phone">2 处</span></div>
+            <div class="msw"><button class="sw on" role="switch" aria-checked="true" data-msk="id" aria-label="身份证脱敏开关"></button><div><div class="msw-n">身份证号</div><div class="msw-d">保留前 6 位与后 4 位</div></div><span class="badge" id="cnt-id">1 处</span></div>
+            <div class="msw"><button class="sw on" role="switch" aria-checked="true" data-msk="bank" aria-label="银行卡脱敏开关"></button><div><div class="msw-n">银行卡号</div><div class="msw-d">仅保留后 4 位</div></div><span class="badge" id="cnt-bank">1 处</span></div>
+            <div class="msw" style="flex:1;border-style:dashed;background:transparent;cursor:default" data-od-id="mask-local-hint">
+              <svg class="ic" style="color:var(--accent)"><use href="#i-shield"/></svg>
+              <div><div class="msw-n">本地处理</div><div class="msw-d">原文与结果均不上传服务器，关闭页面即丢弃</div></div>
+            </div>
+          </div>
+          <div style="display:flex;gap:14px;min-height:0">
+            <div class="card" style="flex:1;min-width:0;display:flex;flex-direction:column" data-od-id="mask-input">
+              <div class="card-head"><span class="card-title">原文粘贴</span><span class="hint" id="mcount">178 字</span><button class="btn ghost sm" id="mclear" style="margin-left:auto">清空原文</button></div>
+              <textarea class="textarea" id="mta" rows="10" style="flex:1">申请人：张某，女，身份证号 320102199004153628，联系电话 13812775623。在职期间，被申请人每月通过尾号 6222023012345678 的银行账户发放工资。其同事李某（电话 13915583421）可证明长期加班事实。承办律师：王某，律所座机 0512-66881234。</textarea>
+            </div>
+            <div class="card" style="flex:1;min-width:0;display:flex;flex-direction:column" data-od-id="mask-output">
+              <div class="card-head"><span class="card-title">脱敏结果</span><span class="mstat" id="mstat"></span>
+                <div class="row" style="gap:6px;margin-left:auto"><button class="btn ghost sm" id="mreset">恢复示例原文</button><button class="btn primary sm" id="mcopy"><svg class="ic"><use href="#i-check"/></svg><span>复制脱敏文本</span></button></div>
+              </div>
+              <div class="mout" id="mout" style="flex:1"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- P5 证据指引 -->
+      <section class="page" id="pg-evidence" data-od-id="page-evidence">
+        <div class="ph">
+          <div><h1>证据指引</h1><p class="ph-desc">按主张类型组织的取证清单 · 关键 / 重要 / 补充三级分级</p></div>
+          <div class="ph-acts"><button class="btn outline sm"><svg class="ic"><use href="#i-doc"/></svg>导出清单</button></div>
+        </div>
+        <div class="pb">
+          <div class="tabs" id="evtabs" data-od-id="evidence-tabs">
+            <button class="tab on" data-ev="weifa">违法解除</button>
+            <button class="tab" data-ev="double">未签二倍工资</button>
+            <button class="tab" data-ev="ot">加班费</button>
+            <button class="tab" data-ev="injury">工伤</button>
+            <div class="row" style="margin-left:auto;gap:6px;padding-right:2px;font-size:11px;color:var(--muted)">
+              <span class="badge b-accent">关键</span><span class="badge b-mid">重要</span><span class="badge b-neutral">补充</span>
+            </div>
+          </div>
+          <div class="card" style="padding:6px 10px 8px" data-od-id="evidence-table">
+            <table class="table">
+              <thead><tr><th style="width:172px">证据名称</th><th>证明目的</th><th style="width:64px">等级</th><th style="width:300px">获取途径</th></tr></thead>
+              <tbody id="evbody"></tbody>
+            </table>
+          </div>
+          <p class="disc" id="evsum">证据等级依据对主张成立的证明力划分，非法定分类；关键证据缺失将直接影响立案受理或胜诉概率。</p>
+        </div>
+      </section>
+
+      <!-- P6 知识库 -->
+      <section class="page" id="pg-kb" data-od-id="page-kb">
+        <div class="ph">
+          <div><h1>知识库</h1><p class="ph-desc">常用法条速查 · 原文引块与实务解读 · 关联办案工具</p></div>
+        </div>
+        <div class="pb" style="flex-direction:row;gap:14px">
+          <div class="card" style="width:224px;flex:none;align-self:flex-start" data-od-id="kb-nav">
+            <input class="input" id="kbq" placeholder="搜索条名或原文…" aria-label="搜索法条" style="margin-bottom:10px">
+            <button class="kn-item on" data-cat="all">全部<span class="badge">9</span></button>
+            <button class="kn-item" data-cat="lc">劳动合同法<span class="badge">5</span></button>
+            <button class="kn-item" data-cat="ld">劳动法<span class="badge">2</span></button>
+            <button class="kn-item" data-cat="mx">民法典<span class="badge">2</span></button>
+          </div>
+          <div style="flex:1;min-width:0" data-od-id="kb-cards">
+            <div id="kbcards"></div>
+            <div class="empty" id="kbempty" data-od-id="kb-empty">
+              <svg class="ic" style="width:36px;height:36px;color:var(--border-strong)"><use href="#i-book"/></svg>
+              <div class="empty-t">没有匹配的法条</div>
+              <p class="empty-d">换一个关键词，或清除分类过滤后重新检索。</p>
+              <button class="btn ghost sm" id="kbclear">清除搜索与过滤</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+  <!-- ⑤ 设置 -->
+  <section class="page" id="pg-settings" data-od-id="page-settings">
+    <div class="pg-head">
+      <div class="grow">
+        <h1 class="pg-title">设置</h1>
+        <div class="pg-sub">网关 · 内核 · 数据与隐私</div>
+      </div>
+    </div>
+    <div class="pg-body">
+      <div class="set-grid">
+        <div class="card" data-od-id="gateway-config">
+          <div class="set-sec" style="margin-bottom:14px">AI 网关配置</div>
+          <div class="gw-row">
+        <div class="field" style="flex:1;min-width:220px">
+          <div class="lab">网关地址</div>
+          <input class="input" id="gw-addr" value="https://llm-gateway.lawfirm.internal/v1" spellcheck="false">
+        </div>
+        <div class="field" style="flex:1;min-width:220px">
+          <div class="lab">API 密钥<span class="hint">已加密存储于本机</span></div>
+          <input class="input" id="gw-key" type="password" value="sk-pi-3Fq9Xk2Lm8Tz4Vb6Nc1Qa7Yw" spellcheck="false">
+        </div>
+      </div>
+
+    <div class="gw-row" style="margin-top:12px">
+      <div class="dd-wrap" style="flex:1;min-width:280px">
+        <button class="dd-trigger" id="gw-trigger" aria-haspopup="listbox" aria-expanded="false">
+          <span class="lbl">推理模型</span><span class="val" id="gw-label">glm-5.3</span>
+          <span class="badge b-low" id="gw-status">已连接</span>
+          <svg class="ic chev" style="width:13px;height:13px"><use href="#i-chev"/></svg>
+        </button>
+        <div class="dd-menu" id="gw-menu" role="listbox" data-od-id="gateway-model-list">
+          <div class="dd-menu-h">可用模型 · 6 个（拉取于刚刚）</div>
+          <button class="dd-item on" data-model="glm-5.3" role="option" aria-selected="true"><span class="mname">glm-5.3</span><span class="badge b-accent" style="height:17px;font-size:10px">最新</span><span class="mmeta">128K 上下文</span><svg class="ic"><use href="#i-check"/></svg></button>
+          <button class="dd-item" data-model="glm-5.2" role="option" aria-selected="false"><span class="mname">glm-5.2</span><span class="badge b-neutral plain" style="height:17px;font-size:10px">稳定</span><span class="mmeta">128K 上下文</span><svg class="ic"><use href="#i-check"/></svg></button>
+          <button class="dd-item" data-model="glm-5.2-air" role="option" aria-selected="false"><span class="mname">glm-5.2-air</span><span class="mmeta">32K · 轻量</span><svg class="ic"><use href="#i-check"/></svg></button>
+          <button class="dd-item" data-model="qwen3-max" role="option" aria-selected="false"><span class="mname">qwen3-max</span><span class="mmeta">128K 上下文</span><svg class="ic"><use href="#i-check"/></svg></button>
+          <button class="dd-item" data-model="qwen3-plus" role="option" aria-selected="false"><span class="mname">qwen3-plus</span><span class="mmeta">64K 上下文</span><svg class="ic"><use href="#i-check"/></svg></button>
+          <button class="dd-item" data-model="qwen-r1" role="option" aria-selected="false"><span class="mname">qwen-r1</span><span class="badge b-neutral plain" style="height:17px;font-size:10px">推理</span><span class="mmeta">32K · 深度思考</span><svg class="ic"><use href="#i-check"/></svg></button>
+        </div>
+      </div>
+      <button class="btn primary" id="gw-fetch" style="height:36px"><span class="spin"></span><svg class="ic"><use href="#i-refresh"/></svg><span>获取模型</span></button>
+    </div>
+    <div class="banner-error" id="gw-err" style="margin-top:12px" data-od-id="gateway-error">
+      <svg class="ic"><use href="#i-alert"/></svg>
+      <span><b id="gw-err-t">拉取失败</b>　<span id="gw-err-d">认证失败（401）：API Key 无效或已过期。</span></span>
+      <button class="btn outline sm" id="gw-retry" style="margin-left:auto;flex:none;color:var(--risk-high);border-color:oklch(0.88 0.05 28)">重试</button>
+            </div>
+          <div class="form-row" style="margin-top:12px">
+            <span class="lbl">上下文长度</span>
+            <select class="select"><option>32K · 长文书审查</option><option>128K · 全卷宗阅卷</option></select>
+          </div>
+          <div class="form-row">
+            <span class="lbl">工具并发</span>
+            <select class="select"><option>2 路 · 稳定</option><option>4 路 · 激进</option></select>
+          </div>
+          <div class="form-actions">
+            <button class="btn outline">恢复默认</button>
+            <button class="btn primary">保存设置</button>
+          </div>
+        </div>
+
+        <div class="card" data-od-id="connection-diag">
+          <div class="set-sec" style="margin-bottom:10px">连接诊断</div>
+          <div class="diag">
+            <div class="diag-row">
+              <span class="diag-ic ok"><svg class="ic"><use href="#i-check"/></svg></span>
+              <span class="diag-name">网关连通</span><span class="diag-ms">138 ms</span>
+            </div>
+            <div class="diag-row">
+              <span class="diag-ic ok"><svg class="ic"><use href="#i-check"/></svg></span>
+              <span class="diag-name">身份鉴权</span><span class="diag-ms">通过</span>
+            </div>
+            <div class="diag-row">
+              <span class="diag-ic ok"><svg class="ic"><use href="#i-check"/></svg></span>
+              <span class="diag-name">模型首字响应</span><span class="diag-ms">412 ms</span>
+            </div>
+            <div class="diag-row">
+              <span class="diag-ic ok"><svg class="ic"><use href="#i-check"/></svg></span>
+              <span class="diag-name">工具沙箱</span><span class="diag-ms">16/16 可用</span>
+            </div>
+            <div class="diag-row err">
+              <span class="diag-ic err"><svg class="ic"><use href="#i-alert"/></svg></span>
+              <span class="diag-name">本地知识库索引<small class="muted" style="display:block">法条库存在 2026-07 修正未合并</small></span>
+              <span class="diag-ms" style="color:var(--risk-high)">未通过</span>
+              <button class="btn outline">重建索引</button>
+            </div>
+          </div>
+          <div class="diag-hint"><svg class="ic" style="width:12px;height:12px"><use href="#i-clock"/></svg>上次诊断：今天 13:58 · 每 30 分钟自动检测
+            <button class="btn ghost sm" style="margin-left:auto">重新诊断</button>
+          </div>
+        </div>
+
+        <div class="card" data-od-id="kernel-info">
+          <div class="set-sec" style="margin-bottom:14px">Agent 内核信息</div>
+          <div class="kv">
+            <div class="cell"><div class="k">内核版本</div><div class="v mono">v1.4.2</div></div>
+            <div class="cell"><div class="k">运行状态</div><div class="v" style="color:var(--accent-deep)">运行中 · 36 天</div></div>
+            <div class="cell"><div class="k">已装载工具</div><div class="v">16 个</div></div>
+            <div class="cell"><div class="k">内存占用</div><div class="v mono">412 MB</div></div>
+          </div>
+          <div class="toolgroups">
+            <div class="tg"><b>咨询 <span class="n">×3</span></b><span>咨询引导 · 案情要素提取 · 风险初评</span></div>
+            <div class="tg"><b>案件 <span class="n">×4</span></b><span>案件建档 · 阶段推进 · 时限计算 · 待办生成</span></div>
+            <div class="tg"><b>审查 <span class="n">×3</span></b><span>条款解析 · 风险分级 · 修订建议</span></div>
+            <div class="tg"><b>文书 <span class="n">×2</span></b><span>文书生成 · 文书校对</span></div>
+            <div class="tg"><b>阅卷 <span class="n">×2</span></b><span>卷宗解析 · 要点摘录</span></div>
+            <div class="tg"><b>检索 <span class="n">×2</span></b><span>法条检索 · 案例检索</span></div>
+          </div>
+          <div class="form-actions">
+            <button class="btn outline"><svg class="ic"><use href="#i-doc"/></svg>查看运行日志</button>
+            <button class="btn outline"><svg class="ic"><use href="#i-refresh"/></svg>重启内核</button>
+          </div>
+        </div>
+
+        <div class="card" data-od-id="general-settings">
+          <div class="set-sec" style="margin-bottom:14px">通用</div>
+          <div class="form-row" style="margin-bottom:12px">
+            <span class="lbl">界面字号</span>
+            <select class="select"><option>标准</option><option>大（长文书阅读）</option><option>紧凑（高密度列表）</option></select>
+          </div>
+          <div class="form-row" style="margin-bottom:12px">
+            <span class="lbl">数据存储路径</span>
+            <div class="field-row grow"><input class="input mono grow" value="/Users/zhou/Library/LegalWorkbench" disabled><button class="btn outline">更改</button></div>
+          </div>
+          <div class="form-row" style="margin-bottom:12px">
+            <span class="lbl">自动更新</span>
+            <label class="switch"><input type="checkbox" checked><span>有新版本时自动下载</span></label>
+          </div>
+          <div class="form-row">
+            <span class="lbl">匿名遥测</span>
+            <label class="switch"><input type="checkbox"><span>帮助改进内核（默认关闭）</span></label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  </div><!-- /main -->
+</div><!-- /shell -->
+</div><!-- /stage -->
+</div><!-- /desk -->
+
+<script>
+(function(){
+  // 窗口舞台自适应缩放（1120×740 基准）
+  var stage=document.getElementById('stage');
+  function fit(){
+    var s=Math.min(1,(innerWidth-28)/1120,(innerHeight-28)/740);
+    stage.style.transform='scale('+s+')';
+  }
+  var raf=0;
+  addEventListener('resize',function(){
+    if(raf)return;raf=requestAnimationFrame(function(){raf=0;fit()});
+  });
+  fit();
+
+  // 页面切换（侧栏 / 快捷入口 / 内核卡）
+  var pages=document.querySelectorAll('.page');
+  var items=document.querySelectorAll('[data-page]');
+  var ALIAS={research:'search'};
+  function show(id){
+    if(ALIAS[id])id=ALIAS[id];
+    pages.forEach(function(p){p.classList.toggle('show',p.id==='pg-'+id)});
+    items.forEach(function(b){if(b.classList.contains('sb-item'))b.classList.toggle('active',(ALIAS[b.dataset.page]||b.dataset.page)===id)});
+    try{localStorage.setItem('lw-page',id)}catch(e){}
+    var main=stage.querySelector('.main');if(main)main.scrollTop=0;
+    stage.querySelectorAll('.page').forEach(function(p){if(p.classList.contains('show'))p.scrollTop=0});
+  }
+  window.lwShow=show;
+
+  items.forEach(function(b){
+    b.addEventListener('click',function(e){
+      if(b.tagName==='A')e.preventDefault();
+      show(b.dataset.page);
+    });
+    if(b.getAttribute('role')==='button'){ // 内核卡支持键盘
+      b.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();show(b.dataset.page)}});
+    }
+  });
+
+  // 展开交互：工具轨迹行 / 风险条目
+  document.querySelectorAll('[data-toggle="trace"]').forEach(function(r){
+    r.addEventListener('click',function(){r.classList.toggle('open')});
+  });
+  document.querySelectorAll('[data-toggle="finding"]').forEach(function(r){
+    r.addEventListener('click',function(){r.parentElement.classList.toggle('open')});
+  });
+
+  // 待办勾选联动 done 样式
+  document.querySelectorAll('.todo-item .check input').forEach(function(c){
+    c.addEventListener('change',function(){
+      c.closest('.todo-item').classList.toggle('done',c.checked);
+    });
+  });
+
+  // 文档选择
+  document.querySelectorAll('.doc').forEach(function(d){
+    d.addEventListener('click',function(){
+      document.querySelectorAll('.doc').forEach(function(x){x.classList.remove('sel')});
+      d.classList.add('sel');
+    });
+  });
+
+  // 恢复上次页面
+  var last=null;try{last=localStorage.getItem('lw-page')}catch(e){}
+  if(last)last=ALIAS[last]||last;
+  if(last&&document.getElementById('pg-'+last))show(last);
+})();
+
+(function(){
+var $=function(id){return document.getElementById(id)};
+function on(el,ev,fn){el.addEventListener(ev,fn)}
+/* ===== 增补片段：AI 网关模型获取 ===== */
+var gAddr=$('gw-addr'),gKey=$('gw-key'),gBtn=$('gw-fetch'),gMenu=$('gw-menu'),gErr=$('gw-err'),gTrig=$('gw-trigger');
+function gwCloseMenu(){gMenu.classList.remove('open');gTrig.setAttribute('aria-expanded','false')}
+function gwOpenMenu(){gMenu.classList.add('open');gTrig.setAttribute('aria-expanded','true')}
+function gwErr(title,desc){
+  $('gw-err-t').textContent=title;$('gw-err-d').textContent=desc;
+  gErr.classList.add('show');gwCloseMenu();
+}
+function gwFetch(){
+  if(gBtn.disabled)return;
+  gErr.classList.remove('show');gwCloseMenu();
+  var addr=gAddr.value.trim(),key=gKey.value.trim();
+  if(!addr){gwErr('无法连接网关','地址为空或格式错误（网络错误），请检查网关地址后重试。');return}
+  if(key.length<20){gwErr('拉取失败','认证失败（401）：API Key 无效或已过期。');return}
+  gBtn.disabled=true;gBtn.classList.add('loading');
+  gBtn.querySelector('span:last-child').textContent='拉取中…';
+  setTimeout(function(){
+    gBtn.disabled=false;gBtn.classList.remove('loading');
+    gBtn.querySelector('span:last-child').textContent='获取模型';
+    gwOpenMenu();
+    $('gw-status').textContent='已连接';
+    $('gw-status').className='badge b-low';
+  },900);
+}
+on(gBtn,'click',gwFetch);
+on($('gw-retry'),'click',gwFetch);
+on(gAddr,'input',function(){gErr.classList.remove('show')});
+on(gTrig,'click',function(){gMenu.classList.contains('open')?gwCloseMenu():gwOpenMenu()});
+var gItems=document.querySelectorAll('#gw-menu .dd-item');
+for(var gi=0;gi<gItems.length;gi++){
+  (function(it){on(it,'click',function(){
+    var all=document.querySelectorAll('#gw-menu .dd-item'),k;
+    for(k=0;k<all.length;k++){all[k].classList.remove('on');all[k].setAttribute('aria-selected','false')}
+    it.classList.add('on');it.setAttribute('aria-selected','true');
+    $('gw-label').textContent=it.getAttribute('data-model');
+    var km=document.querySelector('.kernel-meta b');if(km)km.textContent=it.getAttribute('data-model').toUpperCase();
+    $('gw-status').textContent='已连接';
+    $('gw-status').className='badge b-low';
+    gwCloseMenu();
+  })})(gItems[gi]);
+}
+})();
+
+(function(){
+var $=function(id){return document.getElementById(id)};
+function on(el,ev,fn){el.addEventListener(ev,fn)}
+
+/* ===== 第二辑页面交互：检索 / 计算器 / 文书 / 尽调 / 证据 / 知识库 / 脱敏 ===== */
+/* ===== P1 法律检索 ===== */
+var DOCS=[
+ {t:'《劳动合同法》第八十七条 · 违法解除赔偿金',ty:'law',src:'现行有效 · 2012 修正',d:'2025-12',s:'用人单位违反本法规定解除或者终止劳动合同的，应当依照本法第四十七条规定的经济补偿标准的二倍向劳动者支付赔偿金。'},
+ {t:'苏州市中级人民法院 · (2023)苏05民终4471号',ty:'case',src:'中国裁判文书网',d:'2024-03',s:'公司以“组织架构调整”为由单方解除，未能举证岗位撤销的必要性与合理性，构成违法解除，判决支付赔偿金 86,400 元。'},
+ {t:'张某 诉 恒晟电子科技 · 仲裁裁决书',ty:'doc',src:'苏州工业园区仲裁委',d:'2025-02',s:'本会认为，被申请人未能提供解除所依据的规章制度及公示证据，裁决支付违法解除赔偿金，并责令出具离职证明。'},
+ {t:'咨询笔录 · 口头辞退的取证要点',ty:'note',src:'智能咨询 · 会话存档',d:'2024-11',s:'来访人被口头辞退、无书面通知。固定解除事实证据（录音、微信）应先于主张 2N 赔偿金，避免仅剩单方陈述。'},
+ {t:'《劳动合同法》第四十八条 · 违法解除的救济',ty:'law',src:'现行有效 · 2012 修正',d:'2025-12',s:'劳动者不要求继续履行劳动合同或者劳动合同已经不能继续履行的，用人单位应当依照第八十七条规定支付赔偿金。'},
+ {t:'南京市中级人民法院 · (2022)苏01民终3885号',ty:'case',src:'中国裁判文书网',d:'2023-09',s:'口头通知解除亦发生解除效力，但解除决定及其依据的举证责任由用人单位承担，举证不能的视为违法解除。'}
+];
+var TY={law:['法条','b-accent','book'],case:['判例','b-mid','doc'],doc:['裁决文书','b-low','folder'],note:['案件笔记','b-neutral','pen']};
+var sq=$('sq'),sres=$('sres'),sempty=$('sempty'),scount=$('scount'),curTy='all';
+function escReg(s){return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}
+function hi(text,q){
+  if(!q)return text;
+  var terms=q.split(/\s+/).filter(Boolean),i,re='('+terms.map(escReg).join('|')+')';
+  try{i=new RegExp(re,'g')}catch(e){return text}
+  return text.replace(i,'<mark>$1</mark>');
+}
+function doSearch(){
+  var q=sq.value.trim(),out='',n=0,i,d,b;
+  for(i=0;i<DOCS.length;i++){
+    d=DOCS[i];
+    if(curTy!=='all'&&d.ty!==curTy)continue;
+    if(q&&d.t.indexOf(q)<0&&d.s.indexOf(q)<0)continue;
+    n++;
+    b=TY[d.ty];
+    out+='<div class="sres" data-od-id="search-result-'+(i+1)+'">'
+      +'<span class="sres-ic"><svg class="ic" style="width:16px;height:16px"><use href="#i-'+b[2]+'"/></svg></span>'
+      +'<div style="flex:1;min-width:0"><div class="sres-t">'+hi(d.t,q)+'</div>'
+      +'<div class="sres-s">'+hi(d.s,q)+'</div>'
+      +'<div class="sres-m"><span class="badge '+b[1]+'">'+b[0]+'</span><span>'+d.src+'</span><span>'+d.d+'</span></div></div></div>';
+  }
+  scount.textContent=n;
+  sres.innerHTML=out;
+  sres.style.display=n?'flex':'none';
+  sempty.classList.toggle('show',!n);
+  if(!n)$('sempty-t').textContent=q?('没有找到与「'+q+'」相关的文档'):'没有找到相关文档';
+}
+on(sq,'input',doSearch);
+on(sq,'keydown',function(e){if(e.key==='Enter')doSearch()});
+on($('sgo'),'click',doSearch);
+on($('sclear'),'click',function(){sq.value='';doSearch();sq.focus()});
+var sTabs=document.querySelectorAll('#stabs .tab');
+for(var st=0;st<sTabs.length;st++){
+  (function(t){on(t,'click',function(){
+    var tabs=document.querySelectorAll('#stabs .tab'),k;
+    for(k=0;k<tabs.length;k++)tabs[k].classList.remove('on');
+    t.classList.add('on');curTy=t.getAttribute('data-ty');doSearch();
+  })})(sTabs[st]);
+}
+var chips=document.querySelectorAll('.chip');
+for(var c=0;c<chips.length;c++){
+  (function(ch){on(ch,'click',function(){sq.value=ch.getAttribute('data-q');doSearch()})})(chips[c]);
+}
+doSearch();
+
+/* ===== P2 赔偿计算器 ===== */
+var conNo=true;
+function money(n){return '¥ '+Math.round(n).toLocaleString('zh-CN')}
+function parseD(s){var d=new Date(s+'T00:00:00');return isNaN(d.getTime())?null:d}
+function addM(d,m){var x=new Date(d.getTime());x.setMonth(x.getMonth()+m);return x}
+function calc(){
+  var wage=parseFloat($('cwage').value),ds=parseD($('cstart').value),de=parseD($('cend').value);
+  var okW=isFinite(wage)&&wage>0,okD=!!(ds&&de&&de>ds);
+  $('cwage-err').classList.toggle('show',!okW);
+  $('cdate-err').classList.toggle('show',!!(ds&&de&&de<=ds));
+  $('cal-invalid').classList.toggle('show',!(okW&&okD));
+  if(!(okW&&okD)){$('ctotal').textContent='—';$('csub').textContent='工龄口径与构成见分项明细';$('cbreak').innerHTML='';return}
+  var md=(de.getFullYear()-ds.getFullYear())*12+(de.getMonth()-ds.getMonth());
+  if(de.getDate()>=ds.getDate())md++;
+  var yrs=Math.floor(md/12),rem=md%12,nY=yrs+(rem>=6?1:(rem>0?0.5:0));
+  var fmtN=nY%1?nY.toFixed(1):String(nY);
+  var rows='',total=0,reason=$('creason').value;
+  function row(name,v,base,law,extra,dim){
+    if(!dim)total+=v;
+    rows+='<div class="bk"'+(dim?' style="opacity:.55"':'')+'>'
+      +'<div><div class="bk-n">'+name+'</div><div class="bk-b">'+base+'</div></div>'
+      +(extra||'')+'<span class="badge b-neutral plain" style="margin-left:auto">'+law+'</span>'
+      +'<span class="bk-v">'+(dim?'—':money(v))+'</span></div>';
+  }
+  if(reason==='weifa'){row('违法解除赔偿金（2N）',wage*nY*2,'工龄 '+fmtN+' 年 × 2 × 月均 '+wage.toLocaleString('zh-CN')+' 元','§87')}
+  else if(reason==='hefa'){row('经济补偿金（N）',wage*nY,'工龄 '+fmtN+' 年 × 1 × 月均工资','§47');row('代通知金（+1）',wage,'未提前 30 日书面通知时另行支付 1 个月','§40')}
+  else if(reason==='xieshang'){row('经济补偿金（N）',wage*nY,'用人单位提出协商一致解除','§46')}
+  else if(reason==='daoqi'){row('经济补偿金（N）',wage*nY,'合同到期终止，单位不续签','§47 第5项')}
+  else{row('经济补偿金（N）',0,'劳动者主动辞职，无法定经济补偿','—','',true)}
+  if(conNo){
+    var a=addM(ds,1),b=addM(ds,12),lim=de<b?de:b;
+    var m=(lim.getFullYear()-a.getFullYear())*12+(lim.getMonth()-a.getMonth());
+    if(lim.getDate()>=a.getDate())m++;
+    if(m<0)m=0;if(m>11)m=11;
+    if(m>0){
+      var deadline=addM(b,12),stale=de>deadline;
+      row('未签书面劳动合同二倍工资差额',wage*m,m+' 个月 × 月均工资（最多 11 个月）','§82',
+        '<span class="badge '+(stale?'b-high':'b-low')+'">'+(stale?'时效风险':'在时效内')+'</span>');
+    }
+  }
+  $('ctotal').textContent=money(total);
+  $('csub').innerHTML='工龄 <b>'+fmtN+' 年</b>（'+ds.getFullYear()+'.'+(ds.getMonth()+1)+' 至 '+de.getFullYear()+'.'+(de.getMonth()+1)+'）· 共 '+(rows.split('bk-n').length-1)+' 个分项';
+  $('cbreak').innerHTML=rows;
+}
+on($('cwage'),'input',calc);on($('cstart'),'change',calc);on($('cend'),'change',calc);on($('creason'),'change',calc);
+on($('pcon-no'),'click',function(){conNo=true;this.classList.add('on');$('pcon-yes').classList.remove('on');calc()});
+on($('pcon-yes'),'click',function(){conNo=false;this.classList.add('on');$('pcon-no').classList.remove('on');calc()});
+on($('creset'),'click',function(){
+  $('cwage').value='8000';$('cstart').value='2019-07-01';$('cend').value='2024-06-30';$('creason').value='weifa';
+  conNo=true;$('pcon-no').classList.add('on');$('pcon-yes').classList.remove('on');calc();
+});
+on($('cexport'),'click',function(){
+  this.textContent='已导出 测算报告.docx';
+  var b=this;setTimeout(function(){b.innerHTML='<svg class="ic"><use href="#i-doc"/></svg>导出测算报告'},1600);
+});
+calc();
+
+/* ===== P3 文书生成 ===== */
+var PREVIEWS={
+arbitration:'<h1>劳动仲裁申请书</h1><p><b>申请人：</b>张某，女，1990 年 4 月生，住江苏省苏州市姑苏区。</p><p><b>被申请人：</b>恒晟电子科技有限公司，住所地苏州工业园区，统一社会信用代码 91320594MA1WCJ2X6K。</p><h2>仲裁请求</h2><ol><li>裁决被申请人支付违法解除劳动合同赔偿金 80,000 元；</li><li>裁决被申请人支付未订立书面劳动合同的二倍工资差额 88,000 元；</li><li>裁决被申请人为申请人补缴 2019 年 7 月至 2024 年 6 月期间的社会保险费。</li></ol><h2>事实与理由</h2><p>一、申请人于 2019 年 7 月 1 日入职被申请人处担任产线质检员，月平均工资 8,000 元。被申请人始终未与申请人订立书面劳动合同，依法应当支付二倍工资差额。</p><p>二、2024 年 6 月 30 日，被申请人以“组织架构调整”为由解除劳动关系，未提前三十日书面通知，未支付经济补偿，亦未能举证证明解除事由成立，构成违法解除。</p><div class="md-q">计算口径：赔偿金 = 月均 8,000 × 工龄 5 年 × 2 = 80,000 元；二倍工资差额 = 8,000 × 11 个月 = 88,000 元（详见赔偿计算器测算）。</div><p class="md-sign">此致 苏州工业园区劳动人事争议仲裁委员会<br>申请人：张某　2026 年 8 月 18 日</p>',
+defense:'<h1>答辩状</h1><p><b>答辩人（被申请人）：</b>恒晟电子科技有限公司</p><h2>答辩意见</h2><p>一、答辩人解除劳动合同系因生产经营严重困难、质检班组整体撤销，具有充分事实依据，不属于违法解除，不应支付赔偿金。</p><p>二、双方未订立书面劳动合同系申请人长期拒绝配合签署，答辩人已多次催告并留存记录，二倍工资差额请求缺乏事实基础。</p><p>三、即便需要支付，二倍工资差额亦已超过一年仲裁时效，且最多计算十一个月，申请人的主张金额明显过高。</p><p class="md-sign">答辩人：恒晟电子科技有限公司　2026 年 8 月 18 日</p>',
+lawyer:'<h1>律师函</h1><p><b>致：恒晟电子科技有限公司</b></p><p>本律师受张某委托，就贵司违法解除劳动合同且拒不支付赔偿事宜，郑重函告如下：</p><p>一、贵司于 2024 年 6 月 30 日单方解除与委托人的劳动关系，未支付任何补偿，已违反《劳动合同法》第八十七条。</p><p>二、请贵司于收函之日起十五日内支付赔偿金 80,000 元、二倍工资差额 88,000 元，合计 168,000 元。</p><p>逾期未付，本律师将依法代理申请劳动仲裁，由此产生的全部法律后果由贵司承担。</p><p class="md-sign">苏州某某律师事务所　王律师　2026 年 8 月 18 日</p>',
+demand:'<h1>工资支付催告函</h1><p><b>致：恒晟电子科技有限公司</b></p><p>本人张某于 2019 年 7 月 1 日入职贵司。贵司至今未支付 2024 年 6 月工资 8,000 元，亦未支付违法解除赔偿金。</p><p>现催告贵司于收到本函后七日内一次性付清上述款项合计 88,000 元。逾期将依法申请劳动仲裁并主张相应权利。</p><p class="md-sign">催告人：张某　2026 年 8 月 18 日</p>'
+};
+var curTpl='arbitration',FACTS=$('dfacts').value;
+var tpls=document.querySelectorAll('.tpl');
+for(var tp=0;tp<tpls.length;tp++){
+  (function(t){on(t,'click',function(){
+    var all=document.querySelectorAll('.tpl'),k;
+    for(k=0;k<all.length;k++)all[k].classList.remove('on');
+    t.classList.add('on');curTpl=t.getAttribute('data-tpl');renderDoc(false);
+  })})(tpls[tp]);
+}
+function renderDoc(fresh){
+  $('dbody').innerHTML=PREVIEWS[curTpl];
+  var words=$('dbody').textContent.replace(/\s/g,'').length;
+  $('dmeta').textContent=(fresh?'已生成 · 刚刚':'已生成')+' · '+words+' 字';
+}
+on($('dgen'),'click',function(){
+  var b=this;b.disabled=true;b.classList.add('loading');
+  b.querySelector('span:last-child').textContent='生成中…';
+  setTimeout(function(){
+    b.disabled=false;b.classList.remove('loading');
+    b.querySelector('span:last-child').textContent='生成文书';
+    renderDoc(true);
+  },900);
+});
+on($('dclear'),'click',function(){$('dfacts').value=FACTS;$('dparty1').value='张某';$('dparty2').value='恒晟电子科技有限公司'});
+on($('dcopy'),'click',function(){
+  var t=$('dbody').textContent.trim();
+  if(t&&navigator.clipboard)navigator.clipboard.writeText(t);
+  this.textContent='已复制';
+  var b=this;setTimeout(function(){b.textContent='复制文本'},1500);
+});
+on($('dexport'),'click',function(){
+  this.innerHTML='<svg class="ic"><use href="#i-check"/></svg>已导出 Word';
+  var b=this;setTimeout(function(){b.innerHTML='<svg class="ic"><use href="#i-doc"/></svg>导出 Word'},1600);
+});
+renderDoc(false);
+
+/* ===== P4 尽职调查（阅卷） ===== */
+var mats=document.querySelectorAll('.mat input');
+function updMat(){
+  var n=0,i;
+  for(i=0;i<mats.length;i++)if(mats[i].checked)n++;
+  $('dmat-n').textContent=n+' / 6 份';
+  var go=$('ddgo');
+  go.disabled=n===0;
+  go.querySelector('span:last-child').textContent=n?('开始阅卷（'+n+' 份材料）'):'开始阅卷';
+}
+for(var mi=0;mi<mats.length;mi++)on(mats[mi],'change',updMat);
+function runDD(){
+  var res=$('ddres'),prog=$('ddprog');
+  if($('ddgo').disabled)return;
+  res.style.display='none';prog.style.display='block';
+  var steps=prog.querySelectorAll('.dd-step'),i;
+  for(i=0;i<steps.length;i++)steps[i].className='dd-step';
+  var k=0;
+  (function next(){
+    if(k>0)steps[k-1].className='dd-step done';
+    if(k>=steps.length){
+      setTimeout(function(){
+        prog.style.display='none';res.style.display='block';
+        $('ddmeta').textContent='已完成 · 刚刚';
+      },380);return;
+    }
+    steps[k].className='dd-step run';k++;setTimeout(next,700);
+  })();
+}
+on($('ddgo'),'click',runDD);
+on($('ddre'),'click',runDD);
+updMat();
+
+/* ===== P5 证据指引 ===== */
+var EV={
+weifa:[['解除劳动合同通知书','证明解除事实、时间与事由','K','要求单位书面出具；邮寄送达的保留面单与底单'],['微信 / 钉钉解除沟通记录','证明单位作出解除的意思表示','K','保留手机原始载体，重要记录办理公证'],['劳动合同 / 工作证 / 工牌','证明劳动关系与工作岗位','I','个人留存原件；档案存放地调取复印件'],['工资银行流水','证明工资标准，锁定 2N 计算基数','I','银行柜台打印并加盖业务章'],['规章制度与公示记录','审查单位解除依据是否成立','S','单位掌握，仲裁中申请其举证'],['同事证人证言','佐证解除经过与情形','S','书面证言并申请证人出庭']],
+double:[['工资发放记录','证明劳动关系及实际入职时间','K','银行流水或微信 / 支付宝转账记录'],['工作证 / 门禁卡 / 工牌','证明事实用工','K','个人留存，拍照固定并保留实物'],['社保缴纳记录','证明用工起始时间','I','社保 App 导出或经办机构打印'],['Offer 邮件 / 招聘登记表','证明建立劳动关系的合意','I','导出邮件原始数据，勿以截图替代'],['考勤记录','证明持续提供劳动','S','单位掌握，仲裁申请调取'],['工作成果交付记录','补强用工事实','S','系统导出并由主管确认']],
+ot:[['考勤打卡记录','证明加班时长','K','系统导出原始数据；单位掌握的申请调取'],['加班审批单 / 排班表','证明系单位安排加班','K','OA 系统导出，与同岗位排班对照'],['工资条 / 加班费科目','证明已付金额，计算差额','I','工资条原件与银行流水对照'],['深夜 / 周末工作沟通记录','补强加班事实','I','微信 / 邮件原始载体保全'],['门禁与监控视频','佐证实际在岗时间','S','单位保存，及时申请调取防覆盖'],['同事证言','佐证加班惯例与强度','S','书面证言并申请出庭']],
+injury:[['工伤认定决定书','确认事故属于工伤','K','社保行政部门出具，一般 60 日内作出'],['劳动关系证明','确认用工主体','K','劳动合同；无合同的先仲裁确认关系'],['医疗诊断证明与病历','证明伤情与治疗经过','K','医院病案室复印并盖章'],['事故现场证据 / 目击证言','证明事故发生经过','I','现场照片、监控与证人证言'],['劳动能力鉴定结论书','确定伤残等级与待遇标准','I','市级劳动能力鉴定委员会出具'],['上下班路线证明','“上下班途中”情形适用','S','导航记录、通勤记录与证人证言']]};
+var GRADE={K:['关键','b-accent'],I:['重要','b-mid'],S:['补充','b-neutral']};
+function renderEv(key){
+  var rows=EV[key],out='',n={K:0,I:0,S:0},i,r;
+  for(i=0;i<rows.length;i++){
+    r=rows[i];n[r[2]]++;
+    out+='<tr data-od-id="ev-'+key+'-'+(i+1)+'"><td style="font-weight:600">'+r[0]+'</td><td>'+r[1]+'</td>'
+      +'<td><span class="badge '+GRADE[r[2]][1]+'">'+GRADE[r[2]][0]+'</span></td><td style="color:var(--muted)">'+r[3]+'</td></tr>';
+  }
+  $('evbody').innerHTML=out;
+  $('evsum').textContent='本主张共 '+rows.length+' 项证据 · 关键 '+n.K+' · 重要 '+n.I+' · 补充 '+n.S+'。证据等级依据对主张成立的证明力划分，非法定分类；关键证据缺失将直接影响立案受理或胜诉概率。';
+}
+var evTabs=document.querySelectorAll('#evtabs .tab');
+for(var et=0;et<evTabs.length;et++){
+  (function(t){on(t,'click',function(){
+    var tabs=document.querySelectorAll('#evtabs .tab'),k;
+    for(k=0;k<tabs.length;k++)tabs[k].classList.remove('on');
+    t.classList.add('on');renderEv(t.getAttribute('data-ev'));
+  })})(evTabs[et]);
+}
+renderEv('weifa');
+
+/* ===== P6 知识库 ===== */
+var KB=[
+{cat:'lc',no:'第八十二条',n:'未订立书面劳动合同 · 二倍工资',q:'用人单位自用工之日起超过一个月不满一年未与劳动者订立书面劳动合同的，应当向劳动者每月支付二倍的工资。',r:'二倍工资自用工满一个月的次日起算，多数地区最多支持 11 个月；用工满一年仍未订立的，视为已订立无固定期限劳动合同，此后不再支持。',links:[['calc','赔偿计算器 · 差额测算']]},
+{cat:'lc',no:'第八十七条',n:'违法解除或终止 · 二倍赔偿金',q:'用人单位违反本法规定解除或者终止劳动合同的，应当依照本法第四十七条规定的经济补偿标准的二倍向劳动者支付赔偿金。',r:'即通常所称 2N。主张赔偿金与要求继续履行劳动合同只能择一；赔偿金与经济补偿不重复计算。',links:[['calc','赔偿计算器 · 2N 测算']]},
+{cat:'lc',no:'第四十七条',n:'经济补偿的计算标准（节选）',q:'经济补偿按劳动者在本单位工作的年限，每满一年支付一个月工资……六个月以上不满一年的，按一年计算；不满六个月的，支付半个月工资的经济补偿。',r:'月工资按离职前十二个月平均应发工资计算；高于当地社平工资三倍的按三倍封顶，且年限最高不超过十二年。',links:[['calc','赔偿计算器 · N 与封顶']]},
+{cat:'lc',no:'第十四条',n:'视为订立无固定期限劳动合同',q:'用人单位自用工之日起满一年不与劳动者订立书面劳动合同的，视为用人单位与劳动者已订立无固定期限劳动合同。',r:'满一年既是二倍工资的截止点，也是无固定期限合同的起算点；此后单位解除的按无固定期限合同规则处理。',links:[]},
+{cat:'lc',no:'第四十八条',n:'违法解除的救济路径',q:'劳动者要求继续履行劳动合同的，用人单位应当继续履行；劳动者不要求继续履行或者劳动合同已经不能继续履行的，应当依照本法第八十七条规定支付赔偿金。',r:'诉讼策略上先评估继续履行的可能性（岗位是否已撤销、关系是否恶化），再决定主张 2N 还是恢复劳动关系。',links:[['dd','尽职调查 · 争点核查']]},
+{cat:'ld',no:'第四十四条',n:'延长工时与加班工资标准',q:'安排劳动者延长工作时间的，支付不低于工资的百分之一百五十的工资报酬；休息日安排工作又不能安排补休的，支付不低于百分之二百……法定休假日安排工作的，支付不低于百分之三百。',r:'平时 1.5 倍、休息日 2 倍（可以补休替代）、法定节假日 3 倍且不得以补休替代；基数按正常工作时间工资确定。',links:[['evidence','证据指引 · 加班费']]},
+{cat:'ld',no:'第三十六条',n:'法定工时制度',q:'国家实行劳动者每日工作时间不超过八小时、平均每周工作时间不超过四十四小时的工时制度。',r:'超过法定工时的安排即进入加班认定范畴；不定时与综合计算工时制需经劳动行政部门审批方可适用。',links:[['evidence','证据指引 · 加班费']]},
+{cat:'mx',no:'第一千零三十四条',n:'个人信息的范围与保护（节选）',q:'自然人的个人信息受法律保护……包括自然人的姓名、出生日期、身份证件号码……电话号码、行踪信息等。',r:'案卷流转与背景调查中处理当事人手机号、身份证号须遵循合法、正当、必要原则；对外提交材料前建议先用脱敏工具处理。',links:[['mask','脱敏工具 · 提交前处理']]},
+{cat:'mx',no:'第一千零三十二条',n:'隐私权与私人生活安宁',q:'自然人享有隐私权。任何组织或者个人不得以刺探、侵扰、泄露、公开等方式侵害他人的隐私权。',r:'会见笔录、微信记录等含私密信息的材料，公开质证或归档前应做最小化处理。',links:[['mask','脱敏工具 · 最小化处理']]}];
+var CATB={lc:['劳动合同法','b-accent'],ld:['劳动法','b-low'],mx:['民法典','b-mid']};
+var kbCat='all',kbQ='';
+function hiKb(text,q){
+  if(!q)return text;
+  var terms=q.split(/\s+/).filter(Boolean);
+  try{var re=new RegExp('('+terms.map(escReg).join('|')+')','g');return text.replace(re,'<mark>$1</mark>')}catch(e){return text}
+}
+function renderKb(){
+  var out='',n=0,i,d,t;
+  for(i=0;i<KB.length;i++){
+    d=KB[i];
+    if(kbCat!=='all'&&d.cat!==kbCat)continue;
+    if(kbQ){
+      var hay=d.no+d.n+d.q+d.r,hit=true;
+      var terms=kbQ.split(/\s+/).filter(Boolean);
+      for(t=0;t<terms.length;t++)if(hay.indexOf(terms[t])<0){hit=false;break}
+      if(!hit)continue;
+    }
+    n++;
+    var links='';
+    for(var L=0;L<d.links.length;L++){
+      links+='<button class="linkish" data-page="'+d.links[L][0]+'">'+d.links[L][1]+'</button>';
+    }
+    out+='<div class="kbc" data-od-id="kb-card-'+d.no.replace(/第|条/g,'')+'">'
+      +'<div class="kbc-h"><span class="kbc-no">'+d.no+'</span><span class="kbc-n">'+d.n+'</span><span class="badge '+CATB[d.cat][1]+'">'+CATB[d.cat][0]+'</span></div>'
+      +'<div class="law-quote">「'+hiKb(d.q,kbQ)+'」</div>'
+      +'<p class="kbc-r"><b>解读　</b>'+hiKb(d.r,kbQ)+'</p>'
+      +(links?'<div class="kbc-l">关联工具：'+links+'</div>':'')+'</div>';
+  }
+  $('kbcards').innerHTML=out;
+  $('kbcards').style.display=n?'block':'none';
+  $('kbempty').classList.toggle('show',!n);
+  var lk=document.querySelectorAll('#kbcards .linkish'),q2;
+  for(q2=0;q2<lk.length;q2++)(function(b){on(b,'click',function(){lwShow(b.getAttribute('data-page'))})})(lk[q2]);
+}
+var knItems=document.querySelectorAll('.kn-item');
+for(var kn=0;kn<knItems.length;kn++){
+  (function(b){on(b,'click',function(){
+    var all=document.querySelectorAll('.kn-item'),k;
+    for(k=0;k<all.length;k++)all[k].classList.remove('on');
+    b.classList.add('on');kbCat=b.getAttribute('data-cat');renderKb();
+  })})(knItems[kn]);
+}
+on($('kbq'),'input',function(){kbQ=this.value.trim();renderKb()});
+on($('kbclear'),'click',function(){
+  kbQ='';$('kbq').value='';kbCat='all';
+  var all=document.querySelectorAll('.kn-item'),k;
+  for(k=0;k<all.length;k++)all[k].classList.toggle('on',all[k].getAttribute('data-cat')==='all');
+  renderKb();
+});
+renderKb();
+
+/* ===== P7 脱敏工具（正则优先级：身份证 → 银行卡 → 手机号，避免长号段被短规则吞掉） ===== */
+var MSON={phone:true,id:true,bank:true};
+var COMB=/(\d{17}[\dXx])|(\d{16,19})|(1[3-9]\d{9})/g;
+function maskId(m){return m.slice(0,6)+'********'+m.slice(14)}
+function maskBank(m){return '**** **** **** '+m.slice(-4)}
+function maskPhone(m){return m.slice(0,3)+'****'+m.slice(7)}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+var maskPlain='';
+function maskRun(){
+  var txt=$('mta').value;
+  $('mcount').textContent=txt.replace(/\s/g,'').length+' 字';
+  if(!txt.trim()){
+    $('mout').innerHTML='<div class="empty show"><svg class="ic" style="width:32px;height:32px;color:var(--border-strong)"><use href="#i-shield"/></svg><div class="empty-t">等待原文输入</div><p class="empty-d">在左侧粘贴含手机号、身份证号或银行卡号的文本，脱敏结果将即时生成。</p></div>';
+    $('mstat').textContent='';$('mcopy').disabled=true;maskPlain='';
+    updCnt(0,0,0);return;
+  }
+  $('mcopy').disabled=false;
+  var n={phone:0,id:0,bank:0},outH='',outP='',pos=0,mm;
+  COMB.lastIndex=0;
+  while((mm=COMB.exec(txt))!==null){
+    outH+=esc(txt.slice(pos,mm.index));outP+=txt.slice(pos,mm.index);
+    var mid=mm[1],mbank=mm[2],mph=mm[3],rep;
+    if(mid){rep=MSON.id?maskId(mid):mid;if(MSON.id)n.id++}
+    else if(mbank){rep=MSON.bank?maskBank(mbank):mbank;if(MSON.bank)n.bank++}
+    else{rep=MSON.phone?maskPhone(mph):mph;if(MSON.phone)n.phone++}
+    var masked=rep!==mm[0];
+    outH+=masked?('<span class="mk">'+rep+'</span>'):esc(rep);
+    outP+=rep;
+    pos=mm.index+mm[0].length;
+  }
+  outH+=esc(txt.slice(pos));outP+=txt.slice(pos);
+  maskPlain=outP;
+  $('mout').innerHTML=outH;
+  var tot=n.phone+n.id+n.bank;
+  $('mstat').innerHTML='已脱敏 <b>'+tot+'</b> 处 · 手机号 '+n.phone+' · 身份证 '+n.id+' · 银行卡 '+n.bank;
+  updCnt(n.phone,n.id,n.bank);
+}
+function updCnt(p,i,b){
+  $('cnt-phone').textContent=MSON.phone?(p+' 处'):'未启用';
+  $('cnt-id').textContent=MSON.id?(i+' 处'):'未启用';
+  $('cnt-bank').textContent=MSON.bank?(b+' 处'):'未启用';
+  $('cnt-phone').className='badge'+(MSON.phone?' b-low':'');
+  $('cnt-id').className='badge'+(MSON.id?' b-low':'');
+  $('cnt-bank').className='badge'+(MSON.bank?' b-low':'');
+}
+var sws=document.querySelectorAll('.sw[data-msk]');
+for(var sw=0;sw<sws.length;sw++){
+  (function(s){on(s,'click',function(){
+    var k=s.getAttribute('data-msk');
+    MSON[k]=!MSON[k];
+    s.classList.toggle('on',MSON[k]);
+    s.setAttribute('aria-checked',MSON[k]?'true':'false');
+    maskRun();
+  })})(sws[sw]);
+}
+on($('mta'),'input',maskRun);
+on($('mclear'),'click',function(){$('mta').value='';maskRun()});
+on($('mreset'),'click',function(){$('mta').value='申请人：张某，女，身份证号 320102199004153628，联系电话 13812775623。在职期间，被申请人每月通过尾号 6222023012345678 的银行账户发放工资。其同事李某（电话 13915583421）可证明长期加班事实。承办律师：王某，律所座机 0512-66881234。';maskRun()});
+on($('mcopy'),'click',function(){
+  if(maskPlain&&navigator.clipboard)navigator.clipboard.writeText(maskPlain);
+  var b=this;b.querySelector('span').textContent='已复制';
+  setTimeout(function(){b.querySelector('span').textContent='复制脱敏文本'},1500);
+});
+maskRun();
+})();
+</script>
+</body>
+</html>
