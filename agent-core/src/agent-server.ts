@@ -35,6 +35,10 @@ agent.subscribe((ev: AgentEvent) => {
       .join("");
     if (text) out({ type: "assistant", text });
   } else if (e.type === "agent_end") {
+    const errMsg = (agent.state as unknown as { errorMessage?: unknown }).errorMessage;
+    if (errMsg) {
+      out({ type: "error", fatal: true, message: `模型调用失败：${String(errMsg).slice(0, 200)}` });
+    }
     out({ type: "agent_end" });
   }
 });
