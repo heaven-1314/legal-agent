@@ -1,74 +1,102 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { bridge } from "../bridge.js";
 
+interface Doc { id: string; filename: string; text_chars: number }
+interface Note { id: string; title?: string; filename?: string; created_at?: string; content?: string; summary?: string }
+
 export function DueDiligenceView() {
+  const [docs, setDocs] = useState<Doc[] | null>(null);
+  const [down, setDown] = useState(false);
+  const [picked, setPicked] = useState<string[]>([]);
+  const [question, setQuestion] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState("");
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [error, setError] = useState("");
+
+  const load = useCallback(async () => {
+    const [d, n] = await Promise.all([
+      bridge.api<{ items: Doc[] }>({ path: "/api/documents" }),
+      bridge.api<{ items: Note[] }>({ path: "/api/dossier/notes" }),
+    ]);
+    if (d.ok) setDocs(d.data.items); else setDown(true);
+    if (n.ok) setNotes(n.data.items ?? []);
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const toggle = (id: string) => setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
+
+  const run = async () => {
+    if (picked.length === 0) return;
+    setBusy(true); setError(""); setResult("");
+    const path = picked.length === 1 ? "/api/dossier/read" : "/api/dossier/read-batch";
+    const body = picked.length === 1
+      ? { document_id: picked[0], ...(question.trim() ? { question: question.trim() } : {}) }
+      : { document_ids: picked, ...(question.trim() ? { question: question.trim() } : {}) };
+    const res = await bridge.api<{ note?: string; summary?: string; content?: string }>({ method: "POST", path, body });
+    setBusy(false);
+    if (res.ok) { setResult(res.data.note ?? res.data.summary ?? res.data.content ?? ""); load(); }
+    else setError((res.data as { detail?: string })?.detail ?? `阅卷失败（${res.status}）`);
+  };
+
   return (
     <div className="pg-root">
-<div className="ph">
-          <div><h1>尽职调查（阅卷）</h1><p className="ph-desc">材料解析 → 主体 · 时间线 · 争点 → 沉淀办案笔记</p></div>
+      <div className="pg-head">
+        <div className="grow">
+          <h1 className="pg-title">尽职调查（阅卷）</h1>
+          <div className="pg-sub">选材料 · 定向问题 · AI 提炼主体 / 时间线 / 争点</div>
         </div>
-        <div className="pb" style={{flexDirection: 'row', gap: '14px'}}>
-          <div style={{width: '332px', flex: 'none', display: 'flex', flexDirection: 'column', gap: '12px'}}>
-            <div className="card">
-              <div className="card-head"><span className="card-title">材料选择</span><span className="badge b-neutral plain" id="dmat-n">4 / 6 份</span></div>
-              <label className="mat"><input type="checkbox" disabled /><span className="mn">劳动合同</span><span className="badge b-high mm">未提供</span></label>
-              <label className="mat"><input type="checkbox" checked /><span className="mn">工资银行流水</span><span className="badge b-low mm">24 个月</span></label>
-              <label className="mat"><input type="checkbox" checked /><span className="mn">社保缴纳记录</span><span className="badge b-low mm">已归档</span></label>
-              <label className="mat"><input type="checkbox" checked /><span className="mn">解除通知微信记录</span><span className="badge b-low mm">已固定</span></label>
-              <label className="mat"><input type="checkbox" checked /><span className="mn">考勤记录截图</span><span className="badge b-low mm">18 张</span></label>
-              <label className="mat"><input type="checkbox" /><span className="mn">证人证言笔录</span><span className="badge b-mid mm">待补充</span></label>
-            </div>
-            <div className="card">
-              <div className="card-head"><span className="card-title">针对性问题</span><span className="hint">引导阅卷重点</span></div>
-              <textarea className="textarea" id="ddq" rows={5}>重点核查：① 入职时间与社保起缴时间是否一致；② 解除通知的发出主体、形式与送达时间；③ 工资流水中是否存在加班费科目；④ 是否存在关联公司混同用工。</textarea>
-              <button className="btn primary" id="ddgo" style={{width: '100%', marginTop: '10px'}}><span className="spin"></span><svg className="ic"><use href="#i-scan"/></svg><span>开始阅卷（4 份材料）</span></button>
-            </div>
-          </div>
-          <div style={{flex: '1', minWidth: '0', display: 'flex', flexDirection: 'column', gap: '12px'}}>
-            <div className="card">
-              <div className="card-head">
-                <span className="card-title">AI 阅卷结果</span>
-                <span className="badge b-low" id="ddmeta">已完成 · 4 份材料</span>
-                <button className="btn outline sm" id="ddre" style={{marginLeft: 'auto'}}><svg className="ic"><use href="#i-refresh"/></svg>重新阅卷</button>
+      </div>
+      <div className="pg-body">
+        {down ? (
+          <div className="empty"><div className="empty-t">工具后端未连接</div></div>
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: "minmax(280px,4fr) minmax(320px,7fr)", gap: 14, flex: 1, minHeight: 0 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div className="card">
+                <div className="set-sec" style={{ marginBottom: "8px" }}>材料选择（{picked.length} / {docs?.length ?? 0}）</div>
+                {docs === null ? <div className="hint">加载…</div> : docs.length === 0 ? <div className="hint">无文档。请先在「合同审查」页上传材料。</div> : docs.map((d) => (
+                  <label key={d.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0", fontSize: 13, borderBottom: "1px solid var(--border)", cursor: "pointer" }}>
+                    <input type="checkbox" checked={picked.includes(d.id)} onChange={() => toggle(d.id)} />
+                    <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.filename}</span>
+                    <span className="hint">{d.text_chars.toLocaleString()}字</span>
+                  </label>
+                ))}
               </div>
-              <div id="ddprog" style={{display: 'none'}}>
-                <div className="dd-step"><span className="st"><i className="dot"></i><span className="spin"></span><svg className="ic"><use href="#i-check"/></svg></span>解析材料文本（4 份 · 6.2 MB）</div>
-                <div className="dd-step"><span className="st"><i className="dot"></i><span className="spin"></span><svg className="ic"><use href="#i-check"/></svg></span>抽取主体信息与关键日期</div>
-                <div className="dd-step"><span className="st"><i className="dot"></i><span className="spin"></span><svg className="ic"><use href="#i-check"/></svg></span>归纳争议焦点并匹配法条依据</div>
+              <div className="card">
+                <div className="set-sec" style={{ marginBottom: "8px" }}>针对性问题（可选）</div>
+                <textarea className="textarea" rows={4} value={question} onChange={(e) => setQuestion(e.target.value)} placeholder="如：梳理时间线 / 双方争议焦点是什么" />
+                <button className="btn primary" style={{ width: "100%", marginTop: 10 }} onClick={run} disabled={busy || picked.length === 0}>
+                  {busy ? "阅卷中…" : `开始阅卷（${picked.length} 份材料）`}
+                </button>
               </div>
-              <div id="ddres">
-                <div className="seg">
-                  <div className="seg-h"><svg className="ic" style={{color: 'var(--accent)'}}><use href="#i-shield"/></svg>主体识别</div>
-                  <div className="kv"><span className="k">申请人</span><span className="v">张某 · 女 · 1990.04 · 产线质检员</span></div>
-                  <div className="kv"><span className="k">被申请人</span><span className="v">恒晟电子科技有限公司 · 存续 · 社保开户与工资发放主体一致 <span className="badge b-low">已核验</span></span></div>
-                  <div className="kv"><span className="k">用工形式</span><span className="v">事实劳动关系（未签书面合同）<span className="badge b-high">关注</span></span></div>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12, minHeight: 0 }}>
+              {error && <div className="banner-error show"><svg className="ic"><use href="#i-alert" /></svg><span>{error}</span></div>}
+              {busy && <div className="card"><div className="diag-hint">AI 正在解析材料…</div></div>}
+              {result && (
+                <div className="card">
+                  <div className="set-sec" style={{ marginBottom: "8px" }}>AI 阅卷结果</div>
+                  <div className="bubble-md"><ReactMarkdown remarkPlugins={[remarkGfm]}>{result}</ReactMarkdown></div>
                 </div>
-                <div className="seg">
-                  <div className="seg-h"><svg className="ic" style={{color: 'var(--accent)'}}><use href="#i-clock"/></svg>时间线</div>
-                  <div className="tl">
-                    <div className="tl-i"><span className="tl-d">2019-07-01</span>入职，建立事实劳动关系</div>
-                    <div className="tl-i"><span className="tl-d">2019-08</span>社保改由关联公司代缴 <span className="badge b-mid" style={{height: '17px', fontSize: '10px'}}>待核实</span></div>
-                    <div className="tl-i"><span className="tl-d">2024-06-28</span>主管口头通知班组解散（有录音）</div>
-                    <div className="tl-i key"><span className="tl-d">2024-06-30</span>微信送达《解除通知》，理由“组织架构调整”</div>
-                    <div className="tl-i"><span className="tl-d">2024-07-15</span>委托立案，未获任何补偿</div>
+              )}
+              <div className="card">
+                <div className="set-sec" style={{ marginBottom: "8px" }}>历史笔记（{notes.length}）</div>
+                {notes.length === 0 && <div className="hint">暂无历史笔记</div>}
+                {notes.slice(0, 6).map((n) => (
+                  <div key={n.id} style={{ padding: "7px 0", borderBottom: "1px solid var(--border)" }}>
+                    <b style={{ fontSize: 12.5 }}>{n.title || n.filename || n.id.slice(0, 8)}</b>
+                    <div className="hint">{(n.content || n.summary || "").slice(0, 120)}</div>
                   </div>
-                </div>
-                <div className="seg">
-                  <div className="seg-h"><svg className="ic" style={{color: 'var(--accent)'}}><use href="#i-list"/></svg>争点归纳</div>
-                  <div className="kv"><span className="k">争点一</span><span className="v"><b>是否构成违法解除</b> <span className="badge b-high">高</span> <span className="badge b-neutral plain">§87</span><br />单位以“组织架构调整”解除但未举证岗位撤销必要性，证据由单位掌握。</span></div>
-                  <div className="kv"><span className="k">争点二</span><span className="v"><b>二倍工资差额与时效</b> <span className="badge b-high">高</span> <span className="badge b-neutral plain">§82</span><br />2019-08 至 2020-06 共 11 个月可主张，但距离职已超 1 年，存在时效抗辩风险。</span></div>
-                  <div className="kv"><span className="k">争点三</span><span className="v"><b>加班费基数与举证</b> <span className="badge b-mid">中</span> <span className="badge b-neutral plain">劳动法 §44</span><br />流水中无加班费科目，需以考勤记录补强单位安排加班的事实。</span></div>
-                </div>
+                ))}
               </div>
             </div>
-            <div className="card">
-              <div className="card-head"><span className="card-title">历史笔记</span><button className="more" data-page="consult">全部 23 条 →</button></div>
-              <div className="note"><span className="nd">08-12</span><span className="nt">庭前会议要点：仲裁请求第 2 项金额按 11 个月重新核对</span><span className="badge b-accent" style={{height: '18px', fontSize: '10.5px'}}>庭审</span><button className="linkish">查看</button></div>
-              <div className="note"><span className="nd">08-05</span><span className="nt">与张某二次会见：补充微信原始载体与录音备份</span><span className="badge b-neutral" style={{height: '18px', fontSize: '10.5px'}}>会见</span><button className="linkish">查看</button></div>
-              <div className="note"><span className="nd">07-30</span><span className="nt">阅卷 v1：缺在职证明与工资条原件，已通知委托人补充</span><span className="badge b-neutral" style={{height: '18px', fontSize: '10.5px'}}>阅卷</span><button className="linkish">查看</button></div>
-            </div>
           </div>
-        </div>
+        )}
+      </div>
     </div>
   );
 }

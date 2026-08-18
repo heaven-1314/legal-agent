@@ -1,72 +1,103 @@
-import { useEffect, useState } from "react";
-import { bridge } from "../bridge.js";
+import { useMemo, useState } from "react";
+
+/** 赔偿计算器：§82 二倍工资 / §87 违法解除 2N / §47 经济补偿 N，时效风险提示。 */
+const REASONS = [
+  { key: "illegal", label: "违法解除（无理由辞退/转正不通过）" },
+  { key: "negotiate", label: "协商解除" },
+  { key: "personal", label: "个人原因离职" },
+  { key: "expire", label: "合同到期不续签" },
+];
+
+interface Item { name: string; basis: string; amount: number; stale?: boolean }
 
 export function CalculatorView() {
+  const [salary, setSalary] = useState("8000");
+  const [start, setStart] = useState("2019-07-01");
+  const [end, setEnd] = useState("2024-06-30");
+  const [reason, setReason] = useState("illegal");
+  const [contract, setContract] = useState("unsigned");
+
+  const { items, total, months, n, stale82 } = useMemo(() => {
+    const s = parseFloat(salary) || 0;
+    const st = new Date(start);
+    const en = new Date(end);
+    const bad = !st.getTime() || !en.getTime() || en <= st;
+    const days = bad ? 0 : (en.getTime() - st.getTime()) / 86400000;
+    const mo = days / 30.44;
+    const years = mo / 12;
+    const nn = years < 0.5 ? 0.5 : Math.ceil(years);
+    const list: Item[] = [];
+    let s82 = false;
+    if (contract === "unsigned" && mo > 1) {
+      const dm = Math.min(Math.floor(mo) - 1, 11);
+      if (dm > 0) {
+        // §82 二倍工资时效：按离职日起算一年内可主张
+        s82 = en.getTime() < Date.now() - 365 * 86400000;
+        list.push({ name: "二倍工资差额", basis: `§82 · 入职满1月起 ${dm} 个月`, amount: s * dm, stale: s82 });
+      }
+    }
+    if (reason === "illegal") list.push({ name: "违法解除赔偿金（2N）", basis: `§87 · ${nn} × 2 × 月工资`, amount: s * nn * 2 });
+    else if (reason === "negotiate" || reason === "expire") list.push({ name: "经济补偿金（N）", basis: `§47 · ${nn} × 月工资`, amount: s * nn });
+    return { items: list, total: list.reduce((a, i) => a + i.amount, 0), months: mo, n: nn, stale82: s82 };
+  }, [salary, start, end, reason, contract]);
+
   return (
     <div className="pg-root">
-<div className="ph">
-          <div><h1>赔偿计算器</h1><p className="ph-desc">经济补偿 · 赔偿金 · 二倍工资差额 · 联动即时测算</p></div>
-          <div className="ph-acts"><button className="btn outline sm" id="cexport"><svg className="ic"><use href="#i-doc"/></svg>导出测算报告</button></div>
+      <div className="pg-head">
+        <div className="grow">
+          <h1 className="pg-title">赔偿计算器</h1>
+          <div className="pg-sub">经济补偿 · 二倍工资 · 时效风险 · 即时联动</div>
         </div>
-        <div className="pb" style={{flexDirection: 'row', gap: '16px'}}>
-          <div className="card" style={{width: '352px', flex: 'none'}}>
-            <div className="field">
-              <div className="lab">月平均工资<span className="hint">离职前 12 个月应发口径</span></div>
-              <div className="fm"><span className="pre">¥</span><input id="cwage" className="input" type="number" min="0" step="100" value="8000" aria-label="月平均工资" /></div>
-              <div className="f-err" id="cwage-err">请输入大于 0 的月平均工资</div>
+      </div>
+      <div className="pg-body">
+        <div className="calc-grid">
+          <div className="card">
+            <div className="set-sec" style={{ marginBottom: "12px" }}>案件信息</div>
+            <div className="field"><div className="lab">月工资（税前，元）</div>
+              <input className="input" type="number" value={salary} onChange={(e) => setSalary(e.target.value)} />
             </div>
-            <div className="field">
-              <div className="lab">入职日期</div>
-              <input id="cstart" className="input" type="date" value="2019-07-01" aria-label="入职日期" />
-            </div>
-            <div className="field">
-              <div className="lab">离职日期</div>
-              <input id="cend" className="input" type="date" value="2024-06-30" aria-label="离职日期" />
-              <div className="f-err" id="cdate-err">离职日期需晚于入职日期</div>
-            </div>
-            <div className="field">
-              <div className="lab">离职原因</div>
-              <select id="creason" className="select" aria-label="离职原因">
-                <option value="weifa" selected>用人单位违法解除</option>
-                <option value="hefa">无过失性辞退（未提前 30 日通知）</option>
-                <option value="xieshang">协商一致解除（单位提出）</option>
-                <option value="daoqi">合同到期终止（单位不续签）</option>
-                <option value="cizhi">劳动者主动辞职</option>
-              </select>
-            </div>
-            <div className="field">
-              <div className="lab">书面劳动合同</div>
-              <div className="row" style={{gap: '8px'}}>
-                <button className="pill on" id="pcon-no" type="button">未签订</button>
-                <button className="pill" id="pcon-yes" type="button">已签订</button>
+            <div className="gw-row">
+              <div className="field"><div className="lab">入职日期</div>
+                <input className="input" type="date" value={start} onChange={(e) => setStart(e.target.value)} />
+              </div>
+              <div className="field"><div className="lab">离职日期</div>
+                <input className="input" type="date" value={end} onChange={(e) => setEnd(e.target.value)} />
               </div>
             </div>
-            <div className="row" style={{gap: '8px', marginTop: '4px'}}>
-              <button className="btn outline sm" id="creset"><svg className="ic"><use href="#i-refresh"/></svg>恢复示例值</button>
-              <span className="hint" style={{marginLeft: 'auto'}}>修改任意项即时重算</span>
+            <div className="field"><div className="lab">离职原因</div>
+              <select className="select" value={reason} onChange={(e) => setReason(e.target.value)}>
+                {REASONS.map((r) => <option key={r.key} value={r.key}>{r.label}</option>)}
+              </select>
             </div>
+            <div className="field"><div className="lab">书面劳动合同</div>
+              <select className="select" value={contract} onChange={(e) => setContract(e.target.value)}>
+                <option value="unsigned">未签订</option>
+                <option value="signed">已签订</option>
+              </select>
+            </div>
+            <p className="hint" style={{ marginTop: "8px" }}>工龄 {months.toFixed(1)} 个月 → 折算 N = {n}</p>
           </div>
-          <div style={{flex: '1', minWidth: '0', display: 'flex', flexDirection: 'column', gap: '12px'}}>
-            <div className="banner-error" id="cal-invalid"><svg className="ic"><use href="#i-alert"/></svg><span>表单尚未完整：请补全左侧标红字段后查看测算结果。</span></div>
-            <div className="card">
-              <span className="tc-cap">预计主张总额</span>
-              <div className="tc-num" id="ctotal">—</div>
-              <div className="tc-sub" id="csub">工龄口径与构成见分项明细</div>
+          <div className="card">
+            <div className="set-sec" style={{ marginBottom: "8px" }}>赔偿明细（预估）</div>
+            <div className="calc-total">¥{total.toLocaleString()}</div>
+            <div className="calc-lines">
+              {items.length === 0 && <div className="calc-line"><span>暂无赔偿项</span><span>¥0</span></div>}
+              {items.map((i) => (
+                <div key={i.name} className="calc-line">
+                  <span>
+                    <span className="calc-name">{i.name}{i.stale && <span className="badge b-high" style={{ marginLeft: 6 }}>时效风险</span>}</span>
+                    <span className="calc-basis">{i.basis}</span>
+                  </span>
+                  <span>¥{i.amount.toLocaleString()}</span>
+                </div>
+              ))}
             </div>
-            <div className="card">
-              <div className="card-head"><span className="card-title">分项明细</span><span className="badge b-neutral plain">依据条款已标注</span></div>
-              <div id="cbreak"></div>
-            </div>
-            <div className="card">
-              <div className="card-head"><span className="card-title">注意事项</span></div>
-              <div className="note-li"><svg className="ic"><use href="#i-alert"/></svg><span>月工资高于当地社平工资 3 倍的，按 3 倍封顶计算，且补偿年限最高不超过 12 年（§47）。</span></div>
-              <div className="note-li"><svg className="ic"><use href="#i-alert"/></svg><span>二倍工资差额多数地区按 11 个月封顶；用工满一年未订立的视为无固定期限合同（§14），此后不再支持。</span></div>
-              <div className="note-li"><svg className="ic"><use href="#i-alert"/></svg><span>违法解除赔偿金（2N）与要求继续履行劳动合同系择一主张，不可并行（§48）。</span></div>
-              <div className="note-li"><svg className="ic"><use href="#i-alert"/></svg><span>劳动仲裁时效为 1 年，自劳动关系终止之日起算；二倍工资的时效起算各地口径不一，主张前需核查。</span></div>
-              <p className="disc" style={{marginTop: '6px'}}>测算结果为初步估算，正式主张前请结合当地司法口径与证据情况复核。</p>
+            <div className="diag-hint" style={{ marginTop: "10px" }}>
+              ⚠️ 二倍工资起算：入职满 1 个月的次日；满 6 个月不满 1 年按 1 年计；最终以仲裁委裁决为准。
             </div>
           </div>
         </div>
+      </div>
     </div>
   );
 }

@@ -676,3 +676,12 @@ body { font-family: var(--font-body, "PingFang SC", "Microsoft YaHeihao", "Micro
 .sb-group{display:contents}
 .page-enter{animation:pageIn .2s var(--ease-out) both}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}}
+
+/* ============ 计算器 ============ */
+.calc-grid{display:grid;grid-template-columns:minmax(300px,5fr) minmax(300px,6fr);gap:14px;align-items:start}
+@media (max-width:900px){.calc-grid{grid-template-columns:1fr}}
+.calc-total{font-family:var(--font-display);font-size:30px;font-weight:700;color:var(--accent-deep);margin:4px 0 12px}
+.calc-lines{display:flex;flex-direction:column}
+.calc-line{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--border);font-size:13.5px}
+.calc-name{display:block;font-weight:600}
+.calc-basis{display:block;font-size:11.5px;color:var(--muted);margin-top:2px;font-family:var(--font-mono)}
