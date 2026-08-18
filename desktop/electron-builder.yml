@@ -8,6 +8,9 @@ files:
 extraResources:
   - from: agent-server.bundle.mjs
     to: agent-server.bundle.mjs
+  # PyInstaller 按平台产出（linux 无后缀 / win .exe），整目录平铺进 resources
+  - from: ../backend/dist
+    to: .
 win:
   target: nsis
 nsis:

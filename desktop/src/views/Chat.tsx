@@ -4,9 +4,10 @@ import remarkGfm from "remark-gfm";
 import type { ChatMessage } from "../bridge.js";
 
 const EXAMPLES = [
-  "试用期最长可以约定多久？",
-  "我在北京，试用期被口头辞退，帮我立案",
-  "合同里的违约金条款有什么风险？",
+  "入职未签合同被辞退",
+  "公司拖欠了 3 个月工资",
+  "公司单方面调岗降薪",
+  "工伤认定流程是什么",
 ];
 
 export function ChatView(props: {

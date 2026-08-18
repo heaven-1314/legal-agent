@@ -63,14 +63,34 @@ export function SettingsView(props: { onSaved: () => void }) {
       </label>
 
       <label className="field">
-        <span className="field-label">工具后端地址（案件/文档/审查）</span>
-        <input
-          value={s.apiBase}
-          onChange={(e) => setS({ ...s, apiBase: e.target.value })}
-          placeholder="http://127.0.0.1:8091"
-          spellCheck={false}
-        />
+        <span className="field-label">工具后端（案件/文档/审查）</span>
+        <div className="mode-toggle">
+          <button
+            className={`mode-btn ${s.backendMode !== "remote" ? "on" : ""}`}
+            onClick={() => setS({ ...s, backendMode: "local" })}
+          >
+            本地内置服务（推荐）
+          </button>
+          <button
+            className={`mode-btn ${s.backendMode === "remote" ? "on" : ""}`}
+            onClick={() => setS({ ...s, backendMode: "remote" })}
+          >
+            连接远程后端
+          </button>
+        </div>
       </label>
+
+      {s.backendMode === "remote" && (
+        <label className="field">
+          <span className="field-label">远程后端地址</span>
+          <input
+            value={s.apiBase}
+            onChange={(e) => setS({ ...s, apiBase: e.target.value })}
+            placeholder="http://127.0.0.1:8091"
+            spellCheck={false}
+          />
+        </label>
+      )}
 
       <div className="settings-actions">
         <button className="btn primary" onClick={save} disabled={saved}>

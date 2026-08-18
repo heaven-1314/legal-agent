@@ -7,6 +7,7 @@ export interface ChatMessage {
 }
 
 export interface SettingsView {
+  backendMode: "local" | "remote";
   aiBase: string;
   aiKey: string;
   aiKeySet: boolean;
@@ -17,6 +18,11 @@ export interface SettingsView {
 
 interface LegalAgentBridge {
   prompt: (text: string) => Promise<void>;
+  uploadDocument: () => Promise<{
+    ok: boolean;
+    canceled: boolean;
+    data: { id?: string; filename?: string; message?: string };
+  }>;
   api: <T = unknown>(req: { method?: string; path: string; body?: unknown }) => Promise<{
     ok: boolean;
     status: number;

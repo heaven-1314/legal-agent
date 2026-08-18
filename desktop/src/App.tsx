@@ -1,22 +1,44 @@
 import { useEffect, useState } from "react";
 import { bridge, type ChatMessage } from "./bridge.js";
+import { AnonymizeView } from "./views/Anonymize.js";
+import { CalculatorView } from "./views/Calculator.js";
 import { ChatView } from "./views/Chat.js";
+import { CompareView } from "./views/Compare.js";
+import { DashboardView } from "./views/Dashboard.js";
 import { DraftsView } from "./views/Drafts.js";
+import { DueDiligenceView } from "./views/DueDiligence.js";
+import { EvidenceView } from "./views/Evidence.js";
+import { KnowledgeView } from "./views/Knowledge.js";
 import { MattersView } from "./views/Matters.js";
+import { ResearchView } from "./views/Research.js";
 import { ReviewView } from "./views/Review.js";
 import { SettingsView } from "./views/Settings.js";
 
-type View = "chat" | "matters" | "review" | "drafts" | "settings";
+type View =
+  | "dashboard" | "chat" | "research" | "review" | "calculator" | "drafts"
+  | "evidence" | "dd" | "knowledge" | "anonymize" | "compare" | "matters" | "settings";
 
+/** 侧栏按旧 Web 页 12 模块顺序 + 设置。 */
 const NAV: { key: View; label: string; hint: string }[] = [
-  { key: "chat", label: "对话", hint: "咨询与办案指令" },
-  { key: "matters", label: "办案", hint: "案件与仲裁进度" },
-  { key: "review", label: "审查", hint: "合同风险审查" },
-  { key: "drafts", label: "文书", hint: "模板化起草" },
+  { key: "dashboard", label: "仪表盘", hint: "总览与快捷入口" },
+  { key: "chat", label: "智能咨询", hint: "Agent 多轮对话" },
+  { key: "research", label: "法律检索", hint: "材料全文检索" },
+  { key: "review", label: "合同审查", hint: "风险识别+批注" },
+  { key: "calculator", label: "赔偿计算器", hint: "经济补偿/二倍工资" },
+  { key: "drafts", label: "文书生成", hint: "模板化起草" },
+  { key: "evidence", label: "证据指引", hint: "按主张类型" },
+  { key: "dd", label: "尽职调查", hint: "AI 阅卷提炼" },
+  { key: "knowledge", label: "知识库", hint: "核心法条" },
+  { key: "anonymize", label: "脱敏工具", hint: "本地处理" },
+  { key: "compare", label: "多平台对比", hint: "AI 能力横评" },
+  { key: "matters", label: "案件管理", hint: "案件夹+仲裁进度" },
   { key: "settings", label: "设置", hint: "网关与密钥" },
 ];
 
-const VIEWS: View[] = ["chat", "matters", "review", "drafts", "settings"];
+const VIEWS: View[] = [
+  "dashboard", "chat", "research", "review", "calculator", "drafts",
+  "evidence", "dd", "knowledge", "anonymize", "compare", "matters", "settings",
+];
 
 export default function App() {
   const [view, setView] = useState<View>(() => {
@@ -107,10 +129,18 @@ export default function App() {
         </div>
       </aside>
       <main className="main">
+        {view === "dashboard" && <DashboardView />}
         {view === "chat" && <ChatView messages={messages} busy={busy} ready={ready} onSend={send} onGoSettings={() => setView("settings")} />}
-        {view === "matters" && <MattersView />}
+        {view === "research" && <ResearchView />}
         {view === "review" && <ReviewView />}
+        {view === "calculator" && <CalculatorView />}
         {view === "drafts" && <DraftsView />}
+        {view === "evidence" && <EvidenceView />}
+        {view === "dd" && <DueDiligenceView />}
+        {view === "knowledge" && <KnowledgeView />}
+        {view === "anonymize" && <AnonymizeView />}
+        {view === "compare" && <CompareView />}
+        {view === "matters" && <MattersView />}
         {view === "settings" && <SettingsView onSaved={() => setView("chat")} />}
       </main>
     </div>

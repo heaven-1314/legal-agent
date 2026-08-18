@@ -42,6 +42,15 @@ export function ReviewView() {
     load("");
   }, [load]);
 
+  const upload = async () => {
+    const res = await bridge.uploadDocument();
+    if (res.ok) {
+      load(q.trim());
+    } else if (!res.canceled) {
+      setError(res.data?.message ?? "上传失败");
+    }
+  };
+
   const run = async () => {
     if (!selected) return;
     setBusy(true);
@@ -76,6 +85,7 @@ export function ReviewView() {
             load(e.target.value.trim());
           }}
         />
+        <button className="btn" onClick={upload}>上传文档</button>
         <button className="btn primary" onClick={run} disabled={!selected || busy}>
           {busy ? "审查中，约 1-2 分钟…" : "发起审查"}
         </button>

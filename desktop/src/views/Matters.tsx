@@ -38,30 +38,50 @@ interface LaborCaseSummary {
   updated_at: string;
 }
 
+interface MatterRow {
+  id: string;
+  title: string;
+  client_name: string | null;
+  doc_count: number;
+  updated_at: string;
+}
+
 export function MattersView() {
   const [cases, setCases] = useState<LaborCaseSummary[] | null>(null);
+  const [folders, setFolders] = useState<MatterRow[] | null>(null);
   const [down, setDown] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
 
   const refresh = useCallback(async () => {
-    const res = await bridge.api<{ items: LaborCaseSummary[] }>({ path: "/api/labor/cases" });
-    if (res.ok) {
-      setCases(res.data.items);
+    const [labor, matters] = await Promise.all([
+      bridge.api<{ items: LaborCaseSummary[] }>({ path: "/api/labor/cases" }),
+      bridge.api<{ items: MatterRow[] }>({ path: "/api/matters" }),
+    ]);
+    if (labor.ok) {
+      setCases(labor.data.items);
       setDown(false);
     } else {
       setDown(true);
       setCases([]);
     }
+    if (matters.ok) setFolders(matters.data.items);
   }, []);
 
   useEffect(() => {
     refresh();
   }, [refresh]);
 
+  const createFolder = async () => {
+    const title = prompt("案件夹名称（如：张某劳动争议）");
+    if (!title?.trim()) return;
+    await bridge.api({ method: "POST", path: "/api/matters", body: { title: title.trim() } });
+    refresh();
+  };
+
   if (down)
     return (
-      <Page title="劳动仲裁案件">
+      <Page title="案件管理">
         <BackendDown />
       </Page>
     );
@@ -79,13 +99,31 @@ export function MattersView() {
 
   return (
     <Page
-      title="劳动仲裁案件"
+      title="案件管理"
       action={
-        <button className="btn primary" onClick={() => setCreating(true)}>
-          新建案件
-        </button>
+        <div style={{ display: "flex", gap: 10 }}>
+          <button className="btn" onClick={createFolder}>新建案件夹</button>
+          <button className="btn primary" onClick={() => setCreating(true)}>新建劳动仲裁案</button>
+        </div>
       }
     >
+      {folders !== null && folders.length > 0 && (
+        <div className="card" style={{ marginBottom: 16 }}>
+          <h3>案件夹（{folders.length}）</h3>
+          <div className="rows">
+            {folders.map((f) => (
+              <div key={f.id} className="row" style={{ cursor: "default" }}>
+                <span className="row-main">
+                  <span className="row-title">{f.title}</span>
+                  <span className="row-sub">{f.client_name || "未记录委托人"}</span>
+                </span>
+                <span className="badge">{f.doc_count} 份材料</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      <div className="page-subtitle">劳动仲裁案件</div>
       {cases === null ? (
         <Loading />
       ) : cases.length === 0 && !creating ? (

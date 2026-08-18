@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer } from "electron";
 
 export interface SettingsView {
+  backendMode: "local" | "remote";
   aiBase: string;
   aiKey: string;
   aiKeySet: boolean;
@@ -12,6 +13,12 @@ export interface SettingsView {
 /** IPC 契约：渲染层可见的全部桌面能力（contextIsolation 开启）。 */
 contextBridge.exposeInMainWorld("legalAgent", {
   prompt: (text: string) => ipcRenderer.invoke("agent:prompt", text),
+  uploadDocument: () =>
+    ipcRenderer.invoke("upload:document") as Promise<{
+      ok: boolean;
+      canceled: boolean;
+      data: { id?: string; filename?: string; message?: string };
+    }>,
   api: <T = unknown>(req: { method?: string; path: string; body?: unknown }) =>
     ipcRenderer.invoke("api", req) as Promise<{ ok: boolean; status: number; data: T }>,
   getSettings: (): Promise<SettingsView> => ipcRenderer.invoke("settings:get"),

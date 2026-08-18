@@ -2,19 +2,24 @@ import { spawn, type ChildProcess } from "node:child_process";
 import { appendFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import readline from "node:readline/promises";
 import path from "node:path";
-import { app, BrowserWindow, ipcMain } from "electron";
+import { app, BrowserWindow, dialog, ipcMain } from "electron";
 
 /**
- * Electron 主进程：窗口 + 托管 agent-core 子进程（stdio 行 JSON，Tether 同款形态）。
- * 设置持久化在 ~/.legal-workbench/config.json；保存后热重启 agent 子进程。
+ * Electron 主进程：窗口 + 托管两个子进程（Tether 同款形态）。
+ * - FastAPI sidecar（打包态）：本地数据，AI 网关配置注入
+ * - agent-core（stdio 行 JSON）：对话 Agent
+ * 设置持久化在 ~/.legal-workbench/config.json；保存后热重启。
  */
 
 const ROOT = path.join(__dirname, "..");
 const AGENT_DIR = path.join(ROOT, "..", "agent-core");
 const TSX = path.join(AGENT_DIR, "node_modules", ".bin", "tsx");
-const SETTINGS_FILE = path.join(app.getPath("home"), ".legal-workbench", "config.json");
+const HOME_CONF = path.join(app.getPath("home"), ".legal-workbench");
+const SETTINGS_FILE = path.join(HOME_CONF, "config.json");
+const DATA_DIR = path.join(HOME_CONF, "data");
 
 export interface AgentSettings {
+  backendMode: "local" | "remote";
   aiBase: string;
   aiKey: string;
   modelId: string;
@@ -23,6 +28,7 @@ export interface AgentSettings {
 }
 
 const DEFAULTS: AgentSettings = {
+  backendMode: "local",
   aiBase: "http://127.0.0.1:5004/v1",
   aiKey: "",
   modelId: "glm-5.2",
@@ -41,6 +47,16 @@ function loadSettings(): AgentSettings {
 function saveSettings(s: AgentSettings): void {
   mkdirSync(path.dirname(SETTINGS_FILE), { recursive: true });
   writeFileSync(SETTINGS_FILE, JSON.stringify(s, null, 2));
+}
+
+/** 工具后端基址：本地 sidecar（打包态）或远程地址。 */
+let sidecarPort = 0;
+
+function apiBaseUrl(s: AgentSettings): string {
+  if (s.backendMode === "local" && app.isPackaged && sidecarPort > 0) {
+    return `http://127.0.0.1:${sidecarPort}`;
+  }
+  return s.apiBase;
 }
 
 let win: BrowserWindow | null = null;
@@ -124,6 +140,52 @@ function restartAgent(): void {
   spawnAgent();
 }
 
+/** FastAPI sidecar：打包态随主进程拉起，端口随机、数据本地、AI 配置注入。 */
+let sidecar: ChildProcess | null = null;
+
+function spawnSidecar(): void {
+  if (!app.isPackaged) return; // 开发态用远程后端（服务器 8091）
+  const s = loadSettings();
+  const bin = path.join(process.resourcesPath, `legal-agent-sidecar${process.platform === "win32" ? ".exe" : ""}`);
+  sidecarPort = 20000 + Math.floor(Math.random() * 20000);
+  sidecar = spawn(bin, [], {
+    env: {
+      ...process.env,
+      LEGAL_PORT: String(sidecarPort),
+      LEGAL_AGENT_DATA: DATA_DIR,
+      AI_BASE: s.aiBase,
+      AI_KEY: s.aiKey,
+      AI_MODEL: s.modelId,
+    },
+    stdio: ["ignore", "pipe", "inherit"],
+  });
+  sidecar.stdout?.on("data", (d: Buffer) => debug(`[sidecar] ${d.toString().trim()}`));
+  sidecar.on("exit", (code) => {
+    debug(`[sidecar] exited (${code})`);
+    sidecarPort = 0;
+  });
+}
+
+async function waitSidecarReady(): Promise<boolean> {
+  for (let i = 0; i < 40; i++) {
+    if (sidecarPort === 0) return false;
+    try {
+      const res = await fetch(`http://127.0.0.1:${sidecarPort}/api/health`);
+      if (res.ok) return true;
+    } catch {
+      /* 启动中，继续等 */
+    }
+    await new Promise((r) => setTimeout(r, 250));
+  }
+  return false;
+}
+
+function restartSidecar(): void {
+  if (!app.isPackaged) return;
+  sidecar?.kill();
+  spawnSidecar();
+}
+
 /** 无头验证钩子：AUTO_PROMPT 自动发问，CAPTURE 在回合结束后截图。 */
 function maybeAutoPrompt(): void {
   if (pendingAutoPrompt && agentReady && uiReady && lastPrompt !== pendingAutoPrompt) {
@@ -156,7 +218,12 @@ async function maybeAutoCapture(): Promise<void> {
   if (process.env.QUIT_AFTER_CAPTURE) app.quit();
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  spawnSidecar();
+  if (app.isPackaged) {
+    const ok = await waitSidecarReady();
+    debug(`[sidecar] health=${ok}`);
+  }
   spawnAgent();
 
   ipcMain.handle("settings:get", () => {
@@ -166,6 +233,7 @@ app.whenReady().then(() => {
   ipcMain.handle("settings:set", (_e, patch: Partial<AgentSettings>) => {
     const cur = loadSettings();
     const next: AgentSettings = {
+      backendMode: patch.backendMode === "remote" ? "remote" : "local",
       aiBase: patch.aiBase?.trim() || cur.aiBase,
       // 空字符串或掩码占位表示「沿用旧值」
       aiKey: !patch.aiKey || patch.aiKey.includes("…") ? cur.aiKey : patch.aiKey.trim(),
@@ -174,6 +242,7 @@ app.whenReady().then(() => {
       apiToken: patch.apiToken?.trim() || cur.apiToken,
     };
     saveSettings(next);
+    restartSidecar(); // AI 配置注入 sidecar，改了就重启生效
     restartAgent();
     return { ok: true };
   });
@@ -183,7 +252,7 @@ app.whenReady().then(() => {
     async (_e, req: { method?: string; path: string; body?: unknown }) => {
       const s = loadSettings();
       try {
-        const res = await fetch(`${s.apiBase}${req.path}`, {
+        const res = await fetch(`${apiBaseUrl(s)}${req.path}`, {
           method: req.method ?? "GET",
           headers: {
             "Content-Type": "application/json",
@@ -194,10 +263,40 @@ app.whenReady().then(() => {
         const text = await res.text();
         return { ok: res.ok, status: res.status, data: text ? JSON.parse(text) : {} };
       } catch (err) {
-        return { ok: false, status: 0, data: { message: `无法连接工具后端（${s.apiBase}）` } };
+        return {
+          ok: false,
+          status: 0,
+          data: { message: `无法连接工具后端（${s.backendMode === "local" ? "本地服务" : s.apiBase}）` },
+        };
       }
     },
   );
+
+  /** 文档上传：系统文件对话框 + multipart POST /api/documents（渲染层零文件系统访问）。 */
+  ipcMain.handle("upload:document", async () => {
+    const picked = await dialog.showOpenDialog(win!, {
+      properties: ["openFile"],
+      filters: [{ name: "法律文档", extensions: ["txt", "md", "pdf", "docx", "doc", "jpg", "png"] }],
+    });
+    if (picked.canceled || !picked.filePaths[0]) return { ok: false, canceled: true, data: {} };
+    const filePath = picked.filePaths[0];
+    const s = loadSettings();
+    try {
+      const buf = readFileSync(filePath);
+      const name = path.basename(filePath);
+      const form = new FormData();
+      form.append("file", new Blob([new Uint8Array(buf)]), name);
+      const res = await fetch(`${apiBaseUrl(s)}/api/documents`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${s.apiToken}` },
+        body: form,
+      });
+      const text = await res.text();
+      return { ok: res.ok, canceled: false, data: text ? JSON.parse(text) : {} };
+    } catch (err) {
+      return { ok: false, canceled: false, data: { message: `上传失败：${err instanceof Error ? err.message : err}` } };
+    }
+  });
 
   ipcMain.handle("agent:prompt", (_e, text: string) => {
     if (!child || !agentReady) {
@@ -232,6 +331,7 @@ app.whenReady().then(() => {
   win.on("closed", () => {
     win = null;
     child?.kill();
+    sidecar?.kill();
   });
 });
 
