@@ -40,7 +40,7 @@
 
 # Decisions
 
-- D1 走 OpenDesign product-shell 流程出整体方向（用户指定 OD 优先）
+- D1 参照物 = reference-v1.html（用户手动合并优化的 V1 终稿，2026-08-18 16:48）；落地=结构照搬 HTML→JSX+样式整体复用+数据接真实 API
 - D2 设计稿确认后按 tokens→组件→逐页顺序落地
 - D3 现有墨绿 accent 保留与否由 OD 稿定夺（identity preservation vs 重构）
 
