@@ -5,6 +5,8 @@ export function SettingsView(props: { onSaved: () => void }) {
   const [s, setS] = useState<SettingsView | null>(null);
   const [keyInput, setKeyInput] = useState("");
   const [saved, setSaved] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [testResult, setTestResult] = useState<{ ai: string; backend: string } | null>(null);
 
   useEffect(() => {
     bridge.getSettings().then(setS);
@@ -96,6 +98,32 @@ export function SettingsView(props: { onSaved: () => void }) {
         <button className="btn primary" onClick={save} disabled={saved}>
           {saved ? "已保存，正在重启 Agent…" : "保存并重启"}
         </button>
+        <button
+          className="btn"
+          onClick={async () => {
+            setTesting(true);
+            setTestResult(await bridge.testConnection());
+            setTesting(false);
+          }}
+          disabled={testing}
+        >
+          {testing ? "测试中…" : "测试连接"}
+        </button>
+      </div>
+
+      {testResult && (
+        <div className="card" style={{ marginTop: 14 }}>
+          <h3>连接诊断</h3>
+          <div className="todo">AI 网关：{testResult.ai}</div>
+          <div className="todo">工具后端：{testResult.backend}</div>
+        </div>
+      )}
+
+      <div className="card" style={{ marginTop: 14 }}>
+        <h3>内核信息</h3>
+        <div className="todo">Agent 内核：Pi agent-core 0.84.2（agent loop / 消息流 / 工具协议）</div>
+        <div className="todo">法律工具：16 个（咨询 / 案件 / 审查 / 文书 / 阅卷 / 劳动仲裁）</div>
+        <div className="todo">后端模式：{s.backendMode === "local" ? "本地内置服务（数据在本机）" : "远程后端"}</div>
       </div>
     </div>
   );

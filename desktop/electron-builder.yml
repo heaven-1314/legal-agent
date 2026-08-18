@@ -14,7 +14,9 @@ extraResources:
 win:
   target: nsis
 nsis:
-  oneClick: true
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  perMachine: false
   artifactName: legal-workbench-${version}-setup.${ext}
 mac:
   target: dmg

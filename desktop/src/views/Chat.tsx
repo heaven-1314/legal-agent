@@ -37,7 +37,7 @@ export function ChatView(props: {
         {props.messages.length === 0 && (
           <div className="empty">
             <div className="empty-title">面向中国大陆法律的办案 Agent</div>
-            <div className="empty-sub">擅长劳动争议与劳动仲裁 · 支持案件夹、合同审查、文书起草</div>
+            <div className="empty-sub">Pi Agent 内核驱动 · 擅长劳动争议与劳动仲裁 · 支持案件夹、合同审查、文书起草</div>
             <div className="empty-examples">
               {EXAMPLES.map((e) => (
                 <button key={e} className="example" onClick={() => setInput(e)}>

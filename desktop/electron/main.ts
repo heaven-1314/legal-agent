@@ -2,7 +2,7 @@ import { spawn, type ChildProcess } from "node:child_process";
 import { appendFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import readline from "node:readline/promises";
 import path from "node:path";
-import { app, BrowserWindow, dialog, ipcMain } from "electron";
+import { app, BrowserWindow, dialog, ipcMain, Menu } from "electron";
 
 /**
  * Electron 主进程：窗口 + 托管两个子进程（Tether 同款形态）。
@@ -29,7 +29,8 @@ export interface AgentSettings {
 
 const DEFAULTS: AgentSettings = {
   backendMode: "local",
-  aiBase: "http://127.0.0.1:5004/v1",
+  // 公网网关（AxonHub）：用户机器开箱只需填 Key
+  aiBase: "http://8.152.157.178:5004/v1",
   aiKey: "",
   modelId: "glm-5.2",
   apiBase: "http://127.0.0.1:8091",
@@ -263,6 +264,7 @@ async function maybeAutoCapture(): Promise<void> {
 }
 
 app.whenReady().then(async () => {
+  Menu.setApplicationMenu(null); // 移除 File/Edit/View 默认菜单（桌面应用形态）
   spawnSidecar();
   if (app.isPackaged) {
     const ok = await waitSidecarReady();
@@ -371,6 +373,37 @@ app.whenReady().then(async () => {
       }
     },
   );
+
+  /** 设置页「测试连接」：AI 网关连通性 + 工具后端健康，一次给出可读结论。 */
+  ipcMain.handle("settings:test", async () => {
+    const s = loadSettings();
+    const out: { ai: string; backend: string } = { ai: "", backend: "" };
+    try {
+      const res = await fetch(`${s.aiBase}/models`, {
+        headers: { Authorization: `Bearer ${s.aiKey}` },
+        signal: AbortSignal.timeout(8000),
+      });
+      out.ai =
+        res.status === 401
+          ? "网关可达，但 Key 无效（401）——请检查 API Key"
+          : res.ok
+            ? `网关连通 ✓（${s.modelId}）`
+            : `网关响应异常（${res.status}）`;
+    } catch {
+      out.ai = "网关不可达——请检查地址（本机网关填 127.0.0.1，远程网关填公网 IP）";
+    }
+    try {
+      const res = await fetch(`${apiBaseUrl(s)}/api/health`, { signal: AbortSignal.timeout(8000) });
+      out.backend = res.ok
+        ? s.backendMode === "local"
+          ? "本地内置服务运行中 ✓"
+          : "远程后端连通 ✓"
+        : `后端响应异常（${res.status}）`;
+    } catch {
+      out.backend = s.backendMode === "local" ? "本地内置服务未启动" : "远程后端不可达";
+    }
+    return out;
+  });
 
   ipcMain.handle("agent:prompt", (_e, text: string) => {
     if (!child || !agentReady) {
