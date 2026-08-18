@@ -8,3 +8,5 @@ backend/.venv/
 __pycache__/
 desktop/release/
 desktop/agent-server.bundle.mjs
+backend/build/
+backend/dist/
