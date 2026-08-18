@@ -10,3 +10,8 @@ desktop/release/
 desktop/agent-server.bundle.mjs
 backend/build/
 backend/dist/
+# >>> Comet managed project state >>>
+!/.comet/
+/.comet/*
+!/.comet/config.yaml
+# <<< Comet managed project state <<<
