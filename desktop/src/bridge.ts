@@ -17,6 +17,11 @@ export interface SettingsView {
 
 interface LegalAgentBridge {
   prompt: (text: string) => Promise<void>;
+  api: <T = unknown>(req: { method?: string; path: string; body?: unknown }) => Promise<{
+    ok: boolean;
+    status: number;
+    data: T;
+  }>;
   getSettings: () => Promise<SettingsView>;
   setSettings: (patch: Partial<SettingsView>) => Promise<{ ok: boolean }>;
   uiReady: () => void;

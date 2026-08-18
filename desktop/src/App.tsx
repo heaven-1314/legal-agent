@@ -1,23 +1,41 @@
 import { useEffect, useState } from "react";
 import { bridge, type ChatMessage } from "./bridge.js";
 import { ChatView } from "./views/Chat.js";
-import { CasesView } from "./views/Cases.js";
+import { DraftsView } from "./views/Drafts.js";
+import { MattersView } from "./views/Matters.js";
+import { ReviewView } from "./views/Review.js";
 import { SettingsView } from "./views/Settings.js";
 
-type View = "chat" | "cases" | "settings";
+type View = "chat" | "matters" | "review" | "drafts" | "settings";
 
 const NAV: { key: View; label: string; hint: string }[] = [
   { key: "chat", label: "对话", hint: "咨询与办案指令" },
-  { key: "cases", label: "案件", hint: "案件夹与仲裁进度" },
+  { key: "matters", label: "办案", hint: "案件与仲裁进度" },
+  { key: "review", label: "审查", hint: "合同风险审查" },
+  { key: "drafts", label: "文书", hint: "模板化起草" },
   { key: "settings", label: "设置", hint: "网关与密钥" },
 ];
 
+const VIEWS: View[] = ["chat", "matters", "review", "drafts", "settings"];
+
 export default function App() {
-  const [view, setView] = useState<View>("chat");
+  const [view, setView] = useState<View>(() => {
+    const h = (location.hash || "").replace("#", "");
+    return (VIEWS.includes(h as View) ? h : "chat") as View;
+  });
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [busy, setBusy] = useState(false);
   const [ready, setReady] = useState(false);
   const [needSetup, setNeedSetup] = useState(false);
+
+  useEffect(() => {
+    const onHash = () => {
+      const h = (location.hash || "").replace("#", "");
+      if (VIEWS.includes(h as View)) setView(h as View);
+    };
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
 
   useEffect(() => {
     const off = bridge.onEvent((msg) => {
@@ -90,7 +108,9 @@ export default function App() {
       </aside>
       <main className="main">
         {view === "chat" && <ChatView messages={messages} busy={busy} ready={ready} onSend={send} onGoSettings={() => setView("settings")} />}
-        {view === "cases" && <CasesView />}
+        {view === "matters" && <MattersView />}
+        {view === "review" && <ReviewView />}
+        {view === "drafts" && <DraftsView />}
         {view === "settings" && <SettingsView onSaved={() => setView("chat")} />}
       </main>
     </div>

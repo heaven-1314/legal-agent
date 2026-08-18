@@ -12,6 +12,8 @@ export interface SettingsView {
 /** IPC 契约：渲染层可见的全部桌面能力（contextIsolation 开启）。 */
 contextBridge.exposeInMainWorld("legalAgent", {
   prompt: (text: string) => ipcRenderer.invoke("agent:prompt", text),
+  api: <T = unknown>(req: { method?: string; path: string; body?: unknown }) =>
+    ipcRenderer.invoke("api", req) as Promise<{ ok: boolean; status: number; data: T }>,
   getSettings: (): Promise<SettingsView> => ipcRenderer.invoke("settings:get"),
   setSettings: (patch: Partial<SettingsView>) => ipcRenderer.invoke("settings:set", patch),
   uiReady: () => ipcRenderer.send("ui:ready"),

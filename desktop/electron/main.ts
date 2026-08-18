@@ -136,11 +136,20 @@ async function maybeAutoCapture(): Promise<void> {
   const target = process.env.CAPTURE;
   if (!target || !win) return;
   await new Promise((r) => setTimeout(r, 1500)); // 等 React 渲染完最后一条消息
+  // 无头验证钩子：OPEN_VIEW 切初始页，OPEN_ACTION=click_first_row 点进详情
+  if (process.env.OPEN_VIEW) {
+    await win.webContents.executeJavaScript(`location.hash = ${JSON.stringify(process.env.OPEN_VIEW)}`);
+    await new Promise((r) => setTimeout(r, 900));
+    if (process.env.OPEN_ACTION === "click_first_row") {
+      await win.webContents.executeJavaScript("document.querySelector('.row')?.click()");
+      await new Promise((r) => setTimeout(r, 900));
+    }
+  }
   // DOM 文本证据优先于截图：抓页面文本 + 关键元素状态落盘
   const dom = await win.webContents.executeJavaScript("document.body.innerText");
   appendFileSync(
     process.env.DEBUG_FILE ?? "/dev/null",
-    `\n[dom]\n${dom}\n[dom-classes] nav-active=${await win.webContents.executeJavaScript("document.querySelector('.nav-item.active')?.textContent ?? 'NONE'")} user-bubble=${await win.webContents.executeJavaScript("document.querySelectorAll('.bubble.user').length")} assistant-bubble=${await win.webContents.executeJavaScript("document.querySelectorAll('.bubble.assistant').length")}\n`,
+    `\n[dom]\n${dom}\n[dom-classes] nav-active=${await win.webContents.executeJavaScript("document.querySelector('.nav-item.active')?.textContent ?? 'NONE'")} user-bubble=${await win.webContents.executeJavaScript("document.querySelectorAll('.bubble.user').length")} assistant-bubble=${await win.webContents.executeJavaScript("document.querySelectorAll('.bubble.assistant').length")} steps=${await win.webContents.executeJavaScript("document.querySelectorAll('.step').length")} rows=${await win.webContents.executeJavaScript("document.querySelectorAll('.row').length")}\n`,
   );
   const img = await win.webContents.capturePage();
   writeFileSync(target, img.toPNG());
@@ -168,6 +177,28 @@ app.whenReady().then(() => {
     restartAgent();
     return { ok: true };
   });
+  /** 工具后端统一代理：渲染层零网络，Bearer 在主进程注入。 */
+  ipcMain.handle(
+    "api",
+    async (_e, req: { method?: string; path: string; body?: unknown }) => {
+      const s = loadSettings();
+      try {
+        const res = await fetch(`${s.apiBase}${req.path}`, {
+          method: req.method ?? "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${s.apiToken}`,
+          },
+          body: req.body === undefined ? undefined : JSON.stringify(req.body),
+        });
+        const text = await res.text();
+        return { ok: res.ok, status: res.status, data: text ? JSON.parse(text) : {} };
+      } catch (err) {
+        return { ok: false, status: 0, data: { message: `无法连接工具后端（${s.apiBase}）` } };
+      }
+    },
+  );
+
   ipcMain.handle("agent:prompt", (_e, text: string) => {
     if (!child || !agentReady) {
       send({ type: "error", message: "Agent 未就绪，请先在设置中完成配置。" });
@@ -179,6 +210,10 @@ app.whenReady().then(() => {
     uiReady = true;
     pushStatus();
     maybeAutoPrompt();
+    // 无对话场景（OPEN_VIEW 验证）也要能截图退出
+    if (process.env.CAPTURE && !process.env.AUTO_PROMPT) {
+      setTimeout(() => maybeAutoCapture(), 1800);
+    }
   });
 
   win = new BrowserWindow({
