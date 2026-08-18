@@ -12,6 +12,7 @@ from app.api.documents import require_token
 from app.config import Settings, get_settings
 from app.db import audit, db_session, now_iso
 from app.services.checklist import list_checklists, save_checklist
+from app.services.docx_export import docx_response, md_to_docx_bytes
 from app.services.llm import LLMError
 from app.services.review import (
     load_document_text,
@@ -167,6 +168,7 @@ def review_contract(
         "review": review,
         "opinion_markdown": md,
         "download_md": f"/api/review/runs/{run_id}/download.md",
+        "download_docx": f"/api/review/runs/{run_id}/download.docx",
     }
 
 
@@ -245,3 +247,24 @@ def download_run_md(
             "Content-Disposition": f'attachment; filename="review-{run_id[:8]}.md"'
         },
     )
+
+
+@router.get("/runs/{run_id}/download.docx")
+def download_run_docx(
+    run_id: str,
+    actor: str = Depends(require_token),
+    settings: Settings = Depends(get_settings),
+):
+    with db_session(settings.sqlite_path) as conn:
+        row = conn.execute(
+            """SELECT r.opinion_md, d.filename
+               FROM review_runs r LEFT JOIN documents d ON d.id = r.document_id
+               WHERE r.id=?""",
+            (run_id,),
+        ).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="run not found")
+        md = row["opinion_md"] or ""
+        filename = row["filename"] or run_id[:8]
+    data = md_to_docx_bytes(md, f"审查意见 · {filename}")
+    return docx_response(data, f"review-{run_id[:8]}.docx")

@@ -12,6 +12,7 @@ interface Doc {
   created_at: string;
 }
 interface ReviewResult {
+  run_id: string;
   filename: string;
   opinion_markdown: string;
 }
@@ -24,6 +25,18 @@ export function ReviewView() {
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<ReviewResult | null>(null);
   const [error, setError] = useState("");
+  const [exported, setExported] = useState("");
+
+  const exportDocx = async () => {
+    if (!result) return;
+    setExported("");
+    const res = await bridge.exportDocx({
+      docPath: `/api/review/runs/${result.run_id}/download.docx`,
+      defaultName: `审查意见-${result.filename}.docx`,
+    });
+    if (res.ok) setExported(`已导出：${res.path}`);
+    else if (!res.canceled) setError(res.message ?? "导出失败");
+  };
 
   const load = useCallback(async (query: string) => {
     const path = query
@@ -122,7 +135,11 @@ export function ReviewView() {
       {error && <div className="error-card"><span>{error}</span></div>}
       {result && (
         <div className="card result-card">
-          <h3>审查意见 · {result.filename}</h3>
+          <h3>
+            审查意见 · {result.filename}
+            <button className="btn sm export-btn" onClick={exportDocx}>导出 Word</button>
+          </h3>
+          {exported && <div className="export-done">{exported}</div>}
           <ReactMarkdown remarkPlugins={[remarkGfm]}>{result.opinion_markdown}</ReactMarkdown>
         </div>
       )}

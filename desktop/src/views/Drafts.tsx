@@ -19,7 +19,21 @@ export function DraftsView() {
   const [extra, setExtra] = useState("");
   const [busy, setBusy] = useState(false);
   const [draft, setDraft] = useState("");
+  const [draftId, setDraftId] = useState("");
+  const [draftTitle, setDraftTitle] = useState("");
   const [error, setError] = useState("");
+  const [exported, setExported] = useState("");
+
+  const exportDocx = async () => {
+    if (!draftId) return;
+    setExported("");
+    const res = await bridge.exportDocx({
+      docPath: `/api/drafts/${draftId}/download.docx`,
+      defaultName: `文书-${draftTitle || draftId.slice(0, 8)}.docx`,
+    });
+    if (res.ok) setExported(`已导出：${res.path}`);
+    else if (!res.canceled) setError(res.message ?? "导出失败");
+  };
 
   useEffect(() => {
     bridge.api<{ items: Template[] }>({ path: "/api/draft/templates" }).then((r) => {
@@ -37,14 +51,19 @@ export function DraftsView() {
     setBusy(true);
     setError("");
     setDraft("");
-    const res = await bridge.api<{ draft: string }>({
+    const res = await bridge.api<{ draft_id: string; draft: string }>({
       method: "POST",
       path: "/api/draft",
       body: { template_id: tpl, title, facts: facts.trim(), extra },
     });
     setBusy(false);
-    if (res.ok) setDraft(res.data.draft);
-    else setError((res.data as { detail?: string })?.detail ?? `起草失败（${res.status}）`);
+    if (res.ok) {
+      setDraft(res.data.draft);
+      setDraftId(res.data.draft_id);
+      setDraftTitle(title);
+    } else {
+      setError((res.data as { detail?: string })?.detail ?? `起草失败（${res.status}）`);
+    }
   };
 
   if (down)
@@ -102,7 +121,11 @@ export function DraftsView() {
       {error && <div className="error-card"><span>{error}</span></div>}
       {draft && (
         <div className="card result-card">
-          <h3>文稿</h3>
+          <h3>
+            文稿
+            <button className="btn sm export-btn" onClick={exportDocx}>导出 Word</button>
+          </h3>
+          {exported && <div className="export-done">{exported}</div>}
           <ReactMarkdown remarkPlugins={[remarkGfm]}>{draft}</ReactMarkdown>
         </div>
       )}

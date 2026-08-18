@@ -9,6 +9,7 @@ from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
 from app.api.documents import require_token
+from app.services.docx_export import docx_response, md_to_docx_bytes
 from app.config import Settings, get_settings
 from app.db import audit, db_session, now_iso
 from app.services.llm import LLMError
@@ -289,3 +290,19 @@ def compliance_report(
         "report_markdown": md,
         "download_md": f"/api/review/runs/{run_id}/download.md",
     }
+
+
+@router.get("/drafts/{draft_id}/download.docx")
+def download_draft_docx(
+    draft_id: str,
+    actor: str = Depends(require_token),
+    settings: Settings = Depends(get_settings),
+):
+    with db_session(settings.sqlite_path) as conn:
+        row = conn.execute(
+            "SELECT body_md, title FROM draft_docs WHERE id=?", (draft_id,)
+        ).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="not found")
+    data = md_to_docx_bytes(row["body_md"] or "", f"文书 · {row['title'] or draft_id[:8]}")
+    return docx_response(data, f"draft-{draft_id[:8]}.docx")

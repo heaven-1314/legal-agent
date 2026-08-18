@@ -200,11 +200,55 @@ async function maybeAutoCapture(): Promise<void> {
   await new Promise((r) => setTimeout(r, 1500)); // 等 React 渲染完最后一条消息
   // 无头验证钩子：OPEN_VIEW 切初始页，OPEN_ACTION=click_first_row 点进详情
   if (process.env.OPEN_VIEW) {
-    await win.webContents.executeJavaScript(`location.hash = ${JSON.stringify(process.env.OPEN_VIEW)}`);
-    await new Promise((r) => setTimeout(r, 900));
+    await new Promise((r) => setTimeout(r, 1200));
     if (process.env.OPEN_ACTION === "click_first_row") {
       await win.webContents.executeJavaScript("document.querySelector('.row')?.click()");
       await new Promise((r) => setTimeout(r, 900));
+    }
+    if (process.env.OPEN_ACTION === "review_flow") {
+      // 自动审查链：等文档行渲染 → 选第一个 → 发起审查 → 轮询结果卡 → 导出（全程留痕）
+      try {
+        const step = async (label: string, js: string) => {
+          const v = await win!.webContents.executeJavaScript(js);
+          debug(`[flow] ${label} → ${JSON.stringify(v).slice(0, 80)}`);
+          return v;
+        };
+        const waitFor = async (label: string, js: string, timeoutMs = 30000) => {
+          const started = Date.now();
+          for (;;) {
+            if (await step(label, js)) return true;
+            if (Date.now() - started > timeoutMs) {
+              debug(`[flow] ${label} 超时`);
+              return false;
+            }
+            await new Promise((r) => setTimeout(r, 1000));
+          }
+        };
+        await step("hash", `location.hash = ${JSON.stringify(process.env.OPEN_VIEW)}`);
+        await new Promise((r) => setTimeout(r, 1000));
+        const hasRow = await waitFor("row", "Boolean(document.querySelector('.row'))", 30000);
+        if (hasRow) {
+          await step("click-row", "document.querySelector('.row')?.click() ?? 'none'");
+          await new Promise((r) => setTimeout(r, 800));
+          await step(
+            "click-review",
+            "[...document.querySelectorAll('button')].find(b => b.textContent?.includes('发起审查') && !b.disabled)?.click() ?? 'none'",
+          );
+          await waitFor(
+            "export-btn",
+            "Boolean([...document.querySelectorAll('button')].find(b => b.textContent?.includes('导出 Word')))",
+            300000,
+          );
+          await new Promise((r) => setTimeout(r, 800));
+          await step(
+            "click-export",
+            "[...document.querySelectorAll('button')].find(b => b.textContent?.includes('导出 Word'))?.click() ?? 'none'",
+          );
+          await new Promise((r) => setTimeout(r, 2500));
+        }
+      } catch (err) {
+        debug(`[flow] 异常: ${err instanceof Error ? err.message : err}`);
+      }
     }
   }
   // DOM 文本证据优先于截图：抓页面文本 + 关键元素状态落盘
@@ -298,6 +342,36 @@ app.whenReady().then(async () => {
     }
   });
 
+  /** Word 导出：保存对话框（无头验证可用 EXPORT_AUTO_PATH 固定路径）+ 主进程拉取落盘。 */
+  ipcMain.handle(
+    "export:docx",
+    async (_e, req: { docPath: string; defaultName: string }) => {
+      const s = loadSettings();
+      let target = process.env.EXPORT_AUTO_PATH ?? "";
+      if (!target) {
+        const picked = await dialog.showSaveDialog(win!, {
+          defaultPath: req.defaultName,
+          filters: [{ name: "Word 文档", extensions: ["docx"] }],
+        });
+        if (picked.canceled || !picked.filePath) return { ok: false, canceled: true };
+        target = picked.filePath;
+      }
+      try {
+        const res = await fetch(`${apiBaseUrl(s)}${req.docPath}`, {
+          headers: { Authorization: `Bearer ${s.apiToken}` },
+        });
+        if (!res.ok) {
+          const text = await res.text();
+          return { ok: false, canceled: false, message: `导出失败（${res.status}）：${text.slice(0, 150)}` };
+        }
+        writeFileSync(target, Buffer.from(await res.arrayBuffer()));
+        return { ok: true, path: target };
+      } catch (err) {
+        return { ok: false, canceled: false, message: `导出失败：${err instanceof Error ? err.message : err}` };
+      }
+    },
+  );
+
   ipcMain.handle("agent:prompt", (_e, text: string) => {
     if (!child || !agentReady) {
       send({ type: "error", message: "Agent 未就绪，请先在设置中完成配置。" });
@@ -323,10 +397,11 @@ app.whenReady().then(async () => {
     webPreferences: { preload: path.join(__dirname, "preload.js"), contextIsolation: true },
   });
   const devUrl = process.env.VITE_DEV_SERVER_URL;
+  const openView = process.env.OPEN_VIEW;
   if (devUrl) {
-    win.loadURL(devUrl);
+    win.loadURL(openView ? `${devUrl}#${openView}` : devUrl);
   } else {
-    win.loadFile(path.join(ROOT, "dist", "index.html"));
+    win.loadFile(path.join(ROOT, "dist", "index.html"), openView ? { hash: openView } : undefined);
   }
   win.on("closed", () => {
     win = null;

@@ -19,6 +19,13 @@ contextBridge.exposeInMainWorld("legalAgent", {
       canceled: boolean;
       data: { id?: string; filename?: string; message?: string };
     }>,
+  exportDocx: (req: { docPath: string; defaultName: string }) =>
+    ipcRenderer.invoke("export:docx", req) as Promise<{
+      ok: boolean;
+      canceled: boolean;
+      path?: string;
+      message?: string;
+    }>,
   api: <T = unknown>(req: { method?: string; path: string; body?: unknown }) =>
     ipcRenderer.invoke("api", req) as Promise<{ ok: boolean; status: number; data: T }>,
   getSettings: (): Promise<SettingsView> => ipcRenderer.invoke("settings:get"),

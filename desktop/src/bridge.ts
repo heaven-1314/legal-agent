@@ -23,6 +23,12 @@ interface LegalAgentBridge {
     canceled: boolean;
     data: { id?: string; filename?: string; message?: string };
   }>;
+  exportDocx: (req: { docPath: string; defaultName: string }) => Promise<{
+    ok: boolean;
+    canceled: boolean;
+    path?: string;
+    message?: string;
+  }>;
   api: <T = unknown>(req: { method?: string; path: string; body?: unknown }) => Promise<{
     ok: boolean;
     status: number;
