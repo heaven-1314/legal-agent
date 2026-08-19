@@ -6,7 +6,7 @@ type Tab = "docs" | "laws" | "cases";
 
 interface DocResult { id: string; filename: string; snippet?: string; content?: string; doc_kind?: string }
 interface LawResult { law: string; article: string; title: string; text: string; category: string }
-interface CaseResult { id: string; title: string; summary: string; created_at: string }
+interface CaseResult { id: string; title: string; summary: string; created_at: string; type?: string; ruling?: string; law_ref?: string }
 
 const TABS: { key: Tab; label: string; icon: string }[] = [
   { key: "docs", label: "文档", icon: "i-doc" },
@@ -44,10 +44,11 @@ export function ResearchView() {
   };
 
   const loadCases = async () => {
-    const res = await bridge.api<{ items: CaseResult[] }>({ path: "/api/labor/cases" });
+    const res = await bridge.api<{ items: { title: string; type: string; summary: string; ruling: string; law_ref: string; source: string }[] }>({ path: "/api/laws/cases" });
     if (res.ok) {
-      setCaseResults((res.data.items ?? []).map((c: any) => ({
-        id: c.id, title: c.title, summary: `${c.employee} 诉 ${c.employer}`, created_at: c.updated_at,
+      setCaseResults((res.data.items ?? []).map((c: any, i: number) => ({
+        id: String(i), title: c.title, summary: c.summary, created_at: c.source || "",
+        type: c.type, ruling: c.ruling, law_ref: c.law_ref,
       })));
     }
   };
@@ -122,6 +123,12 @@ export function ResearchView() {
         )}
 
         {tab === "laws" && (
+          <>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            {[["", "全部"], ["labor_contract", "劳动法"], ["civil", "民法典"], ["criminal", "刑法"], ["administrative", "行政法"], ["procedure", "诉讼法"], ["company", "公司法"]].map(([id, label]) => (
+              <button key={id} className="btn outline sm" onClick={() => searchLaws(id || undefined)}>{label}</button>
+            ))}
+          </div>
           <div className="rows">
             {lawResults.length === 0 ? (
               <div className="empty"><div className="empty-t">输入关键词或点击分类浏览法条</div></div>
@@ -135,6 +142,7 @@ export function ResearchView() {
               </div>
             ))}
           </div>
+          </>
         )}
 
         {tab === "cases" && (
@@ -145,9 +153,19 @@ export function ResearchView() {
                 <p className="empty-d">这里显示你创建的仲裁案件。公开案例检索将在后续版本接入。</p>
               </div>
             ) : caseResults.map((c) => (
-              <div key={c.id} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "var(--r-md)", padding: "10px 14px" }}>
-                <b style={{ fontSize: 13 }}>{c.title}</b>
-                <div className="hint">{c.summary} · {c.created_at?.slice(0, 10)}</div>
+              <div key={c.id} className="card" style={{ marginBottom: 0 }}>
+                <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 6 }}>
+                  {c.type && <span className="badge b-accent">{c.type}</span>}
+                  <b style={{ fontSize: 13.5, color: "var(--fg-strong)" }}>{c.title}</b>
+                </div>
+                <div style={{ fontSize: 12.5, lineHeight: 1.7, color: "var(--fg)" }}>{c.summary}</div>
+                {c.ruling && (
+                  <div style={{ marginTop: 6, padding: "6px 10px", background: "var(--accent-soft)", borderRadius: "var(--r-sm)", fontSize: 12, color: "var(--accent-deep)" }}>
+                    ⚖️ {c.ruling}
+                  </div>
+                )}
+                {c.law_ref && <div className="hint" style={{ marginTop: 4 }}>法条依据：{c.law_ref}</div>}
+                {c.created_at && <div className="hint" style={{ marginTop: 2 }}>来源：{c.created_at}</div>}
               </div>
             ))}
           </div>
