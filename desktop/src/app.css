@@ -699,3 +699,9 @@ body { font-family: var(--font-body, "PingFang SC", "Microsoft YaHeihao", "Micro
   .pg-body{padding:12px 14px 18px}
 }
 html{min-width:720px;min-height:520px}
+
+/* ============ 设置页模式切换（统一组件词汇） ============ */
+.mode-toggle{display:flex;gap:0;border:1px solid var(--border-strong);border-radius:var(--r-md);overflow:hidden;background:var(--surface)}
+.mode-btn{flex:1;height:32px;border:none;background:transparent;color:var(--muted);font-size:12.5px;transition:var(--t-state)}
+.mode-btn.on{background:var(--accent);color:var(--on-accent);font-weight:600}
+.mode-btn:not(.on):hover{background:var(--surface-3);color:var(--fg)}

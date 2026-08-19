@@ -102,6 +102,7 @@ function spawnAgent(): void {
     cwd,
     env: { ...env, ...(isPackaged ? { ELECTRON_RUN_AS_NODE: "1" } : {}) },
     stdio: ["pipe", "pipe", "inherit"],
+    windowsHide: true, // Windows：隐藏子进程控制台窗口
   });
   debug(`[main] agent-core spawn pid=${child.pid}`);
 
@@ -159,6 +160,7 @@ function spawnSidecar(): void {
       AI_MODEL: s.modelId,
     },
     stdio: ["ignore", "pipe", "inherit"],
+    windowsHide: true, // Windows：隐藏 sidecar 控制台窗口
   });
   sidecar.stdout?.on("data", (d: Buffer) => debug(`[sidecar] ${d.toString().trim()}`));
   sidecar.on("exit", (code) => {
