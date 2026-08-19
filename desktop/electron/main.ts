@@ -292,7 +292,8 @@ app.whenReady().then(async () => {
     };
     saveSettings(next);
     restartSidecar(); // AI 配置注入 sidecar，改了就重启生效
-    restartAgent();
+    // 延迟重启 agent，等 sidecar 先就绪
+    setTimeout(() => restartAgent(), 2000);
     return { ok: true };
   });
   /** 工具后端统一代理：渲染层零网络，Bearer 在主进程注入。 */

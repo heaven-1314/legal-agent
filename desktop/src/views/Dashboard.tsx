@@ -41,24 +41,31 @@ export function DashboardView() {
           <div className="pg-sub">案件总览 · 今日工作 · 快捷操作</div>
         </div>
         <span className="badge b-low">Pi 内核 · {model}</span>
+        <button className="btn outline" onClick={() => alert("周报导出功能开发中")}>
+          <svg className="ic"><use href="#i-doc" /></svg>导出周报
+        </button>
       </div>
       <div className="pg-body">
         <div className="stats">
           <button className="stat" onClick={() => location.hash = "case"}>
-            <div className="stat-label">劳动仲裁案件</div>
-            <div className="stat-num">{stats.cases === null ? "…" : stats.cases}</div>
+            <span className="stat-label">在办案件</span>
+            <span className="stat-num">{stats.cases === null ? "…" : stats.cases}<small>件</small></span>
+            <span className="stat-sub">劳动仲裁 · 点击查看</span>
           </button>
           <button className="stat" onClick={() => location.hash = "case"}>
-            <div className="stat-label">案件夹</div>
-            <div className="stat-num">{stats.matters === null ? "…" : stats.matters}</div>
+            <span className="stat-label">案件夹</span>
+            <span className="stat-num">{stats.matters === null ? "…" : stats.matters}<small>个</small></span>
+            <span className="stat-sub">含子案件 · 点击查看</span>
           </button>
           <button className="stat" onClick={() => location.hash = "contract"}>
-            <div className="stat-label">文档材料</div>
-            <div className="stat-num">{stats.docs === null ? "…" : stats.docs}</div>
+            <span className="stat-label">文档材料</span>
+            <span className="stat-num">{stats.docs === null ? "…" : stats.docs}<small>份</small></span>
+            <span className="stat-sub">已上传 · 点击审查</span>
           </button>
           <button className="stat" onClick={() => location.hash = "case"}>
-            <div className="stat-label">未完成待办</div>
-            <div className="stat-num">{stats.todos}</div>
+            <span className="stat-label">待办事项</span>
+            <span className="stat-num">{stats.todos}<small>项</small></span>
+            <span className="stat-sub"><em className="hot">{todos.length > 0 ? `待处理 ${todos.length} 项` : "全部完成"}</em></span>
           </button>
         </div>
 
@@ -91,15 +98,20 @@ export function DashboardView() {
             ))
           )}
         </div>
-        <div className="card">
+        <div className="card" style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
           <div className="set-sec" style={{ marginBottom: "8px" }}>今日待办</div>
           {todos.length === 0 ? (
             <div className="empty-d">暂无待办</div>
           ) : (
             todos.map((t) => (
-              <div key={t.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderBottom: "1px solid var(--border)" }}>
-                <span style={{ fontSize: 13 }}>{t.title.length > 40 ? t.title.slice(0, 40) + "…" : t.title}</span>
-                <span className="hint" style={{ flex: "none", marginLeft: 8 }}>{t.case_title}</span>
+              <div key={t.id} className="todo-item">
+                <div className="todo-main">
+                  <div className="todo-title">{t.title}</div>
+                  <div className="todo-meta">
+                    <span>📁 {t.case_title}</span>
+                  </div>
+                </div>
+                <span className="badge b-mid">待处理</span>
               </div>
             ))
           )}

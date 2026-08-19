@@ -68,6 +68,10 @@ export default function App() {
       if (msg.type === "agent_status") {
         setReady(Boolean(msg.ready));
         if (msg.model) setModel(String(msg.model));
+        // agent 就绪时清除旧错误
+        if (msg.ready) {
+          setMessages((m) => m.filter((x) => x.role !== "error"));
+        }
       }
       if (msg.type === "assistant") setMessages((m) => [...m, { role: "assistant", text: String(msg.text) }]);
       if (msg.type === "user_echo") setMessages((m) => [...m, { role: "user", text: String(msg.text) }]);
@@ -75,7 +79,14 @@ export default function App() {
       if (msg.type === "agent_end") setBusy(false);
       if (msg.type === "error") {
         setBusy(false);
-        setMessages((m) => [...m, { role: "error", text: String(msg.message), action: msg.fatal ? "settings" : undefined }]);
+        const errMsg = String(msg.message);
+        setMessages((m) => [...m, { role: "error", text: errMsg, action: msg.fatal ? "settings" : undefined }]);
+        // 非致命错误 8 秒后自动消失
+        if (!msg.fatal) {
+          setTimeout(() => {
+            setMessages((m) => m.filter((x) => x.role !== "error" || x.text !== errMsg));
+          }, 8000);
+        }
       }
     });
     bridge.uiReady();
