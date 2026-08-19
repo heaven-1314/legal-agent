@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { UploadButton } from "./UploadButton.js";
 
 const TYPES = [
   { key: "illegal", label: "违法解除劳动合同" },
@@ -53,10 +54,11 @@ export function EvidenceView() {
         </div>
       </div>
       <div className="pg-body">
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
           {TYPES.map((t) => (
             <button key={t.key} className={`btn ${type === t.key ? "primary" : "outline"}`} onClick={() => setType(t.key)}>{t.label}</button>
           ))}
+          <span style={{ marginLeft: "auto" }}><UploadButton onUploaded={() => {}} label="上传已有证据" /></span>
         </div>
         <div className="card">
           {DATA[type].map(([name, how, level]) => (

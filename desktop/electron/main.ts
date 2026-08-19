@@ -267,8 +267,9 @@ app.whenReady().then(async () => {
   Menu.setApplicationMenu(null); // 移除 File/Edit/View 默认菜单（桌面应用形态）
   spawnSidecar();
   if (app.isPackaged) {
+    // sidecar 就绪门控：等待健康后才创建窗口，避免竞态期 API 打死地址
     const ok = await waitSidecarReady();
-    debug(`[sidecar] health=${ok}`);
+    debug(`[sidecar] ready=${ok}`);
   }
   spawnAgent();
 

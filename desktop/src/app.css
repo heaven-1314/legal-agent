@@ -45,11 +45,10 @@ input,select,textarea{font-family:inherit;color:var(--fg)}
 svg.ic{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 
 /* ============ 桌面窗口舞台 ============ */
-#desk{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
-  background:oklch(0.905 0.005 145)}
-#stage{width:1120px;height:740px;flex:none;display:flex;flex-direction:column;
-  background:var(--bg);border:1px solid var(--border-strong);border-radius:10px;
-  box-shadow:var(--shadow-2);overflow:hidden;position:relative;transform-origin:center center}
+/* 真响应式：无固定舞台，全屏铺满（最小 720×520） */
+#desk{position:fixed;inset:0;display:flex;background:var(--bg)}
+#stage{flex:1;min-width:0;min-height:0;display:flex;flex-direction:column;
+  background:var(--bg);overflow:hidden;position:relative}
 
 /* 标题栏 */
 .tb{height:38px;flex:none;display:flex;align-items:center;gap:10px;padding:0 12px;
@@ -678,10 +677,25 @@ body { font-family: var(--font-body, "PingFang SC", "Microsoft YaHeihao", "Micro
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}}
 
 /* ============ 计算器 ============ */
-.calc-grid{display:grid;grid-template-columns:minmax(300px,5fr) minmax(300px,6fr);gap:14px;align-items:start}
+.calc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:14px;align-items:start}
 @media (max-width:900px){.calc-grid{grid-template-columns:1fr}}
 .calc-total{font-family:var(--font-display);font-size:30px;font-weight:700;color:var(--accent-deep);margin:4px 0 12px}
 .calc-lines{display:flex;flex-direction:column}
 .calc-line{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--border);font-size:13.5px}
 .calc-name{display:block;font-weight:600}
 .calc-basis{display:block;font-size:11.5px;color:var(--muted);margin-top:2px;font-family:var(--font-mono)}
+
+/* ============ 响应式适配（B 方案） ============ */
+@media (max-width: 860px) {
+  .stepper{grid-template-columns:1fr;gap:0}
+  .step{flex-direction:row;gap:8px;align-items:center;text-align:left;padding:4px 0}
+  .step::before{top:50%;left:-100%;width:100%;height:1px}
+  .step-hint{display:none}
+}
+@media (max-width: 720px) {
+  .sb{width:52px;padding:8px 6px}
+  .sb-item span:not(.sb-count),.sb-cap,.kernel-meta,.kernel-top .ver{display:none}
+  .kernel{padding:6px 4px;text-align:center}
+  .pg-body{padding:12px 14px 18px}
+}
+html{min-width:720px;min-height:520px}

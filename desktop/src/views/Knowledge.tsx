@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { UploadButton } from "./UploadButton.js";
 
 const LAWS: Record<string, { title: string; sections: { name: string; text: string; note: string }[] }> = {
   lc: {
@@ -54,7 +55,8 @@ export function KnowledgeView() {
           {filtered.length === 0 ? (
             <div className="empty">
               <div className="empty-t">没有匹配的法条</div>
-              <p className="empty-d">换一个关键词试试</p>
+              <p className="empty-d">换关键词，或上传你自己的法条/资料库</p>
+              <UploadButton onUploaded={() => {}} label="上传知识库文档" />
             </div>
           ) : (
             filtered.map((s) => (

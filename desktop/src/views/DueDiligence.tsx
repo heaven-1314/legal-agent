@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { bridge } from "../bridge.js";
+import { ErrorBanner, UploadButton, apiErr } from "./UploadButton.js";
 
 interface Doc { id: string; filename: string; text_chars: number }
 interface Note { id: string; title?: string; filename?: string; created_at?: string; content?: string; summary?: string }
@@ -39,7 +40,7 @@ export function DueDiligenceView() {
     const res = await bridge.api<{ note?: string; summary?: string; content?: string }>({ method: "POST", path, body });
     setBusy(false);
     if (res.ok) { setResult(res.data.note ?? res.data.summary ?? res.data.content ?? ""); load(); }
-    else setError((res.data as { detail?: string })?.detail ?? `阅卷失败（${res.status}）`);
+    else setError(apiErr(res, "阅卷失败"));
   };
 
   return (
@@ -58,7 +59,7 @@ export function DueDiligenceView() {
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               <div className="card">
                 <div className="set-sec" style={{ marginBottom: "8px" }}>材料选择（{picked.length} / {docs?.length ?? 0}）</div>
-                {docs === null ? <div className="hint">加载…</div> : docs.length === 0 ? <div className="hint">无文档。请先在「合同审查」页上传材料。</div> : docs.map((d) => (
+                {docs === null ? <div className="hint">加载…</div> : docs.length === 0 ? <div style={{ textAlign: "center", padding: "12px 0" }}><div className="hint" style={{ marginBottom: 8 }}>无阅卷材料</div><UploadButton onUploaded={load} onError={setError} label="上传阅卷材料" /></div> : docs.map((d) => (
                   <label key={d.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0", fontSize: 13, borderBottom: "1px solid var(--border)", cursor: "pointer" }}>
                     <input type="checkbox" checked={picked.includes(d.id)} onChange={() => toggle(d.id)} />
                     <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.filename}</span>
@@ -75,7 +76,7 @@ export function DueDiligenceView() {
               </div>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 12, minHeight: 0 }}>
-              {error && <div className="banner-error show"><svg className="ic"><use href="#i-alert" /></svg><span>{error}</span></div>}
+              {error && <ErrorBanner message={error} onRetry={() => setError("")} />}
               {busy && <div className="card"><div className="diag-hint">AI 正在解析材料…</div></div>}
               {result && (
                 <div className="card">

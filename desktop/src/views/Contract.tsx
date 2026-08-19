@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { bridge } from "../bridge.js";
+import { ErrorBanner, UploadButton, apiErr } from "./UploadButton.js";
 
 interface Doc { id: string; filename: string; doc_kind: string; text_chars: number }
 interface ReviewResult { run_id: string; filename: string; opinion_markdown: string }
@@ -14,6 +15,7 @@ export function ContractView() {
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<ReviewResult | null>(null);
   const [error, setError] = useState("");
+  const [uploaded, setUploaded] = useState("");
   const [exported, setExported] = useState("");
 
   const load = useCallback(async (query: string) => {
@@ -24,11 +26,7 @@ export function ContractView() {
 
   useEffect(() => { load(""); }, [load]);
 
-  const upload = async () => {
-    const res = await bridge.uploadDocument();
-    if (res.ok) load(q.trim());
-    else if (!res.canceled) setError(res.data?.message ?? "上传失败");
-  };
+
 
   const run = async () => {
     if (!selected) return;
@@ -36,7 +34,7 @@ export function ContractView() {
     const res = await bridge.api<ReviewResult>({ method: "POST", path: "/api/review/contract", body: { document_id: selected.id } });
     setBusy(false);
     if (res.ok) setResult(res.data);
-    else setError((res.data as { detail?: string })?.detail ?? `审查失败（${res.status}）`);
+    else setError(apiErr(res, "审查失败"));
   };
 
   const exportDocx = async () => {
@@ -65,7 +63,7 @@ export function ContractView() {
           <>
             <div className="doc-picker">
               <input className="input" style={{ flex: 1 }} value={q} placeholder="搜索文档（文件名/内容）…" onChange={(e) => { setQ(e.target.value); load(e.target.value.trim()); }} />
-              <button className="btn outline" onClick={upload}><svg className="ic"><use href="#i-doc" /></svg>上传文档</button>
+              <UploadButton onUploaded={() => { setUploaded("上传成功"); load(q.trim()); }} onError={setError} />
               <button className="btn primary" onClick={run} disabled={!selected || busy}>{busy ? "审查中，约 1-2 分钟…" : "发起审查"}</button>
             </div>
 
@@ -73,8 +71,10 @@ export function ContractView() {
               <div className="empty-d">加载文档…</div>
             ) : docs.length === 0 ? (
               <div className="empty">
-                <div className="empty-t">没有可审查的文档</div>
-                <p className="empty-d">点击「上传文档」选择本地合同文件</p>
+                <svg className="ic" style={{ width: 36, height: 36, color: "var(--border-strong)" }}><use href="#i-contract" /></svg>
+                <div className="empty-t">还没有可审查的文档</div>
+                <p className="empty-d">上传你的第一份合同（txt / md / pdf / docx），AI 将按检查单逐项核对风险</p>
+                <UploadButton onUploaded={() => load(q.trim())} onError={setError} label="上传第一份合同" />
               </div>
             ) : (
               <div className="rows">
@@ -91,12 +91,7 @@ export function ContractView() {
             )}
 
             {busy && <div className="diag-hint">模型正在逐项核对检查单，请勿关闭窗口…</div>}
-            {error && (
-              <div className="banner-error show">
-                <svg className="ic"><use href="#i-alert" /></svg>
-                <span>{error}</span>
-              </div>
-            )}
+            {error && <ErrorBanner message={error} onRetry={() => setError("")} />}
             {result && (
               <div className="card">
                 <div className="card-head">

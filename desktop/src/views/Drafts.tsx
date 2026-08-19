@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { bridge } from "../bridge.js";
+import { ErrorBanner, apiErr } from "./UploadButton.js";
 
 interface Template { id: string; name: string; instruction: string }
 
@@ -31,7 +32,7 @@ export function DraftsView() {
     const res = await bridge.api<{ draft_id: string; draft: string }>({ method: "POST", path: "/api/draft", body: { template_id: tpl, title, facts: facts.trim(), extra } });
     setBusy(false);
     if (res.ok) { setDraft(res.data.draft); setDraftId(res.data.draft_id); }
-    else setError((res.data as { detail?: string })?.detail ?? `起草失败（${res.status}）`);
+    else setError(apiErr(res, "起草失败"));
   };
 
   const exportDocx = async () => {
@@ -80,7 +81,7 @@ export function DraftsView() {
             </div>
             <div>
               {busy && <div className="card"><div className="diag-hint">模型正在按模板生成文书…</div></div>}
-              {error && <div className="banner-error show"><svg className="ic"><use href="#i-alert" /></svg><span>{error}</span></div>}
+              {error && <ErrorBanner message={error} onRetry={() => setError("")} />}
               {draft && (
                 <div className="card">
                   <div className="card-head">

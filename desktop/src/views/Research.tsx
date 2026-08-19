@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { bridge } from "../bridge.js";
+import { UploadButton } from "./UploadButton.js";
 
 interface Result { id: string; filename: string; snippet?: string; content?: string; doc_kind?: string }
 
@@ -49,11 +50,13 @@ export function ResearchView() {
             <svg className="ic" style={{ width: 36, height: 36, color: "var(--border-strong)" }}><use href="#i-search" /></svg>
             <div className="empty-t">输入关键词检索已上传的法律材料</div>
             <p className="empty-d">支持文件名与内容匹配，命中关键词自动高亮</p>
+            <UploadButton onUploaded={() => setResults(null)} label="上传材料" />
           </div>
         ) : results.length === 0 ? (
           <div className="empty">
             <div className="empty-t">未找到相关材料</div>
-            <p className="empty-d">请先在「合同审查」页上传法条或案卷文档</p>
+            <p className="empty-d">上传法条、判例或案卷文档后即可全文检索</p>
+            <UploadButton onUploaded={search} label="上传检索材料" />
           </div>
         ) : (
           <div className="rows">
