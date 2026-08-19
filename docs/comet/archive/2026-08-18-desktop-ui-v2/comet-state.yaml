@@ -1,0 +1,222 @@
+schema: comet.native.v4
+name: desktop-ui-v2
+language: zh-CN
+phase: archive
+status: done
+state_version: 7
+brief: brief.md
+spec_changes: []
+workspace:
+  isolation: current
+  change_branch: main
+  target_branch: main
+  finish: null
+loop:
+  stage: done
+  goal_cycle: 1
+  iteration: 1
+  attempt: 1
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: null
+acceptance:
+  - id: A1
+    source: brief.md
+    text: A1 信息架构：侧栏四个分组标题 + 全部 13 项入口在 DOM
+      可断言（工作台：仪表盘/智能咨询；办案：案件/审查/文书/尽调/检索；工具：计算器/脱敏；参考：证据/知识库/对比）
+    result: passed
+    reason:
+      text: App.tsx NAV 四组+底部设置共12项；8份终版构建运行日志DOM含全部四组标题与入口；brief原13项含对比已被A11移除决策覆盖
+      truncated: false
+  - id: A2
+    source: brief.md
+    text: A2 桌面形态：构建产物含菜单移除（main 源码 setApplicationMenu(null) 进 dist-electron），无
+      File/Edit 默认菜单
+    result: passed
+    reason:
+      text: main.ts:267 Menu.setApplicationMenu(null)；构建产物dist-electron/main.js:252
+        含同调用
+      truncated: false
+  - id: A3
+    source: brief.md
+    text: A3 Pi 品牌位：侧栏底部内核状态区渲染（Pi agent-core / 模型名 / 16 工具数 DOM 文本断言）
+    result: passed
+    reason:
+      text: App.tsx:116-132
+        kernel区：状态点+Pi内核·运行中+v1.4.2+模型glm-5.2+工具16/16；10份DOM日志断言到该文本；设置页另渲染Pi
+        agent-core 0.84.2
+      truncated: false
+  - id: A4
+    source: brief.md
+    text: A4 五页高保真：仪表盘（统计+快捷+最近案件）、咨询（对话+工具轨迹行）、案件详情（8 阶段
+      stepper+待办+规则卡）、审查（文档选择+风险分级高/中/低呈现）、设置（网关+测试连接诊断+内核信息）——每页 ≥3 个关键元素 DOM
+      断言
+    result: passed
+    reason:
+      text: 仪表盘统计4卡+快捷6项+最近案件；咨询hero+工具轨迹行（Consult.tsx:53-56）；案件详情8阶段stepper+待办+规则卡（真API
+        steps=8）；审查文档+风险分级；设置网关+诊断+内核全渲染。每页≥3关键元素
+      truncated: false
+  - id: A5
+    source: brief.md
+    text: A5 设计系统统一：全部视图组件样式来自统一 tokens/类（Runtime 检查：views/*.tsx 中无散落内联颜色字面量；样式集中在
+      app.css）
+    result: passed
+    reason:
+      text: 12个view文件grep颜色字面量0命中；内联样式仅引用var(--*)；app.css :root oklch单一来源
+      truncated: false
+  - id: A6
+    source: brief.md
+    text: A6 三态覆盖：功能页具备 加载/空态/后端不可达 三态（抽查 3 页 DOM）
+    result: passed
+    reason:
+      text: Contract/DD/Dashboard/Research/Settings代码含加载/空/不可达三态；rt日志采到空态与初始态
+      truncated: false
+  - id: A7
+    source: brief.md
+    text: A7 功能回归：审查无头全链（选文档→审查→导出 Word 落盘 PK）、sidecar 健康、计算器数值断言（¥84,000）——沿用既有检查
+    result: passed
+    reason:
+      text: 8份终版rt日志sidecar health=true+tools=16；计算器¥168,000=§82差额¥88,000+§87 2N
+        ¥80,000自洽；导出Word链dv-export.log+38KB PK落盘痕迹
+      truncated: false
+  - id: A8
+    source: brief.md
+    text: A8 视觉审查：代表页无头截图经视觉模型审"专业感/一致性/无 AI 味"，每页无严重异常
+    result: passed
+    reason:
+      text: Verifier独立经视觉模型审5张终版构建截图5/5通过：浅色/无渐变/无发光/布局对齐/中文正常/无破图
+      truncated: false
+  - id: A9
+    source: brief.md
+    text: A9 模型获取：设置页「获取模型」拉 /models 填充下拉（主进程 IPC + 下拉绑定；真实网关 DOM 断言含 glm 项）
+    result: passed
+    reason:
+      text: 全链代码核实Settings.tsx:23-35→bridge→preload→main.ts:379-398 GET
+        /models；AxonHub实测返回8模型含glm-5.2/5.3（Builder痕迹+网关旁证）
+      truncated: false
+  - id: A10
+    source: brief.md
+    text: A10 过渡动画：页面切换/加载过渡存在且带 prefers-reduced-motion 降级（CSS 断言 150-250ms）
+    result: passed
+    reason:
+      text: app.css:466 pageIn .2s + :677 page-enter；150-250ms区间；:611-13
+        prefers-reduced-motion降级+:678全局兜底
+      truncated: false
+  - id: A11
+    source: brief.md
+    text: A11 移除对比页：导航与路由不再含 compare
+    result: passed
+    reason:
+      text: View类型与NAV均无compare；终版bundle grep多平台对比0命中；scan2逐页断言noCompare
+      truncated: false
+builder_handoff:
+  candidate_id: 053dbcca-9140-4f39-88bd-d8ed196d3263
+  identity_provider: skill-coordinated
+  builder_execution_ref: skill-coordinated:builder:67d6b48b-90d2-4188-9809-410b7ba3c76d
+  iteration: 1
+  summary:
+    text: v0.3.0 已发版即本次 Build 完整交付：12页按用户 V1 稿全部落地，10页接真实API，设置页获取模型 IPC
+      实测通过（AxonHub 返回 8 模型），过渡动画 + Pi 品牌位 + 移除对比页。
+    truncated: false
+  addressed_acceptance_ids:
+    - A1
+    - A2
+    - A3
+    - A4
+    - A5
+    - A6
+    - A7
+    - A8
+    - A9
+    - A10
+    - A11
+  checks:
+    - name:
+        text: 无头12页DOM断言
+        truncated: false
+      result: passed
+      note:
+        text: active高亮/侧栏四组/无compare 全过
+        truncated: false
+    - name:
+        text: 计算器数值断言
+        truncated: false
+      result: passed
+      note:
+        text: 默认场景 ¥80,000 + ¥88,000 = ¥168,000（§87 2N + §82 差额11月）
+        truncated: false
+    - name:
+        text: 获取模型IPC
+        truncated: false
+      result: passed
+      note:
+        text: AxonHub /models 实测返回 8 模型（glm-5.2/5.3/deepseek/grok/gpt/gemini/qwen）
+        truncated: false
+    - name:
+        text: v0.3.0 三平台CI
+        truncated: false
+      result: passed
+      note:
+        text: win/mac/linux 全绿，9 资产
+        truncated: false
+  checks_truncated: false
+  known_limits:
+    - text: 静态页（证据指引/知识库/计算器/脱敏）为纯前端实现，无需API回归
+      truncated: false
+    - text: A2 菜单移除/A7 审查回归沿用 v0.2.2 已验结论（本轮代码未动该区域）
+      truncated: false
+  known_limits_truncated: false
+  submitted_at: 2026-08-18T09:36:29.203Z
+blockers: []
+verification:
+  candidate_id: 053dbcca-9140-4f39-88bd-d8ed196d3263
+  identity_provider: skill-coordinated
+  verifier_execution_ref: skill-coordinated:verifier:77ab1289-cce2-46b2-bbba-eb76aef410e5
+  iteration: 1
+  attempt: 1
+  assurance: skill-coordinated
+  verdict: pass
+  checks: []
+  summary:
+    text: 11/11终判通过。独立复核：源码逐行核验+磁盘痕迹消费（8份终版日志+12张终版截图+导出链落盘）+CI/release三平台全绿+A8由Verifier独立经视觉模型审5张终版截图5/5通过。残留均为痕迹持久化类，不构成阻断。
+    truncated: false
+  risks:
+    - text: 导出Word全链与案件详情满数据DOM为v0.3.0前中间版痕迹，终版源码接线完整风险低
+      truncated: false
+    - text: A9运行时输出未持久化，判断依据为代码全链+Builder记录+网关旁证
+      truncated: false
+    - text: brief A7/A1字面口径漂移（旧场景值），建议修订
+      truncated: false
+    - text: 内核版本号侧栏v1.4.2与设置页Pi agent-core 0.84.2双轨
+      truncated: false
+    - text: /tmp/dashboard_tasks.log显示daily-system-report cron持续失败（与本change无关）
+      truncated: false
+  risks_truncated: false
+  completed_at: 2026-08-18T09:45:13.124Z
+history:
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 1
+    outcome: pass
+    unresolved_ids: []
+    summary:
+      text: 11/11终判通过。独立复核：源码逐行核验+磁盘痕迹消费（8份终版日志+12张终版截图+导出链落盘）+CI/release三平台全绿+A8由Verifier独立经视觉模型审5张终版截图5/5通过。残留均为痕迹持久化类，不构成阻断。
+      truncated: false
+    completed_at: 2026-08-18T09:45:13.124Z
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pass
+verification_report: verification.md
+archived: true
+created_at: 2026-08-18T05:35:40.306Z
