@@ -41,7 +41,7 @@ jobs:
         working-directory: backend
         run: |
           pip install -r requirements-sidecar.txt pyinstaller
-          pyinstaller --onefile --name legal-agent-sidecar --distpath dist --workpath /tmp/pyi-build --specpath /tmp/pyi-build --add-data "app/data/laws.json:app/data" run_sidecar.py
+          pyinstaller --onefile --name legal-agent-sidecar --distpath dist --workpath /tmp/pyi-build --add-data "app/data/laws.json:app/data" run_sidecar.py
 
       - name: Fetch Electron binary (postinstall was skipped)
         working-directory: desktop
