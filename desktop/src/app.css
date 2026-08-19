@@ -782,3 +782,21 @@ html{min-width:720px;min-height:520px}
 .todo-title{font-size:13px;font-weight:600;color:var(--fg);line-height:1.4}
 .todo-meta{display:flex;gap:8px;margin-top:2px;font-size:11px;color:var(--muted)}
 .due-urgent{color:var(--risk-high);font-weight:600}
+
+/* ============ OD 稿仪表盘补充样式 ============ */
+.t-case{font-size:13px;font-weight:600;line-height:1.4}
+.t-case small{display:block;font-size:11px;font-weight:400;color:var(--muted);margin-top:1px}
+.dots8{display:inline-flex;gap:3px;align-items:center}
+.dots8 i{width:8px;height:8px;border-radius:50%;background:var(--border);flex:none}
+.dots8 i.on{background:var(--accent)}
+.dots8 i.cur{background:var(--surface);border:2px solid var(--accent);width:10px;height:10px}
+.more{margin-left:auto;font-size:12px;color:var(--accent);background:none;border:none;padding:2px 4px;cursor:pointer}
+.more:hover{text-decoration:underline}
+.check input[type="checkbox"]{width:15px;height:15px;accent-color:var(--accent);cursor:pointer}
+.todo{display:flex;flex-direction:column}
+.todo-item{display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)}
+.todo-item:last-child{border-bottom:none}
+.todo-main{flex:1;min-width:0}
+.todo-title{font-size:12.5px;font-weight:600;line-height:1.4;color:var(--fg)}
+.todo-meta{display:flex;gap:8px;margin-top:2px;font-size:11px;color:var(--muted)}
+.due-urgent{color:var(--risk-high);font-weight:600}
