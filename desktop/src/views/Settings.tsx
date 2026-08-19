@@ -138,10 +138,15 @@ export function SettingsView(props: { onModelSaved?: (model: string) => void }) 
             )}
 
             <div className="form-row" style={{ marginTop: "12px" }}>
-              <span className="lbl">工具后端</span>
+              <span className="lbl">数据存储 <span className="hint">案件、文档、待办存在哪里</span></span>
               <div className="mode-toggle">
-                <button className={`mode-btn ${s.backendMode !== "remote" ? "on" : ""}`} onClick={() => setS({ ...s, backendMode: "local" })}>本地内置服务</button>
-                <button className={`mode-btn ${s.backendMode === "remote" ? "on" : ""}`} onClick={() => setS({ ...s, backendMode: "remote" })}>远程后端</button>
+                <button className={`mode-btn ${s.backendMode !== "remote" ? "on" : ""}`} onClick={() => setS({ ...s, backendMode: "local" })}>本机存储（推荐）</button>
+                <button className={`mode-btn ${s.backendMode === "remote" ? "on" : ""}`} onClick={() => setS({ ...s, backendMode: "remote" })}>团队服务器</button>
+              </div>
+              <div className="hint" style={{ marginTop: 4 }}>
+                {s.backendMode !== "remote"
+                  ? "数据保存在本机 ~/.legal-workbench/，无需任何配置"
+                  : "连接团队共享的后端服务器（仅团队协作场景需要）"}
               </div>
             </div>
             {s.backendMode === "remote" && (
