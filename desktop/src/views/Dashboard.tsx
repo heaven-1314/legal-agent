@@ -14,6 +14,7 @@ export function DashboardView() {
   const [stats, setStats] = useState({ matters: null as number | null, docs: null as number | null, cases: null as number | null, todos: 0 });
   const [recent, setRecent] = useState<{ id: string; title: string; employee: string; employer: string; city: string; stage: string }[]>([]);
   const [model, setModel] = useState("—");
+  const [todos, setTodos] = useState<{ id: string; title: string; case_title: string }[]>([]);
 
   useEffect(() => {
     Promise.all([
@@ -28,6 +29,8 @@ export function DashboardView() {
       }
     });
     bridge.getSettings().then((s) => setModel(s.modelId));
+    bridge.api<{ items: { id: string; title: string; case_title: string }[] }>({ path: "/api/labor/todos/open?limit=8" })
+      .then((r) => r.ok && setTodos(r.data.items ?? []));
   }, []);
 
   return (
@@ -41,22 +44,22 @@ export function DashboardView() {
       </div>
       <div className="pg-body">
         <div className="stats">
-          <div className="stat">
+          <button className="stat" onClick={() => location.hash = "case"}>
             <div className="stat-label">劳动仲裁案件</div>
             <div className="stat-num">{stats.cases === null ? "…" : stats.cases}</div>
-          </div>
-          <div className="stat">
+          </button>
+          <button className="stat" onClick={() => location.hash = "case"}>
             <div className="stat-label">案件夹</div>
             <div className="stat-num">{stats.matters === null ? "…" : stats.matters}</div>
-          </div>
-          <div className="stat">
+          </button>
+          <button className="stat" onClick={() => location.hash = "contract"}>
             <div className="stat-label">文档材料</div>
             <div className="stat-num">{stats.docs === null ? "…" : stats.docs}</div>
-          </div>
-          <div className="stat">
+          </button>
+          <button className="stat" onClick={() => location.hash = "case"}>
             <div className="stat-label">未完成待办</div>
             <div className="stat-num">{stats.todos}</div>
-          </div>
+          </button>
         </div>
 
         <div className="card">
@@ -84,6 +87,19 @@ export function DashboardView() {
                   <div className="hint">{c.employee} 诉 {c.employer}{c.city ? ` · ${c.city}` : ""}</div>
                 </span>
                 <span className="badge b-low">{c.stage}</span>
+              </div>
+            ))
+          )}
+        </div>
+        <div className="card">
+          <div className="set-sec" style={{ marginBottom: "8px" }}>今日待办</div>
+          {todos.length === 0 ? (
+            <div className="empty-d">暂无待办</div>
+          ) : (
+            todos.map((t) => (
+              <div key={t.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderBottom: "1px solid var(--border)" }}>
+                <span style={{ fontSize: 13 }}>{t.title.length > 40 ? t.title.slice(0, 40) + "…" : t.title}</span>
+                <span className="hint" style={{ flex: "none", marginLeft: 8 }}>{t.case_title}</span>
               </div>
             ))
           )}

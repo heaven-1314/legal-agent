@@ -265,3 +265,37 @@ def get_stage_checklist(
             "stage_key": stage_key,
             "items": [{"title": it, "done": it in done_titles} for it in items],
         }
+
+
+@router.delete("/todos/{todo_id}")
+def delete_labor_todo(
+    todo_id: str,
+    actor: str = Depends(require_token),
+    settings: Settings = Depends(get_settings),
+):
+    with db_session(settings.sqlite_path) as conn:
+        _ensure_tables(conn)
+        cur = conn.execute("DELETE FROM labor_todos WHERE id=?", (todo_id,))
+        if cur.rowcount == 0:
+            raise HTTPException(status_code=404, detail="todo not found")
+        return {"deleted": todo_id}
+
+
+@router.get("/todos/open")
+def list_open_todos(
+    limit: int = 10,
+    actor: str = Depends(require_token),
+    settings: Settings = Depends(get_settings),
+):
+    """跨案件的未完成待办汇总（仪表盘 Today's TODOs 用）。"""
+    with db_session(settings.sqlite_path) as conn:
+        _ensure_tables(conn)
+        rows = conn.execute(
+            """SELECT t.id, t.title, t.due, t.case_id, c.title as case_title
+               FROM labor_todos t
+               JOIN labor_cases c ON c.id = t.case_id
+               WHERE t.done = 0
+               ORDER BY t.created_at DESC LIMIT ?""",
+            (limit,),
+        ).fetchall()
+        return {"items": [dict(r) for r in rows]}

@@ -190,3 +190,24 @@ def delete_document(
     if parent.is_dir() and parent.parent == settings.uploads_dir:
         shutil.rmtree(parent, ignore_errors=True)
     return {"ok": True, "id": doc_id}
+
+
+@router.get("/{doc_id}/content")
+def get_document_content(
+    doc_id: str,
+    actor: str = Depends(require_token),
+    settings: Settings = Depends(get_settings),
+):
+    """返回文档的完整提取文本（预览用）。"""
+    with db_session(settings.sqlite_path) as conn:
+        row = conn.execute(
+            "SELECT storage_path, filename, text_chars FROM documents WHERE id=?",
+            (doc_id,),
+        ).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="document not found")
+    path = Path(row["storage_path"])
+    if not path.is_file():
+        raise HTTPException(status_code=404, detail="file missing")
+    text = extract_text(path)
+    return {"id": doc_id, "filename": row["filename"], "text_chars": row["text_chars"], "content": text[:10000]}

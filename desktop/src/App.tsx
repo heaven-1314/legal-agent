@@ -125,7 +125,7 @@ export default function App() {
               <div className="kernel-top">
                 <span className={`kdot ${ready ? "" : "off"}`}></span>
                 Pi 内核 · {ready ? "运行中" : "未就绪"}
-                <span className="ver">v1.4.2</span>
+                <span className="ver">v0.4.2</span>
               </div>
               <div className="kernel-meta">
                 <span>模型 <b>{model}</b></span>

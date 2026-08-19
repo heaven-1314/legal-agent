@@ -16,6 +16,7 @@ export function DueDiligenceView() {
   const [result, setResult] = useState("");
   const [notes, setNotes] = useState<Note[]>([]);
   const [error, setError] = useState("");
+  const [expandedNote, setExpandedNote] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const [d, n] = await Promise.all([
@@ -28,6 +29,7 @@ export function DueDiligenceView() {
 
   useEffect(() => { load(); }, [load]);
 
+  const toggleNote = (id: string) => setExpandedNote((prev) => (prev === id ? null : id));
   const toggle = (id: string) => setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
 
   const run = async () => {
@@ -90,7 +92,15 @@ export function DueDiligenceView() {
                 {notes.slice(0, 6).map((n) => (
                   <div key={n.id} style={{ padding: "7px 0", borderBottom: "1px solid var(--border)" }}>
                     <b style={{ fontSize: 12.5 }}>{n.title || n.filename || n.id.slice(0, 8)}</b>
-                    <div className="hint">{(n.content || n.summary || "").slice(0, 120)}</div>
+                    <div className="hint" style={{ marginTop: 2 }}>{(n.content || n.summary || "").slice(0, 80)}…</div>
+                    <button className="btn ghost sm" style={{ padding: "2px 8px", marginTop: 4 }} onClick={() => toggleNote(n.id)}>
+                      {expandedNote === n.id ? "收起" : "查看全文"}
+                    </button>
+                    {expandedNote === n.id && (
+                      <div style={{ marginTop: 6, background: "var(--surface-2)", borderRadius: "var(--r-md)", padding: 10, fontSize: 12.5, lineHeight: 1.7, maxHeight: 200, overflowY: "auto" }}>
+                        {(n.content || n.summary || "（无内容）")}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

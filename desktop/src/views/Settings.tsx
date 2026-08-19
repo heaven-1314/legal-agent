@@ -173,7 +173,7 @@ export function SettingsView(props: { onModelSaved?: (model: string) => void }) 
 
           <div className="card">
             <div className="set-sec" style={{ marginBottom: "14px" }}>Agent 内核信息</div>
-            <div className="hint" style={{ marginBottom: 10 }}>应用版本 <b style={{ color: "var(--accent)" }}>v0.4.0</b></div>
+            <div className="hint" style={{ marginBottom: 10 }}>应用版本 <b style={{ color: "var(--accent)" }}>v0.4.2</b></div>
             <div className="kv">
               <div className="cell"><div className="k">Agent 内核</div><div className="v mono">Pi agent-core 0.84.2</div></div>
               <div className="cell"><div className="k">当前模型</div><div className="v">{s.modelId}</div></div>

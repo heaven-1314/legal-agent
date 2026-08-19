@@ -133,6 +133,11 @@ function CaseDetail(props: { caseId: string; onBack: () => void }) {
     if (!res.ok) { setError(apiErr(res, "添加待办失败")); return; }
     setTodoText(""); setError(""); await load();
   };
+  const deleteTodo = async (id: string) => {
+    const res = await bridge.api({ method: "DELETE", path: `/api/labor/todos/${id}` });
+    if (!res.ok) { setError(apiErr(res, "删除待办失败")); return; }
+    await load();
+  };
   const doneTodo = async (id: string) => {
     const res = await bridge.api({ method: "POST", path: `/api/labor/todos/${id}/done` });
     if (!res.ok) { setError(apiErr(res, "完成待办失败")); return; }
@@ -168,7 +173,7 @@ function CaseDetail(props: { caseId: string; onBack: () => void }) {
             {busy ? "处理中…" : `推进到「${data.stage_flow[data.stage_index + 1]?.name ?? "已完成"}」`}
           </button>
         </div>
-        <StageChecklist caseId={props.caseId} stageName={data.stage.name} />
+        <StageChecklist caseId={props.caseId} stageName={data.stage.name} onRefresh={load} />
         <div className="case-cols">
           <div className="card">
             <div className="set-sec" style={{ marginBottom: "8px" }}>待办</div>
@@ -178,10 +183,13 @@ function CaseDetail(props: { caseId: string; onBack: () => void }) {
             </div>
             {data.todos.length === 0 && <div className="empty-d">暂无待办</div>}
             {data.todos.map((t) => (
-              <label key={t.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0", fontSize: 13, borderBottom: "1px solid var(--border)", opacity: t.done ? 0.5 : 1, textDecoration: t.done ? "line-through" : "none" }}>
+              <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0", fontSize: 13, borderBottom: "1px solid var(--border)", opacity: t.done ? 0.5 : 1 }}>
                 <input type="checkbox" checked={t.done} disabled={t.done} onChange={() => doneTodo(t.id)} />
-                {t.title}
-              </label>
+                <span style={{ flex: 1, textDecoration: t.done ? "line-through" : "none" }}>{t.title}</span>
+                <button className="btn ghost sm" style={{ padding: "2px 6px" }} onClick={() => deleteTodo(t.id)} title="删除">
+                  <svg className="ic" style={{ width: 12, height: 12, color: "var(--risk-high)" }}><use href="#i-wclose" /></svg>
+                </button>
+              </div>
             ))}
           </div>
           {region && (
@@ -261,7 +269,7 @@ function CreateFolderForm(props: { onCancel: () => void; onCreated: () => void; 
 }
 
 
-function StageChecklist(props: { caseId: string; stageName: string }) {
+function StageChecklist(props: { caseId: string; stageName: string; onRefresh?: () => void }) {
   const [items, setItems] = useState<{ title: string; done: boolean }[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -282,6 +290,7 @@ function StageChecklist(props: { caseId: string; stageName: string }) {
       await bridge.api({ method: "POST", path: `/api/labor/cases/${props.caseId}/todos`, body: { title: item.title } });
     }
     loadChecklist();
+    props.onRefresh?.();
   };
 
   if (loading) return <div className="empty-d">加载阶段检查单…</div>;

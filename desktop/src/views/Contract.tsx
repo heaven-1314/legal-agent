@@ -32,9 +32,9 @@ export function ContractView() {
   const loadPreview = async () => {
     if (preview) { setPreview(""); return; }
     if (!selected) return;
-    const res = await bridge.api<{ items: Doc[] }>({ path: `/api/documents/search?q=${encodeURIComponent(selected.filename.slice(0, 8))}&limit=1` });
-    if (res.ok && res.data.items?.[0]?.content) setPreview(res.data.items[0].content.slice(0, 3000));
-    else setPreview("（该文档格式暂不支持文本预览）");
+    const res = await bridge.api<{ content: string }>({ path: `/api/documents/${selected.id}/content` });
+    if (res.ok && res.data.content) setPreview(res.data.content.slice(0, 5000));
+    else setPreview("（无法读取该文档内容）");
   };
 
   const run = async () => {
