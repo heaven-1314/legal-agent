@@ -4,7 +4,7 @@ import remarkGfm from "remark-gfm";
 import { bridge } from "../bridge.js";
 import { ErrorBanner, UploadButton, apiErr } from "./UploadButton.js";
 
-interface Doc { id: string; filename: string; doc_kind: string; text_chars: number }
+interface Doc { id: string; filename: string; doc_kind: string; text_chars: number; content?: string }
 interface ReviewResult { run_id: string; filename: string; opinion_markdown: string }
 
 export function ContractView() {
@@ -17,6 +17,7 @@ export function ContractView() {
   const [error, setError] = useState("");
   const [uploaded, setUploaded] = useState("");
   const [exported, setExported] = useState("");
+  const [preview, setPreview] = useState("");
 
   const load = useCallback(async (query: string) => {
     const path = query ? `/api/documents/search?q=${encodeURIComponent(query)}&limit=20` : "/api/documents";
@@ -27,6 +28,14 @@ export function ContractView() {
   useEffect(() => { load(""); }, [load]);
 
 
+
+  const loadPreview = async () => {
+    if (preview) { setPreview(""); return; }
+    if (!selected) return;
+    const res = await bridge.api<{ items: Doc[] }>({ path: `/api/documents/search?q=${encodeURIComponent(selected.filename.slice(0, 8))}&limit=1` });
+    if (res.ok && res.data.items?.[0]?.content) setPreview(res.data.items[0].content.slice(0, 3000));
+    else setPreview("（该文档格式暂不支持文本预览）");
+  };
 
   const run = async () => {
     if (!selected) return;
@@ -87,6 +96,23 @@ export function ContractView() {
                     {selected?.id === d.id && <span className="badge b-low">已选中</span>}
                   </button>
                 ))}
+              </div>
+            )}
+
+            {selected && (
+              <div className="card" style={{ marginTop: 12 }}>
+                <div className="card-head">
+                  <span className="card-title">📄 {selected.filename}</span>
+                  <span className="hint">{selected.text_chars.toLocaleString()} 字</span>
+                  <button className="btn outline sm" style={{ marginLeft: "auto" }} onClick={loadPreview}>
+                    {preview ? "收起" : "查看内容"}
+                  </button>
+                </div>
+                {preview && (
+                  <div style={{ maxHeight: 300, overflowY: "auto", background: "var(--surface-2)", borderRadius: "var(--r-md)", padding: 14, fontSize: 13, lineHeight: 1.8, whiteSpace: "pre-wrap" }}>
+                    {preview}
+                  </div>
+                )}
               </div>
             )}
 

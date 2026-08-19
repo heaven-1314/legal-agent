@@ -2,8 +2,27 @@ import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { ChatMessage } from "../bridge.js";
+import { UploadButton } from "./UploadButton.js";
 
 const EXAMPLES = ["入职未签合同被辞退", "公司拖欠了 3 个月工资", "公司单方面调岗降薪", "工伤认定流程是什么"];
+
+interface Session {
+  id: string;
+  title: string;
+  messages: ChatMessage[];
+  updated_at: string;
+}
+
+function loadSessions(): Session[] {
+  try {
+    const raw = localStorage.getItem("legal-consult-sessions");
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+}
+
+function saveSessions(sessions: Session[]) {
+  try { localStorage.setItem("legal-consult-sessions", JSON.stringify(sessions)); } catch {}
+}
 
 export function ConsultView(props: {
   messages: ChatMessage[];
@@ -11,8 +30,45 @@ export function ConsultView(props: {
   ready: boolean;
   onSend: (text: string) => void;
   onGoSettings: () => void;
+  onNewSession?: () => void;
+  onLoadSession?: (messages: ChatMessage[]) => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [activeSession, setActiveSession] = useState<string | null>(null);
+
+  useEffect(() => { setSessions(loadSessions()); }, []);
+
+  // 消息变化时自动保存
+  useEffect(() => {
+    if (props.messages.length > 0) {
+      const title = props.messages.find(m => m.role === "user")?.text.slice(0, 30) || "新会话";
+      const existing = sessions.find(s => s.id === activeSession);
+      if (existing) {
+        existing.messages = props.messages;
+        existing.updated_at = new Date().toISOString();
+      } else {
+        const newSession: Session = {
+          id: Date.now().toString(36),
+          title, messages: props.messages, updated_at: new Date().toISOString(),
+        };
+        sessions.unshift(newSession);
+        setActiveSession(newSession.id);
+      }
+      saveSessions([...sessions]);
+    }
+  }, [props.messages]);
+
+  const newSession = () => {
+    setActiveSession(null);
+    // 需要通知 App 清空消息
+    if (props.onNewSession) props.onNewSession();
+  };
+
+  const switchSession = (session: Session) => {
+    setActiveSession(session.id);
+    if (props.onLoadSession) props.onLoadSession(session.messages);
+  };
 
   useEffect(() => {
     ref.current?.scrollTo({ top: ref.current.scrollHeight });
@@ -28,7 +84,24 @@ export function ConsultView(props: {
         <span className={`badge ${props.ready ? "b-low" : "b-mid"}`}>{props.ready ? "内核就绪" : "未就绪"}</span>
       </div>
       <div className="pg-body">
-        <div className="chat-wrap">
+        <div style={{ display: "flex", gap: 12, flex: 1, minHeight: 0 }}>
+        <div className="card" style={{ width: 180, flex: "none", overflowY: "auto", alignSelf: "stretch", padding: "8px 6px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 6, padding: "0 6px" }}>
+            <span style={{ fontSize: 12, fontWeight: 600, color: "var(--muted)" }}>历史会话</span>
+            <button className="btn ghost sm" style={{ marginLeft: "auto", padding: "2px 6px" }} onClick={newSession} title="新会话">
+              <svg className="ic" style={{ width: 12, height: 12 }}><use href="#i-plus" /></svg>
+            </button>
+          </div>
+          {sessions.length === 0 && <div className="hint" style={{ padding: "0 6px", fontSize: 11 }}>暂无历史</div>}
+          {sessions.map((s) => (
+            <button key={s.id} className={`btn ${activeSession === s.id ? "primary" : "ghost"}`}
+              style={{ width: "100%", justifyContent: "flex-start", marginBottom: 2, fontSize: 11.5, padding: "4px 8px", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}
+              onClick={() => switchSession(s)} title={s.title}>
+              {s.title}
+            </button>
+          ))}
+        </div>
+        <div className="chat-wrap" style={{ flex: 1 }}>
           <div className="chat-scroll" ref={ref}>
             {props.messages.length === 0 && (
               <div className="chat-hero">
@@ -80,6 +153,7 @@ export function ConsultView(props: {
           <Composer busy={props.busy} onSend={props.onSend} />
         </div>
       </div>
+      </div>
     </div>
   );
 }
@@ -107,6 +181,7 @@ function Composer(props: { busy: boolean; onSend: (t: string) => void }) {
           }
         }}
       />
+      <UploadButton onUploaded={() => {}} label="" />
       <button className="btn primary send" onClick={send} disabled={props.busy || !text.trim()}>
         <svg className="ic"><use href="#i-send" /></svg>发送
       </button>

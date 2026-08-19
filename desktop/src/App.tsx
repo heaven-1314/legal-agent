@@ -139,7 +139,7 @@ export default function App() {
           <div className="main">
             <div key={view} className="page show page-enter">
               {view === "dashboard" && <DashboardView />}
-              {view === "consult" && <ConsultView messages={messages} busy={busy} ready={ready} onSend={send} onGoSettings={() => nav("settings")} />}
+              {view === "consult" && <ConsultView messages={messages} busy={busy} ready={ready} onSend={send} onGoSettings={() => nav("settings")} onNewSession={() => setMessages([])} onLoadSession={(msgs) => setMessages(msgs)} />}
               {view === "case" && <CaseView />}
               {view === "contract" && <ContractView />}
               {view === "docgen" && <DraftsView />}

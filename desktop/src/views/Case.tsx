@@ -168,6 +168,7 @@ function CaseDetail(props: { caseId: string; onBack: () => void }) {
             {busy ? "处理中…" : `推进到「${data.stage_flow[data.stage_index + 1]?.name ?? "已完成"}」`}
           </button>
         </div>
+        <StageChecklist caseId={props.caseId} stageName={data.stage.name} />
         <div className="case-cols">
           <div className="card">
             <div className="set-sec" style={{ marginBottom: "8px" }}>待办</div>
@@ -255,6 +256,54 @@ function CreateFolderForm(props: { onCancel: () => void; onCreated: () => void; 
         <button className="btn primary" onClick={submit} disabled={busy || !f.title.trim()}>{busy ? "创建中…" : "创建"}</button>
         <button className="btn outline" onClick={props.onCancel}>取消</button>
       </div>
+    </div>
+  );
+}
+
+
+function StageChecklist(props: { caseId: string; stageName: string }) {
+  const [items, setItems] = useState<{ title: string; done: boolean }[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const loadChecklist = useCallback(async () => {
+    setLoading(true);
+    const res = await bridge.api<{ items: { title: string; done: boolean }[] }>({
+      path: `/api/labor/cases/${props.caseId}/stage-checklist`,
+    });
+    if (res.ok) setItems(res.data.items);
+    setLoading(false);
+  }, [props.caseId]);
+
+  useEffect(() => { loadChecklist(); }, [loadChecklist]);
+
+  const generateTodos = async () => {
+    const undone = items.filter((i) => !i.done);
+    for (const item of undone) {
+      await bridge.api({ method: "POST", path: `/api/labor/cases/${props.caseId}/todos`, body: { title: item.title } });
+    }
+    loadChecklist();
+  };
+
+  if (loading) return <div className="empty-d">加载阶段检查单…</div>;
+  if (items.length === 0) return null;
+
+  const doneCount = items.filter((i) => i.done).length;
+
+  return (
+    <div className="card">
+      <div className="card-head">
+        <span className="card-title">📋 {props.stageName} · 阶段检查单</span>
+        <span className="badge">{doneCount}/{items.length}</span>
+        <button className="btn outline sm" style={{ marginLeft: "auto" }} onClick={generateTodos}>
+          一键生成待办
+        </button>
+      </div>
+      {items.map((item) => (
+        <label key={item.title} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0", fontSize: 13, borderBottom: "1px solid var(--border)", opacity: item.done ? 0.5 : 1 }}>
+          <input type="checkbox" checked={item.done} readOnly />
+          <span style={{ textDecoration: item.done ? "line-through" : "none" }}>{item.title}</span>
+        </label>
+      ))}
     </div>
   );
 }
