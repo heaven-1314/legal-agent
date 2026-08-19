@@ -2,17 +2,54 @@ import { useState } from "react";
 import { bridge } from "../bridge.js";
 import { UploadButton } from "./UploadButton.js";
 
-interface Result { id: string; filename: string; snippet?: string; content?: string; doc_kind?: string }
+type Tab = "docs" | "laws" | "cases";
+
+interface DocResult { id: string; filename: string; snippet?: string; content?: string; doc_kind?: string }
+interface LawResult { law: string; article: string; title: string; text: string; category: string }
+interface CaseResult { id: string; title: string; summary: string; created_at: string }
+
+const TABS: { key: Tab; label: string; icon: string }[] = [
+  { key: "docs", label: "文档", icon: "i-doc" },
+  { key: "laws", label: "法条", icon: "i-book" },
+  { key: "cases", label: "案例", icon: "i-folder" },
+];
 
 export function ResearchView() {
+  const [tab, setTab] = useState<Tab>("docs");
   const [q, setQ] = useState("");
-  const [results, setResults] = useState<Result[] | null>(null);
-  const [searched, setSearched] = useState(false);
+  const [docResults, setDocResults] = useState<DocResult[] | null>(null);
+  const [lawResults, setLawResults] = useState<LawResult[]>([]);
+  const [caseResults, setCaseResults] = useState<CaseResult[]>([]);
+  const [busy, setBusy] = useState(false);
 
   const search = async () => {
     if (!q.trim()) return;
-    const res = await bridge.api<{ items: Result[] }>({ path: `/api/documents/search?q=${encodeURIComponent(q.trim())}&limit=20` });
-    if (res.ok) { setResults(res.data.items ?? []); setSearched(true); }
+    setBusy(true);
+    if (tab === "docs") {
+      const res = await bridge.api<{ items: DocResult[] }>({ path: `/api/documents/search?q=${encodeURIComponent(q.trim())}&limit=20` });
+      if (res.ok) setDocResults(res.data.items ?? []);
+    } else if (tab === "laws") {
+      const res = await bridge.api<{ items: LawResult[] }>({ path: `/api/laws?q=${encodeURIComponent(q.trim())}` });
+      if (res.ok) setLawResults(res.data.items ?? []);
+    }
+    setBusy(false);
+  };
+
+  const searchLaws = async (category?: string) => {
+    setBusy(true);
+    const path = category ? `/api/laws?category=${category}` : `/api/laws`;
+    const res = await bridge.api<{ items: LawResult[] }>({ path });
+    if (res.ok) setLawResults(res.data.items ?? []);
+    setBusy(false);
+  };
+
+  const loadCases = async () => {
+    const res = await bridge.api<{ items: CaseResult[] }>({ path: "/api/labor/cases" });
+    if (res.ok) {
+      setCaseResults((res.data.items ?? []).map((c: any) => ({
+        id: c.id, title: c.title, summary: `${c.employee} 诉 ${c.employer}`, created_at: c.updated_at,
+      })));
+    }
   };
 
   const hl = (text: string) => {
@@ -30,43 +67,87 @@ export function ResearchView() {
       <div className="pg-head">
         <div className="grow">
           <h1 className="pg-title">法律检索</h1>
-          <div className="pg-sub">已上传材料的全文检索 · 关键词高亮</div>
+          <div className="pg-sub">文档 · 法条 · 案例三合一检索</div>
         </div>
       </div>
       <div className="pg-body">
-        <div className="doc-picker">
-          <input
-            className="input"
-            style={{ flex: 1 }}
-            value={q}
-            placeholder="输入法律问题或关键词…（Enter 检索）"
-            onChange={(e) => setQ(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && search()}
-          />
-          <button className="btn primary" onClick={search}><svg className="ic"><use href="#i-search" /></svg>检索</button>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+          {TABS.map((t) => (
+            <button key={t.key} className={`btn ${tab === t.key ? "primary" : "outline"}`} onClick={() => {
+              setTab(t.key);
+              if (t.key === "laws") searchLaws();
+              if (t.key === "cases") loadCases();
+            }}>
+              <svg className="ic"><use href={`#${t.icon}`} /></svg>{t.label}
+            </button>
+          ))}
         </div>
-        {results === null ? (
-          <div className="empty">
-            <svg className="ic" style={{ width: 36, height: 36, color: "var(--border-strong)" }}><use href="#i-search" /></svg>
-            <div className="empty-t">输入关键词检索已上传的法律材料</div>
-            <p className="empty-d">支持文件名与内容匹配，命中关键词自动高亮</p>
-            <UploadButton onUploaded={() => setResults(null)} label="上传材料" />
+
+        {tab !== "cases" && (
+          <div className="doc-picker">
+            <input className="input" style={{ flex: 1 }} value={q}
+              placeholder={tab === "docs" ? "搜索已上传材料…" : "搜索法条名、条号或关键词…"}
+              onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === "Enter" && search()} />
+            <button className="btn primary" onClick={search} disabled={busy || !q.trim()}>
+              <svg className="ic"><use href="#i-search" /></svg>检索
+            </button>
           </div>
-        ) : results.length === 0 ? (
-          <div className="empty">
-            <div className="empty-t">未找到相关材料</div>
-            <p className="empty-d">上传法条、判例或案卷文档后即可全文检索</p>
-            <UploadButton onUploaded={search} label="上传检索材料" />
-          </div>
-        ) : (
+        )}
+
+        {tab === "docs" && (
+          <>
+            {docResults === null ? (
+              <div className="empty">
+                <svg className="ic" style={{ width: 36, height: 36, color: "var(--border-strong)" }}><use href="#i-search" /></svg>
+                <div className="empty-t">检索已上传的法律材料</div>
+                <p className="empty-d">支持文件名与内容匹配，命中关键词自动高亮</p>
+                <UploadButton onUploaded={() => setDocResults(null)} label="上传材料" />
+              </div>
+            ) : docResults.length === 0 ? (
+              <div className="empty"><div className="empty-t">未找到相关材料</div></div>
+            ) : (
+              <div className="rows">
+                {docResults.map((r) => (
+                  <div key={r.id} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "var(--r-md)", padding: "10px 14px" }}>
+                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      <b style={{ fontSize: 13 }}>{hl(r.filename || "未命名")}</b>
+                      {r.doc_kind && <span className="badge">{r.doc_kind}</span>}
+                    </div>
+                    <div className="hint" style={{ marginTop: 4 }}>{hl((r.snippet || r.content || "").slice(0, 160))}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
+        {tab === "laws" && (
           <div className="rows">
-            {results.map((r) => (
-              <div key={r.id} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "var(--r-md)", padding: "10px 14px" }}>
-                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                  <b style={{ fontSize: 13 }}>{hl(r.filename || "未命名")}</b>
-                  {r.doc_kind && <span className="badge">{r.doc_kind}</span>}
+            {lawResults.length === 0 ? (
+              <div className="empty"><div className="empty-t">输入关键词或点击分类浏览法条</div></div>
+            ) : lawResults.map((law, i) => (
+              <div key={i} className="card" style={{ marginBottom: 0 }}>
+                <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 6 }}>
+                  <span className="badge b-low">{law.law}</span>
+                  <b style={{ fontSize: 13.5 }}>{law.article} · {law.title}</b>
                 </div>
-                <div className="hint" style={{ marginTop: 4 }}>{hl((r.snippet || r.content || "").slice(0, 160))}</div>
+                <div style={{ borderLeft: "2px solid var(--accent-line)", paddingLeft: 12, fontSize: 13, lineHeight: 1.7 }}>{hl(law.text)}</div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {tab === "cases" && (
+          <div className="rows">
+            {caseResults.length === 0 ? (
+              <div className="empty">
+                <div className="empty-t">暂无本地案例</div>
+                <p className="empty-d">这里显示你创建的仲裁案件。公开案例检索将在后续版本接入。</p>
+              </div>
+            ) : caseResults.map((c) => (
+              <div key={c.id} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "var(--r-md)", padding: "10px 14px" }}>
+                <b style={{ fontSize: 13 }}>{c.title}</b>
+                <div className="hint">{c.summary} · {c.created_at?.slice(0, 10)}</div>
               </div>
             ))}
           </div>

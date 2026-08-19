@@ -231,3 +231,37 @@ def labor_regions(
     else:
         result["cities"] = sorted(REGION_NOTES)
     return result
+
+
+# ── 阶段子项检查清单 ──
+
+STAGE_CHECKLISTS = {
+    "intake": ["明确当事人信息", "梳理诉求方向", "评估时效是否过期", "确认管辖地"],
+    "evidence": ["工资流水/银行转账", "劳动合同（如有）", "社保缴纳记录", "考勤记录", "辞退通知/解除证明", "工作群聊天记录"],
+    "filing_prep": ["起草仲裁申请书", "计算请求金额", "准备证据清单", "按被申请人数备副本"],
+    "filed": ["提交仲裁委", "获取受理回执", "确认答辩期"],
+    "accepted": ["关注答辩意见", "准备质证提纲", "确认开庭日期"],
+    "hearing": ["庭审提纲", "证据原件核对", "当事人庭前辅导"],
+    "award": ["领取裁决书", "分析裁决结果", "评估是否起诉"],
+    "enforcement": ["申请强制执行", "跟踪执行进度", "结案归档"],
+}
+
+
+@router.get("/cases/{case_id}/stage-checklist")
+def get_stage_checklist(
+    case_id: str,
+    actor: str = Depends(require_token),
+    settings: Settings = Depends(get_settings),
+):
+    with db_session(settings.sqlite_path) as conn:
+        _ensure_tables(conn)
+        case = _case_row(conn, case_id)
+        stage_key = case["stage"]["key"]
+        items = STAGE_CHECKLISTS.get(stage_key, [])
+        # 已勾选状态存在 stage_notes 里（简化：从 todos 表查匹配标题）
+        done_titles = {t["title"] for t in case["todos"] if t["done"]}
+        return {
+            "stage": case["stage"]["name"],
+            "stage_key": stage_key,
+            "items": [{"title": it, "done": it in done_titles} for it in items],
+        }

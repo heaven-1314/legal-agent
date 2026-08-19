@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { bridge, type ChatMessage } from "./bridge.js";
 import { AnonymizeView } from "./views/Anonymize.js";
 import { CalculatorView } from "./views/Calculator.js";
+import { CompanyQueryView } from "./views/CompanyQuery.js";
 import { CaseView } from "./views/Case.js";
 import { ConsultView } from "./views/Consult.js";
 import { ContractView } from "./views/Contract.js";
@@ -15,7 +16,7 @@ import { SettingsView } from "./views/Settings.js";
 
 type View =
   | "dashboard" | "consult" | "case" | "contract" | "docgen" | "dd"
-  | "research" | "calc" | "mask" | "evidence" | "kb" | "settings";
+  | "research" | "calc" | "mask" | "evidence" | "kb" | "company" | "settings";
 
 /** 侧栏四组（对照 reference-v1；多平台对比已移除）。 */
 const NAV: { cap: string; items: { key: View; label: string; icon: string }[] }[] = [
@@ -29,6 +30,7 @@ const NAV: { cap: string; items: { key: View; label: string; icon: string }[] }[
     { key: "docgen", label: "文书生成", icon: "i-pen" },
     { key: "dd", label: "尽职调查", icon: "i-scan" },
     { key: "research", label: "法律检索", icon: "i-search" },
+    { key: "company", label: "企业查询", icon: "i-search" },
   ]},
   { cap: "工具", items: [
     { key: "calc", label: "赔偿计算器", icon: "i-calc" },
@@ -143,6 +145,7 @@ export default function App() {
               {view === "docgen" && <DraftsView />}
               {view === "dd" && <DueDiligenceView />}
               {view === "research" && <ResearchView />}
+              {view === "company" && <CompanyQueryView />}
               {view === "calc" && <CalculatorView />}
               {view === "mask" && <AnonymizeView />}
               {view === "evidence" && <EvidenceView />}
