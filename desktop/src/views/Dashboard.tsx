@@ -41,19 +41,32 @@ export function DashboardView() {
       </div>
       <div className="pg-body">
         <div className="stats">
-          <Stat icon="i-folder" value={stats.cases} label="劳动仲裁案件" />
-          <Stat icon="i-doc" value={stats.matters} label="案件夹" />
-          <Stat icon="i-doc" value={stats.docs} label="文档材料" />
-          <Stat icon="i-clock" value={stats.todos} label="未完成待办" />
+          <div className="stat">
+            <div className="stat-label">劳动仲裁案件</div>
+            <div className="stat-num">{stats.cases === null ? "…" : stats.cases}</div>
+          </div>
+          <div className="stat">
+            <div className="stat-label">案件夹</div>
+            <div className="stat-num">{stats.matters === null ? "…" : stats.matters}</div>
+          </div>
+          <div className="stat">
+            <div className="stat-label">文档材料</div>
+            <div className="stat-num">{stats.docs === null ? "…" : stats.docs}</div>
+          </div>
+          <div className="stat">
+            <div className="stat-label">未完成待办</div>
+            <div className="stat-num">{stats.todos}</div>
+          </div>
         </div>
 
         <div className="card">
           <div className="set-sec" style={{ marginBottom: "10px" }}>快捷操作</div>
-          <div className="qa-grid">
+          <div className="quick">
             {QUICK.map((q) => (
               <button key={q.hash} className="qa" onClick={() => (location.hash = q.hash)}>
-                <svg className="ic qa-ic"><use href={`#${q.icon}`} /></svg>
-                <span><span className="qa-t">{q.title}</span><span className="qa-d">{q.desc}</span></span>
+                <svg className="ic"><use href={`#${q.icon}`} /></svg>
+                {q.title}
+                <small>{q.desc}</small>
               </button>
             ))}
           </div>
@@ -76,16 +89,6 @@ export function DashboardView() {
           )}
         </div>
       </div>
-    </div>
-  );
-}
-
-function Stat(props: { icon: string; value: number | null; label: string }) {
-  return (
-    <div className="stat-card">
-      <svg className="ic" style={{ color: "var(--accent)" }}><use href={`#${props.icon}`} /></svg>
-      <div className="stat-value">{props.value === null ? "…" : props.value}</div>
-      <div className="stat-label">{props.label}</div>
     </div>
   );
 }

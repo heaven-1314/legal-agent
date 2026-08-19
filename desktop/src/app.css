@@ -186,7 +186,7 @@ svg.ic{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-wid
 .card-title{font-size:14px;font-weight:600;color:var(--fg-strong)}
 .card-head .more{margin-left:auto;font-size:12px;color:var(--accent);background:none;border:none;padding:2px 4px;border-radius:4px}
 .card-head .more:hover{text-decoration:underline}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);background:var(--surface);
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,160px),1fr));background:var(--surface);
   border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow-1);overflow:hidden}
 .stat{border:none;background:none;box-shadow:none;border-radius:0;
   padding:14px 18px 12px;display:flex;flex-direction:column;gap:2px}
@@ -198,7 +198,7 @@ svg.ic{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-wid
 .stat-sub{font-size:11px;color:var(--muted);margin-top:2px}
 .stat-sub em{font-style:normal;font-weight:600}
 .stat-sub .up{color:var(--accent)} .stat-sub .hot{color:var(--risk-high)}
-.quick{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+.quick{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,160px),1fr));gap:10px}
 .qa{display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:12px 12px 11px;
   background:var(--surface);border:1px solid var(--border);border-radius:8px;text-align:left;
   font-size:13px;color:var(--fg);transition:var(--t-state)}
@@ -705,3 +705,63 @@ html{min-width:720px;min-height:520px}
 .mode-btn{flex:1;height:32px;border:none;background:transparent;color:var(--muted);font-size:12.5px;transition:var(--t-state)}
 .mode-btn.on{background:var(--accent);color:var(--on-accent);font-weight:600}
 .mode-btn:not(.on):hover{background:var(--surface-3);color:var(--fg)}
+
+
+/* ============ 补齐 React 使用的缺失类 ============ */
+
+/* 8 阶段进度条 */
+.stepper{display:grid;grid-template-columns:repeat(8,1fr);gap:0;margin:8px 0}
+.step{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding:0 4px;text-align:center}
+.step::before{content:"";position:absolute;top:7px;left:-50%;width:100%;height:2px;background:var(--border)}
+.step:first-child::before{display:none}
+.step.past::before,.step.now::before{background:var(--accent)}
+.step-dot{width:16px;height:16px;border-radius:50%;background:var(--surface);border:2px solid var(--border);z-index:1;flex:none}
+.step.past .step-dot{background:var(--accent);border-color:var(--accent)}
+.step.now .step-dot{border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+.step-name{font-size:11.5px;color:var(--muted)}
+.step.past .step-name,.step.now .step-name{color:var(--fg);font-weight:600}
+.step.now .step-name{color:var(--accent-deep)}
+.step-hint{font-size:10.5px;color:var(--muted);line-height:1.4}
+@media (max-width:860px){.stepper{grid-template-columns:1fr;gap:0}
+  .step{flex-direction:row;gap:8px;align-items:center;text-align:left;padding:4px 0}
+  .step::before{top:50%;left:-100%;width:100%;height:1px}
+  .step-hint{display:none}}
+
+/* 案件详情双栏 */
+.case-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:14px;align-items:start}
+
+/* 列表行 */
+.rows{display:flex;flex-direction:column;gap:6px}
+
+/* 文档选择条 */
+.doc-picker{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.doc-picker .input{flex:1;min-width:200px}
+
+/* 结果区 markdown */
+.bubble-md{font-size:13.5px;line-height:1.7}
+.bubble-md p{margin:8px 0}
+.bubble-md table{border-collapse:collapse;margin:10px 0}
+.bubble-md th,.bubble-md td{border:1px solid var(--border-strong);padding:4px 10px;font-size:12.5px}
+.bubble-md th{background:var(--surface-2);font-weight:600}
+.bubble-md ul,.bubble-md ol{padding-left:1.4em;margin:8px 0}
+.bubble-md code{font-family:var(--font-mono);font-size:12px;background:var(--surface-2);padding:1px 5px;border-radius:3px}
+.bubble-md blockquote{border-left:2px solid var(--accent-line);padding-left:12px;margin:8px 0;color:var(--muted)}
+.bubble-md h1,.bubble-md h2,.bubble-md h3{font-size:14.5px;margin:12px 0 6px;color:var(--fg-strong)}
+
+/* Settings kv 网格 */
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:10px}
+.cell{background:var(--surface-2);border-radius:var(--r-md);padding:10px 12px}
+.cell .k{font-size:11.5px;color:var(--muted);font-weight:600}
+.cell .v{font-size:13px;color:var(--fg);margin-top:2px}
+
+/* 下拉模型项 */
+.dd-item .mname{font-weight:600;font-size:13px;flex:none}
+.dd-item .val{font-size:13px;color:var(--fg);flex:1;text-align:left}
+.dd-item .lbl{font-size:11.5px;color:var(--muted);flex:none}
+
+/* 工具组 */
+.toolgroups{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:8px;margin-top:12px}
+.tg{background:var(--surface-2);border-radius:var(--r-md);padding:8px 12px;font-size:12px}
+.tg b{color:var(--fg-strong);font-size:12.5px}
+.tg .n{color:var(--accent);font-size:11px;font-weight:600}
+.tg span{display:block;color:var(--muted);margin-top:2px}
