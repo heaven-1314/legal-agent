@@ -118,7 +118,7 @@ export default function App() {
         <header className="tb">
           <div className="tb-mark">法</div>
           <span className="tb-name">法律智能工作台 · Legal AI Workbench</span>
-          <span className="tb-chip">{isElectron ? "v0.4.5 Desktop" : "v0.4.5 Web"}</span>
+          <span className="tb-chip">{isElectron ? "v0.4.6 Desktop" : "v0.4.6 Web"}</span>
           <div className="tb-drag" />
           <div className="row" style={{ gap: 8 }}>
             <span className={`badge ${ready ? "b-low" : "b-neutral"}`} style={{ height: 22, fontSize: 11 }}>
@@ -154,7 +154,7 @@ export default function App() {
               <div className="kernel-top">
                 <span className={`kdot ${ready ? "" : "off"}`}></span>
                 {isElectron ? `Pi 内核 · ${ready ? "运行中" : "未就绪"}` : "Web 托管 · 服务就绪"}
-                <span className="ver">v0.4.5</span>
+                <span className="ver">v0.4.6</span>
               </div>
               <div className="kernel-meta">
                 <span>模型 <b>{model}</b></span>
