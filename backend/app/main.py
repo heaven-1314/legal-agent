@@ -63,7 +63,9 @@ app.include_router(labor.router)
 app.include_router(company.router)
 app.include_router(laws.router)
 
-if _STATIC.is_dir():
+if (_STATIC / "assets").is_dir():
+    app.mount("/assets", StaticFiles(directory=str(_STATIC / "assets")), name="assets")
+elif _STATIC.is_dir():
     app.mount("/assets", StaticFiles(directory=str(_STATIC)), name="assets")
 
 
