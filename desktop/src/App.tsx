@@ -73,7 +73,12 @@ export default function App() {
           setMessages((m) => m.filter((x) => x.role !== "error"));
         }
       }
-      if (msg.type === "assistant") setMessages((m) => [...m, { role: "assistant", text: String(msg.text) }]);
+      if (msg.type === "assistant") {
+        setMessages((m) => [
+          ...m,
+          { role: "assistant", text: String(msg.text), actionCards: msg.actionCards || [] },
+        ]);
+      }
       if (msg.type === "user_echo") setMessages((m) => [...m, { role: "user", text: String(msg.text) }]);
       if (msg.type === "tool_start") setMessages((m) => [...m, { role: "tool", text: String(msg.name) }]);
       if (msg.type === "agent_end") setBusy(false);
@@ -105,9 +110,22 @@ export default function App() {
     location.hash = v;
   };
 
+  const isElectron = typeof window !== "undefined" && Boolean((window as any).legalAgent);
+
   return (
     <div id="desk">
       <div id="stage">
+        <header className="tb">
+          <div className="tb-mark">法</div>
+          <span className="tb-name">法律智能工作台 · Legal AI Workbench</span>
+          <span className="tb-chip">{isElectron ? "v0.4.5 Desktop" : "v0.4.5 Web"}</span>
+          <div className="tb-drag" />
+          <div className="row" style={{ gap: 8 }}>
+            <span className={`badge ${ready ? "b-low" : "b-neutral"}`} style={{ height: 22, fontSize: 11 }}>
+              {isElectron ? (ready ? "● Pi 内核就绪" : "○ 内核启动中") : "● 服务端安全托管"}
+            </span>
+          </div>
+        </header>
         <div id="shell">
           <nav className="sb" aria-label="主导航">
             {NAV.map((g) => (
@@ -135,12 +153,12 @@ export default function App() {
             >
               <div className="kernel-top">
                 <span className={`kdot ${ready ? "" : "off"}`}></span>
-                Pi 内核 · {ready ? "运行中" : "未就绪"}
-                <span className="ver">v0.4.2</span>
+                {isElectron ? `Pi 内核 · ${ready ? "运行中" : "未就绪"}` : "Web 托管 · 服务就绪"}
+                <span className="ver">v0.4.5</span>
               </div>
               <div className="kernel-meta">
                 <span>模型 <b>{model}</b></span>
-                <span>工具 <b>16/16</b></span>
+                <span>{isElectron ? "工具 20/20" : "全量接口托管 (20 工具)"}</span>
               </div>
             </div>
             <button className={`sb-item sb-settings ${view === "settings" ? "active" : ""}`} onClick={() => nav("settings")}>

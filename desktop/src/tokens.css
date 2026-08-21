@@ -1,0 +1,79 @@
+/* ==========================================================================
+   法律智能工作台 · Design Tokens
+   ========================================================================== */
+
+:root {
+  /* --- 现代法律底色与表面 (Canvas & Surfaces) --- */
+  --bg: #f8fafc;              /* Slate-50: 沉浸清爽工作台底色 */
+  --surface: #ffffff;         /* 纯白主工作卡片与视窗 */
+  --surface-2: #f1f5f9;       /* Slate-100: 工具栏、次级卡片、嵌套面板 */
+  --surface-3: #e2e8f0;       /* Slate-200: Hover/Active 高亮状态 */
+  --surface-elevated: #ffffff;
+
+  /* --- 墨色字阶体系 (Text Hierarchy - Slate Ramps) --- */
+  --fg-strong: #0f172a;       /* Slate-900: 标题、重点数据、高对比正文 */
+  --fg: #1e293b;              /* Slate-800: 标准正文 (WCAG AAA contrast) */
+  --fg-secondary: #475569;    /* Slate-600: 次要信息、表单标签 */
+  --muted: #64748b;           /* Slate-500: 辅助说明、时间戳、案号辅助 */
+  --fg-disabled: #94a3b8;     /* Slate-400: 禁用态文字 */
+
+  /* --- 边框与分割线 --- */
+  --border: #e2e8f0;          /* Slate-200: 标准卡片/表格分割线 */
+  --border-strong: #cbd5e1;   /* Slate-300: 控件轮廓、强调边框 */
+  --border-focus: #3b82f6;
+
+  /* --- 法律品牌主色 (Deep Navy / Royal Blue) --- */
+  --accent: #1d4ed8;          /* Blue-700: 严谨、沉稳的法律权威主蓝 */
+  --accent-hover: #1e40af;    /* Blue-800 */
+  --accent-deep: #172554;     /* Blue-950: 强强调文字 */
+  --accent-soft: #eff6ff;     /* Blue-50: 选中背景、轻度提示 */
+  --accent-line: #bfdbfe;     /* Blue-200: 选中高亮边框 */
+  --on-accent: #ffffff;
+
+  /* --- 严谨法律风险语义体系 --- */
+  /* 🔴 高风险 (High Risk) */
+  --risk-high: #dc2626;
+  --risk-high-bg: #fef2f2;
+  --risk-high-line: #fecaca;
+  --risk-high-text: #991b1b;
+
+  /* 🟡 中风险/提示 (Mid Risk / Warning) */
+  --risk-mid: #d97706;
+  --risk-mid-bg: #fffbeb;
+  --risk-mid-line: #fde68a;
+  --risk-mid-text: #92400e;
+
+  /* 🟢 低风险/合规/通过 (Low Risk / Success) */
+  --risk-low: #059669;
+  --risk-low-bg: #ecfdf5;
+  --risk-low-line: #a7f3d0;
+  --risk-low-text: #065f46;
+
+  /* 🔵 提示/信息 (Info / Notice) */
+  --info: #0284c7;
+  --info-bg: #f0f9ff;
+  --info-line: #bae6fd;
+  --info-text: #0369a1;
+
+  --neutral-bg: #f1f5f9;
+
+  /* --- 动效曲线与过渡 --- */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --t-fast: all 0.12s var(--ease-out);
+  --t-state: color 0.15s var(--ease-out), background-color 0.15s var(--ease-out), border-color 0.15s var(--ease-out), box-shadow 0.15s var(--ease-out);
+
+  /* --- 字体体系 --- */
+  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", "Consolas", monospace;
+
+  /* --- 圆角与阴影 --- */
+  --r-sm: 4px;
+  --r-md: 8px;
+  --r-lg: 12px;
+  --r-xl: 16px;
+
+  --shadow-1: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
+  --shadow-2: 0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
+  --shadow-3: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.03);
+}

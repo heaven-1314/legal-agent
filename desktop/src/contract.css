@@ -1,0 +1,221 @@
+/* ==========================================================================
+   合同智能审查沉浸式工作台 (Contract Review Workbench Styles)
+   ========================================================================== */
+
+.contract-workspace {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  flex: 1;
+  min-height: 0;
+}
+
+.contract-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-1);
+  flex-wrap: wrap;
+}
+
+/* 左右双栏真分屏 */
+.contract-split {
+  display: grid;
+  grid-template-columns: minmax(380px, 1.1fr) minmax(400px, 1fr);
+  gap: 16px;
+  flex: 1;
+  min-height: 0;
+}
+
+@media (max-width: 980px) {
+  .contract-split {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 左侧原文阅读面板 */
+.contract-doc-pane {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-1);
+  overflow: hidden;
+  min-height: 0;
+}
+
+.doc-pane-head {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.doc-viewer {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 28px;
+  background: #ffffff;
+  font-size: 13.5px;
+  line-height: 1.85;
+  color: var(--fg);
+  scroll-behavior: smooth;
+}
+
+.doc-clause-block {
+  padding: 10px 14px;
+  border-radius: var(--r-md);
+  margin-bottom: 12px;
+  border: 1px solid transparent;
+  transition: all 0.2s var(--ease-out);
+  position: relative;
+}
+
+.doc-clause-block:hover {
+  background: var(--surface-2);
+}
+
+.doc-clause-block.has-risk-high {
+  background: var(--risk-high-bg);
+  border-color: var(--risk-high-line);
+}
+
+.doc-clause-block.has-risk-mid {
+  background: var(--risk-mid-bg);
+  border-color: var(--risk-mid-line);
+}
+
+.doc-clause-block.flash-focus {
+  animation: flashHighlight 1.8s var(--ease-out) both;
+}
+
+/* 右侧审查意见与 AI 建议面板 */
+.contract-review-pane {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-1);
+  overflow: hidden;
+  min-height: 0;
+}
+
+.review-pane-head {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.review-feed {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* 风险审查卡片 */
+.risk-card {
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+  overflow: hidden;
+  transition: var(--t-state);
+}
+
+.risk-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-2);
+}
+
+.risk-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+}
+
+.risk-card-head:hover {
+  background: var(--surface-2);
+}
+
+.risk-card-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--fg-strong);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.risk-card-body {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+/* 原文引用框 */
+.quote-box {
+  background: var(--surface-2);
+  border-left: 3px solid var(--muted);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  padding: 8px 12px;
+  font-size: 12.5px;
+  color: var(--fg-secondary);
+}
+
+/* AI 修订建议 Diff 视窗 (Red/Green Diff) */
+.diff-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 10px 12px;
+}
+
+.diff-del {
+  background: #fee2e2;
+  color: #991b1b;
+  text-decoration: line-through;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-size: 12.5px;
+}
+
+.diff-ins {
+  background: #dcfce7;
+  color: #166534;
+  font-weight: 600;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-size: 12.5px;
+}
+
+.diff-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}

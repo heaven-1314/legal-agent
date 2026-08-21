@@ -139,6 +139,85 @@ export function ConsultView(props: {
                   <div className="ava">{m.role === "user" ? "我" : "律"}</div>
                   <div className="bubble">
                     {m.role === "assistant" ? <ReactMarkdown remarkPlugins={[remarkGfm]}>{m.text}</ReactMarkdown> : m.text}
+                    {m.actionCards && m.actionCards.length > 0 && (
+                      <div className="action-cards-grid" style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+                        {m.actionCards.map((card, cidx) => (
+                          <div
+                            key={cidx}
+                            className="card action-card"
+                            style={{
+                              padding: "10px 14px",
+                              background: "var(--surface-2)",
+                              border: "1px solid var(--accent-line)",
+                              borderRadius: "var(--r-md)",
+                            }}
+                          >
+                            {card.type === "case_created" && (
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                                <div>
+                                  <div style={{ fontWeight: 600, color: "var(--accent-deep)", fontSize: 13 }}>
+                                    📁 已自动建立办案档案：{card.title}
+                                  </div>
+                                  <div className="muted" style={{ fontSize: 11.5, marginTop: 2 }}>
+                                    单位：{card.employer} · 阶段：{card.stage} {card.dispute_amount ? `· 涉及金额 ${card.dispute_amount}` : ""}
+                                  </div>
+                                </div>
+                                <button
+                                  className="btn primary sm"
+                                  onClick={() => {
+                                    location.hash = "case";
+                                  }}
+                                >
+                                  查看案件详情 →
+                                </button>
+                              </div>
+                            )}
+
+                            {card.type === "contract_review" && (
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                                <div>
+                                  <div style={{ fontWeight: 600, color: "var(--accent-deep)", fontSize: 13 }}>
+                                    📄 {card.title}
+                                  </div>
+                                  <div className="muted" style={{ fontSize: 11.5, marginTop: 2 }}>
+                                    {card.hint}
+                                  </div>
+                                </div>
+                                <button
+                                  className="btn outline sm"
+                                  onClick={() => {
+                                    location.hash = "contract";
+                                  }}
+                                >
+                                  去审查合同 →
+                                </button>
+                              </div>
+                            )}
+
+                            {card.type === "draft_suggest" && (
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                                <div>
+                                  <div style={{ fontWeight: 600, color: "var(--accent-deep)", fontSize: 13 }}>
+                                    📝 推荐文书：{card.template}
+                                  </div>
+                                  <div className="muted" style={{ fontSize: 11.5, marginTop: 2 }}>
+                                    基于当前案情一键填充起草格式并生成 Word
+                                  </div>
+                                </div>
+                                <button
+                                  className="btn outline sm"
+                                  onClick={() => {
+                                    location.hash = "docgen";
+                                  }}
+                                >
+                                  一键起草 →
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               ),

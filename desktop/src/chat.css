@@ -1,0 +1,127 @@
+/* ==========================================================================
+   智能咨询与对话模块 (Chat & LLM Stream Styles)
+   ========================================================================== */
+
+.chat-wrap {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.chat-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 8px 4px;
+}
+
+.msg {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.msg.u {
+  flex-direction: row-reverse;
+}
+
+.ava {
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border-radius: var(--r-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.msg.u .ava {
+  background: var(--surface-2);
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+
+.msg.a .ava {
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+  color: #fff;
+  box-shadow: 0 2px 4px rgba(29, 78, 216, 0.2);
+}
+
+.bubble {
+  max-width: min(80%, 72ch);
+  border-radius: var(--r-lg);
+  padding: 12px 16px;
+  font-size: 13.5px;
+  line-height: 1.7;
+  word-break: break-word;
+}
+
+.msg.u .bubble {
+  background: var(--accent);
+  color: #ffffff;
+  border-top-right-radius: 2px;
+}
+
+.msg.a .bubble {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-1);
+  border-top-left-radius: 2px;
+}
+
+.bubble p {
+  margin: 6px 0;
+}
+
+.bubble p:first-child {
+  margin-top: 0;
+}
+
+.bubble p:last-child {
+  margin-bottom: 0;
+}
+
+.bubble-md {
+  font-size: 13.5px;
+  line-height: 1.75;
+}
+
+.bubble-md p {
+  margin: 8px 0;
+}
+
+.bubble-md table {
+  border-collapse: collapse;
+  margin: 10px 0;
+  width: 100%;
+}
+
+.bubble-md th, .bubble-md td {
+  border: 1px solid var(--border);
+  padding: 6px 10px;
+  font-size: 12.5px;
+}
+
+.bubble-md th {
+  background: var(--surface-2);
+}
+
+.bubble-md ul, .bubble-md ol {
+  padding-left: 1.4em;
+  margin: 8px 0;
+}
+
+.bubble-md code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  background: var(--surface-2);
+  padding: 1px 5px;
+  border-radius: 3px;
+}

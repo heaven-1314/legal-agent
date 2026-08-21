@@ -66,6 +66,20 @@ export function SettingsView(props: { onModelSaved?: (model: string) => void }) 
       </div>
       <div className="pg-body">
         <div className="set-grid">
+          {typeof window !== "undefined" && !(window as any).legalAgent && (
+            <div className="card" style={{ background: "var(--accent-soft)", border: "1px solid var(--accent-line)", padding: "14px 16px" }}>
+              <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                <span style={{ fontSize: 20 }}>🔒</span>
+                <div>
+                  <div style={{ fontWeight: 600, color: "var(--accent)", fontSize: 13.5 }}>Web 演示端处于内网安全托管模式</div>
+                  <div className="muted" style={{ fontSize: 12, marginTop: 4, lineHeight: 1.6 }}>
+                    AI 推理网关及凭证已由服务端内网安全路由直连，前端无需且禁止在公网网页端输入真实商业 Key（彻底阻断公网爬虫与嗅探扫描风险）。在本地电脑运行 Electron 客户端时，配置则保存在本地个人目录。
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="card">
             <div className="set-sec" style={{ marginBottom: "14px" }}>AI 网关配置</div>
             <div className="gw-row">
@@ -77,17 +91,19 @@ export function SettingsView(props: { onModelSaved?: (model: string) => void }) 
                   onChange={(e) => setBaseInput(e.target.value)}
                   placeholder="http://8.152.157.178:5004/v1"
                   spellCheck={false}
+                  disabled={typeof window !== "undefined" && !(window as any).legalAgent}
                 />
               </div>
               <div className="field" style={{ flex: "1", minWidth: "220px" }}>
-                <div className="lab">API 密钥{s.aiKeySet && <span className="hint">已配置 {s.aiKey}</span>}</div>
+                <div className="lab">API 密钥{s.aiKeySet && <span className="hint">已安全托管</span>}</div>
                 <input
                   className="input"
                   type="password"
-                  value={keyInput}
+                  value={typeof window !== "undefined" && !(window as any).legalAgent ? "" : keyInput}
                   onChange={(e) => setKeyInput(e.target.value)}
-                  placeholder={s.aiKeySet ? "留空保持不变" : "ah-… 或 sk-…"}
+                  placeholder={typeof window !== "undefined" && !(window as any).legalAgent ? "服务端内网安全托管中（禁止公网输入）" : (s.aiKeySet ? "留空保持不变" : "ah-… 或 sk-…")}
                   spellCheck={false}
+                  disabled={typeof window !== "undefined" && !(window as any).legalAgent}
                 />
               </div>
             </div>
@@ -137,20 +153,35 @@ export function SettingsView(props: { onModelSaved?: (model: string) => void }) 
               </div>
             )}
 
-            <div className="form-row" style={{ marginTop: "12px" }}>
-              <span className="lbl">数据存储 <span className="hint">案件、文档、待办存在哪里</span></span>
-              <div className="mode-toggle">
-                <button className={`mode-btn ${s.backendMode !== "remote" ? "on" : ""}`} onClick={() => setS({ ...s, backendMode: "local" })}>本机存储（推荐）</button>
-                <button className={`mode-btn ${s.backendMode === "remote" ? "on" : ""}`} onClick={() => setS({ ...s, backendMode: "remote" })}>团队服务器</button>
+            <div style={{ marginTop: "14px" }}>
+              <div className="lab" style={{ marginBottom: 6 }}>
+                数据存储模式
+                <span className="hint">案件、文档、待办存在哪里</span>
               </div>
-              <div className="hint" style={{ marginTop: 4 }}>
+              <div className="mode-toggle" style={{ width: "100%", display: "flex" }}>
+                <button
+                  className={`mode-btn ${s.backendMode !== "remote" ? "on" : ""}`}
+                  style={{ flex: 1, padding: "8px 12px", textAlign: "center" }}
+                  onClick={() => setS({ ...s, backendMode: "local" })}
+                >
+                  💻 本机独立存储（推荐）
+                </button>
+                <button
+                  className={`mode-btn ${s.backendMode === "remote" ? "on" : ""}`}
+                  style={{ flex: 1, padding: "8px 12px", textAlign: "center" }}
+                  onClick={() => setS({ ...s, backendMode: "remote" })}
+                >
+                  🌐 团队共享服务器
+                </button>
+              </div>
+              <div className="hint" style={{ marginTop: 6 }}>
                 {s.backendMode !== "remote"
-                  ? "数据保存在本机 ~/.legal-workbench/，无需任何配置"
-                  : "连接团队共享的后端服务器（仅团队协作场景需要）"}
+                  ? "✓ 数据保存在个人设备本地（~/.legal-workbench/），单机独立安全。"
+                  : "✓ 连接团队共享的 FastAPI 服务端（团队协作、多端共享）。"}
               </div>
             </div>
             {s.backendMode === "remote" && (
-              <div className="field">
+              <div className="field" style={{ marginTop: 10 }}>
                 <div className="lab">远程后端地址</div>
                 <input className="input" value={s.apiBase} onChange={(e) => setS({ ...s, apiBase: e.target.value })} spellCheck={false} />
               </div>
@@ -160,7 +191,9 @@ export function SettingsView(props: { onModelSaved?: (model: string) => void }) 
               <button className="btn outline" onClick={async () => { setTesting(true); setTestResult(await bridge.testConnection()); setTesting(false); }} disabled={testing}>
                 {testing ? "诊断中…" : "测试连接"}
               </button>
-              <button className="btn primary" onClick={save} disabled={saved}>{saved ? "已保存，重启内核…" : "保存设置"}</button>
+              <button className="btn primary" onClick={save} disabled={saved}>
+                {saved ? "✓ 设置已保存生效" : "保存设置"}
+              </button>
             </div>
 
             {testResult && (
@@ -173,20 +206,22 @@ export function SettingsView(props: { onModelSaved?: (model: string) => void }) 
 
           <div className="card">
             <div className="set-sec" style={{ marginBottom: "14px" }}>Agent 内核信息</div>
-            <div className="hint" style={{ marginBottom: 10 }}>应用版本 <b style={{ color: "var(--accent)" }}>v0.4.2</b></div>
+            <div className="hint" style={{ marginBottom: 10 }}>应用版本 <b style={{ color: "var(--accent)" }}>v0.4.5</b></div>
             <div className="kv">
               <div className="cell"><div className="k">Agent 内核</div><div className="v mono">Pi agent-core 0.84.2</div></div>
               <div className="cell"><div className="k">当前模型</div><div className="v">{s.modelId}</div></div>
-              <div className="cell"><div className="k">已装载工具</div><div className="v">16 个</div></div>
+              <div className="cell"><div className="k">已装载工具</div><div className="v">20 个全量工具</div></div>
               <div className="cell"><div className="k">数据位置</div><div className="v mono">{s.backendMode === "local" ? "本机 ~/.legal-workbench" : s.apiBase}</div></div>
             </div>
             <div className="toolgroups">
-              <div className="tg"><b>咨询 <span className="n">×1</span></b><span>法律咨询</span></div>
+              <div className="tg"><b>咨询 <span className="n">×1</span></b><span>法律咨询与自动分诊</span></div>
               <div className="tg"><b>案件 <span className="n">×9</span></b><span>案件夹 · 劳动仲裁进度 · 待办 · 地区规则</span></div>
-              <div className="tg"><b>审查 <span className="n">×1</span></b><span>合同风险审查</span></div>
+              <div className="tg"><b>审查 <span className="n">×1</span></b><span>合同风险审查与 Diff 建议</span></div>
               <div className="tg"><b>文书 <span className="n">×2</span></b><span>模板 · 起草</span></div>
-              <div className="tg"><b>阅卷 <span className="n">×2</span></b><span>单文档 · 多文档</span></div>
-              <div className="tg"><b>检索 <span className="n">×1</span></b><span>文档搜索</span></div>
+              <div className="tg"><b>阅卷 <span className="n">×2</span></b><span>单文档 · 多文档争点提炼</span></div>
+              <div className="tg"><b>检索 <span className="n">×3</span></b><span>文档搜索 · 130+法条 · 典型案例</span></div>
+              <div className="tg"><b>工商 <span className="n">×1</span></b><span>天眼查企业主体核验</span></div>
+              <div className="tg"><b>测算 <span className="n">×1</span></b><span>2N/N 法定赔偿测算引擎</span></div>
             </div>
           </div>
         </div>

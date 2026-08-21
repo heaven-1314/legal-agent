@@ -1,0 +1,351 @@
+/* ==========================================================================
+   通用卡片、布局与辅助类 (Cards, Layouts & Modals)
+   ========================================================================== */
+
+/* 卡片 */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-1);
+  padding: 16px 18px;
+}
+
+.card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fg-strong);
+}
+
+.card-head .more {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--accent);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.card-head .more:hover {
+  text-decoration: underline;
+}
+
+/* 空状态与异常提示 */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 44px 20px;
+  gap: 8px;
+  text-align: center;
+}
+
+.empty-t {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fg-strong);
+}
+
+.empty-d {
+  font-size: 12px;
+  color: var(--muted);
+  max-width: 400px;
+  line-height: 1.6;
+}
+
+.banner-error {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  background: var(--risk-high-bg);
+  border: 1px solid var(--risk-high-line);
+  border-radius: var(--r-md);
+  padding: 10px 14px;
+  font-size: 12.5px;
+  color: var(--risk-high-text);
+  line-height: 1.6;
+}
+
+.diag-hint {
+  font-size: 11.5px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* 标签页 Tabs */
+.tabs {
+  display: flex;
+  gap: 2px;
+  border-bottom: 1px solid var(--border);
+  flex: none;
+}
+
+.tab {
+  height: 36px;
+  padding: 0 14px;
+  font-size: 13px;
+  color: var(--muted);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  margin-bottom: -1px;
+  transition: var(--t-state);
+}
+
+.tab b {
+  font-weight: 600;
+  font-size: 11.5px;
+  margin-left: 3px;
+}
+
+.tab:hover {
+  color: var(--fg);
+}
+
+.tab.on {
+  color: var(--accent);
+  font-weight: 600;
+  border-bottom-color: var(--accent);
+}
+
+/* 计算器与网格 */
+.calc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.calc-total {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--accent);
+  margin: 6px 0 14px;
+}
+
+.calc-lines {
+  display: flex;
+  flex-direction: column;
+}
+
+.calc-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+
+.calc-name {
+  display: block;
+  font-weight: 600;
+}
+
+.calc-basis {
+  display: block;
+  font-size: 11.5px;
+  color: var(--muted);
+  margin-top: 2px;
+  font-family: var(--font-mono);
+}
+
+/* 表单行与设置区 */
+.gw-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.set-grid {
+  max-width: 860px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.set-sec {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.08em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-transform: uppercase;
+}
+
+.set-sec::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+/* 键值网格 (KV / Cell) */
+.kv {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+  gap: 10px;
+}
+
+.cell {
+  background: var(--surface-2);
+  border-radius: var(--r-md);
+  padding: 10px 12px;
+}
+
+.cell .k {
+  font-size: 11.5px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.cell .v {
+  font-size: 13px;
+  color: var(--fg);
+  margin-top: 3px;
+}
+
+/* 列表与选择器 */
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.doc-picker {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.doc-picker .input {
+  flex: 1;
+  min-width: 200px;
+}
+
+/* 下拉菜单 */
+.dd-wrap {
+  position: relative;
+}
+
+.dd-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 36px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 0 12px;
+  background: var(--surface);
+  cursor: pointer;
+  font-size: 13px;
+  transition: var(--t-state);
+}
+
+.dd-trigger:hover {
+  border-color: var(--border-strong);
+}
+
+.dd-trigger .lbl {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.dd-trigger .val {
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+
+.dd-trigger .chev {
+  margin-left: auto;
+  transition: transform 0.15s var(--ease-out);
+}
+
+.dd-trigger[aria-expanded="true"] .chev {
+  transform: rotate(90deg);
+}
+
+.dd-menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-2);
+  z-index: 50;
+  overflow: hidden;
+}
+
+.dd-menu.open {
+  display: block;
+}
+
+.dd-menu-h {
+  font-size: 11px;
+  color: var(--muted);
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  letter-spacing: 0.04em;
+}
+
+.dd-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  font-size: 12.5px;
+  cursor: pointer;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+
+.dd-item:hover {
+  background: var(--surface-2);
+}
+
+.dd-item.on {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.dd-item .ic {
+  margin-left: auto;
+  display: none;
+  color: var(--accent);
+}
+
+.dd-item.on .ic {
+  display: block;
+}

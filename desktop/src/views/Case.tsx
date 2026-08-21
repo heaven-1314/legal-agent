@@ -1,16 +1,33 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { bridge } from "../bridge.js";
-import { ErrorBanner, UploadButton, apiErr } from "./UploadButton.js";
+import { ErrorBanner, apiErr } from "./UploadButton.js";
+import { CaseDetail, type CaseData } from "./case/CaseDetail.js";
+import { CreateCaseForm } from "./case/CreateCaseForm.js";
 
-interface Stage { key: string; name: string; hint: string; reached?: boolean }
-interface Todo { id: string; title: string; due: string; done: boolean }
-interface LaborCase {
-  id: string; title: string; employee: string; employer: string; city: string;
-  dispute_amount: string; claim_summary: string; stage_index: number;
-  stage: Stage; stage_flow: Stage[]; todos: Todo[];
+type CategoryFilter = "all" | "civil" | "criminal" | "non_litigation";
+
+interface CaseSummary {
+  id: string;
+  title: string;
+  case_type?: string;
+  stage_type_label?: string;
+  employee: string;
+  employer: string;
+  city: string;
+  dispute_amount?: string;
+  stage: string;
+  stage_index: number;
+  created_at: string;
+  updated_at: string;
 }
-interface CaseSummary { id: string; title: string; employee: string; employer: string; city: string; stage: string; updated_at: string }
-interface MatterRow { id: string; title: string; client_name: string | null; doc_count: number; updated_at: string }
+
+interface MatterRow {
+  id: string;
+  title: string;
+  client_name: string | null;
+  doc_count: number;
+  updated_at: string;
+}
 
 export function CaseView() {
   const [cases, setCases] = useState<CaseSummary[] | null>(null);
@@ -20,79 +37,228 @@ export function CaseView() {
   const [selected, setSelected] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [folderForm, setFolderForm] = useState(false);
+  const [catFilter, setCatFilter] = useState<CategoryFilter>("all");
 
   const refresh = useCallback(async () => {
     const [labor, matters] = await Promise.all([
       bridge.api<{ items: CaseSummary[] }>({ path: "/api/labor/cases" }),
       bridge.api<{ items: MatterRow[] }>({ path: "/api/matters" }),
     ]);
-    if (labor.ok) { setCases(labor.data.items); setDown(false); } else { setDown(true); setCases([]); }
-    if (matters.ok) setFolders(matters.data.items);
+    if (labor.ok) {
+      setCases(labor.data.items || []);
+      setDown(false);
+    } else {
+      setDown(true);
+      setCases([]);
+    }
+    if (matters.ok) {
+      setFolders(matters.data.items || []);
+    }
   }, []);
 
-  useEffect(() => { refresh(); }, [refresh]);
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
 
-  if (selected) return <CaseDetail caseId={selected} onBack={() => { setSelected(null); refresh(); }} />;
+  const civilCount = useMemo(() => (cases || []).filter((c) => (c.case_type || "civil") === "civil").length, [cases]);
+  const criminalCount = useMemo(() => (cases || []).filter((c) => c.case_type === "criminal").length, [cases]);
+  const nonLitCount = useMemo(() => (cases || []).filter((c) => c.case_type === "non_litigation").length, [cases]);
+
+  const filteredCases = useMemo(() => {
+    if (!cases) return [];
+    if (catFilter === "civil") return cases.filter((c) => (c.case_type || "civil") === "civil");
+    if (catFilter === "criminal") return cases.filter((c) => c.case_type === "criminal");
+    if (catFilter === "non_litigation") return cases.filter((c) => c.case_type === "non_litigation");
+    return cases;
+  }, [cases, catFilter]);
+
+  if (selected) {
+    return <CaseDetail caseId={selected} onBack={() => { setSelected(null); refresh(); }} />;
+  }
 
   return (
     <div className="pg-root">
       <div className="pg-head">
         <div className="grow">
-          <h1 className="pg-title">案件管理</h1>
-          <div className="pg-sub">案件夹 · 劳动仲裁 8 阶段进度 · 待办</div>
+          <h1 className="pg-title">案件管理工作台</h1>
+          <div className="pg-sub">
+            民商事 · 刑事辩护 · 非诉专项 全流程阶段流转与办案档案
+          </div>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
-          <button className="btn outline" onClick={() => setFolderForm(true)}><svg className="ic"><use href="#i-folder" /></svg>新建案件夹</button>
-          <button className="btn primary" onClick={() => setCreating(true)}><svg className="ic"><use href="#i-plus" /></svg>新建仲裁案</button>
+          <button className="btn outline" onClick={() => setFolderForm(true)}>
+            <svg className="ic"><use href="#i-folder" /></svg>
+            新建案件夹
+          </button>
+          <button className="btn primary" onClick={() => setCreating(true)}>
+            <svg className="ic"><use href="#i-plus" /></svg>
+            新建案件 / 事务
+          </button>
         </div>
       </div>
+
       <div className="pg-body">
-        {error && <ErrorBanner message={error} />}
+        {error && <ErrorBanner message={error} onRetry={() => setError("")} />}
+
         {down ? (
-          <div className="empty">
-            <svg className="ic" style={{ width: 36, height: 36, color: "var(--border-strong)" }}><use href="#i-alert" /></svg>
-            <div className="empty-t">工具后端未连接</div>
-            <p className="empty-d">请到「设置」点测试连接诊断。若刚启动，内置服务可能还在加载（几秒）。</p>
-            <button className="btn outline" onClick={refresh}>重试</button>
+          <div className="card" style={{ textAlign: "center", padding: "48px 20px" }}>
+            <svg className="ic" style={{ width: 36, height: 36, color: "var(--border-strong)", marginInline: "auto" }}>
+              <use href="#i-alert" />
+            </svg>
+            <div className="empty-t" style={{ marginTop: 10 }}>工具后端未连接</div>
+            <p className="empty-d" style={{ marginTop: 4 }}>请到「设置」检查后端服务连接状态。</p>
+            <button className="btn outline sm" style={{ marginTop: 12 }} onClick={refresh}>重试</button>
           </div>
         ) : (
           <>
+            {/* 案件夹区域 */}
             {folders !== null && folders.length > 0 && (
               <div className="card">
-                <div className="set-sec" style={{ marginBottom: "8px" }}>案件夹（{folders.length}）</div>
-                {folders.map((f) => (
-                  <div key={f.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: "1px solid var(--border)" }}>
-                    <span><b style={{ fontSize: 13 }}>{f.title}</b><span className="hint" style={{ marginLeft: 8 }}>{f.client_name || "未记录委托人"}</span></span>
-                    <span className="badge">{f.doc_count} 份材料</span>
-                  </div>
-                ))}
+                <div className="card-head">
+                  <span className="card-title">📁 案件夹归档（{folders.length}）</span>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 10 }}>
+                  {folders.map((f) => (
+                    <div
+                      key={f.id}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        padding: "10px 12px",
+                        background: "var(--surface-2)",
+                        borderRadius: "var(--r-md)",
+                        border: "1px solid var(--border)",
+                      }}
+                    >
+                      <div>
+                        <b style={{ fontSize: 13, color: "var(--fg-strong)" }}>{f.title}</b>
+                        <div className="muted" style={{ fontSize: 11, marginTop: 2 }}>
+                          {f.client_name || "未记录委托人"}
+                        </div>
+                      </div>
+                      <span className="badge b-neutral">{f.doc_count} 份材料</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
-            <div className="set-sec">劳动仲裁案件</div>
+
+            {/* 三大分类筛选 Tabs */}
+            <div className="tabs">
+              <button
+                className={`tab ${catFilter === "all" ? "on" : ""}`}
+                onClick={() => setCatFilter("all")}
+              >
+                全部在办案件 <b>({cases?.length || 0})</b>
+              </button>
+              <button
+                className={`tab ${catFilter === "civil" ? "on" : ""}`}
+                onClick={() => setCatFilter("civil")}
+              >
+                ⚖️ 民商事 <b>({civilCount})</b>
+              </button>
+              <button
+                className={`tab ${catFilter === "criminal" ? "on" : ""}`}
+                onClick={() => setCatFilter("criminal")}
+              >
+                🛡️ 刑事辩护 <b>({criminalCount})</b>
+              </button>
+              <button
+                className={`tab ${catFilter === "non_litigation" ? "on" : ""}`}
+                onClick={() => setCatFilter("non_litigation")}
+              >
+                📑 非诉业务 <b>({nonLitCount})</b>
+              </button>
+            </div>
+
+            {/* 新建案件与新建案件夹表单 */}
+            {creating && (
+              <CreateCaseForm
+                onCancel={() => setCreating(false)}
+                onError={setError}
+                onCreated={async () => {
+                  setCreating(false);
+                  setError("");
+                  await refresh();
+                }}
+              />
+            )}
+
+            {folderForm && (
+              <CreateFolderForm
+                onCancel={() => setFolderForm(false)}
+                onError={setError}
+                onCreated={async () => {
+                  setFolderForm(false);
+                  setError("");
+                  await refresh();
+                }}
+              />
+            )}
+
+            {/* 案件列表 */}
             {cases === null ? (
-              <div className="empty-d">加载中…</div>
-            ) : cases.length === 0 && !creating ? (
-              <div className="empty">
-                <svg className="ic" style={{ width: 36, height: 36, color: "var(--border-strong)" }}><use href="#i-folder" /></svg>
-                <div className="empty-t">还没有劳动仲裁案件</div>
-                <p className="empty-d">新建后会自动生成 8 阶段办案进度表</p>
-                <button className="btn primary" onClick={() => setCreating(true)}><svg className="ic"><use href="#i-plus" /></svg>新建第一个仲裁案</button>
+              <div className="card"><div className="empty-d">加载案件列表…</div></div>
+            ) : filteredCases.length === 0 && !creating ? (
+              <div className="card" style={{ textAlign: "center", padding: "48px 20px" }}>
+                <svg className="ic" style={{ width: 40, height: 40, color: "var(--border-strong)", marginInline: "auto" }}>
+                  <use href="#i-folder" />
+                </svg>
+                <div className="empty-t" style={{ marginTop: 10 }}>当前分类暂无案件</div>
+                <p className="empty-d" style={{ marginTop: 4 }}>点击右上「新建案件 / 事务」开始录入民商事、刑事或非诉案件</p>
+                <button className="btn primary sm" style={{ marginTop: 12 }} onClick={() => setCreating(true)}>
+                  新建第一个案件
+                </button>
               </div>
             ) : (
               <div className="rows">
-                {cases.map((c) => (
-                  <button key={c.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", textAlign: "left", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "var(--r-md)", padding: "10px 14px", cursor: "pointer" }} onClick={() => setSelected(c.id)}>
-                    <span>
-                      <b style={{ fontSize: 13.5 }}>{c.title}</b>
-                      <div className="hint">{c.employee} 诉 {c.employer}{c.city ? ` · ${c.city}` : ""}</div>
-                    </span>
-                    <span className="badge b-low">{c.stage}</span>
-                  </button>
-                ))}
+                {filteredCases.map((c) => {
+                  const ctype = c.case_type || "civil";
+                  const typeLabel = ctype === "civil" ? "⚖️ 民商事" : ctype === "criminal" ? "🛡️ 刑事" : "📑 非诉";
+                  const badgeClass = ctype === "civil" ? "b-accent" : ctype === "criminal" ? "b-high" : "b-low";
+
+                  return (
+                    <button
+                      key={c.id}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        width: "100%",
+                        textAlign: "left",
+                        background: "var(--surface)",
+                        border: "1px solid var(--border)",
+                        borderRadius: "var(--r-md)",
+                        padding: "12px 16px",
+                        cursor: "pointer",
+                        boxShadow: "var(--shadow-1)",
+                        transition: "var(--t-state)",
+                      }}
+                      onClick={() => setSelected(c.id)}
+                    >
+                      <div className="grow">
+                        <div className="row" style={{ gap: 8 }}>
+                          <span className={`badge ${badgeClass}`}>{typeLabel}</span>
+                          <b style={{ fontSize: 13.5, color: "var(--fg-strong)" }}>{c.title}</b>
+                        </div>
+                        <div className="muted" style={{ fontSize: 11.5, marginTop: 4 }}>
+                          当事人：{c.employee} vs {c.employer}
+                          {c.city ? ` · ${c.city}` : ""}
+                          {c.dispute_amount ? ` · 涉及：${c.dispute_amount}` : ""}
+                        </div>
+                      </div>
+                      <div className="row" style={{ gap: 8 }}>
+                        <span className="badge b-neutral" style={{ height: 24 }}>
+                          当前阶段：{c.stage}
+                        </span>
+                        <span className="btn outline sm">办案工作台 →</span>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             )}
-            {creating && <CreateCaseForm onCancel={() => setCreating(false)} onError={setError} onCreated={async () => { setCreating(false); setError(""); await refresh(); }} />}
-            {folderForm && <CreateFolderForm onCancel={() => setFolderForm(false)} onError={setError} onCreated={async () => { setFolderForm(false); setError(""); await refresh(); }} />}
           </>
         )}
       </div>
@@ -100,219 +266,70 @@ export function CaseView() {
   );
 }
 
-function CaseDetail(props: { caseId: string; onBack: () => void }) {
-  const [data, setData] = useState<LaborCase | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [todoText, setTodoText] = useState("");
-  const [region, setRegion] = useState<Record<string, string> | null>(null);
-  const [error, setError] = useState("");
-
-  const load = useCallback(async () => {
-    const res = await bridge.api<LaborCase>({ path: `/api/labor/cases/${props.caseId}` });
-    if (res.ok) setData(res.data);
-  }, [props.caseId]);
-
-  useEffect(() => { load(); }, [load]);
-
-  useEffect(() => {
-    if (!data?.city) return;
-    bridge.api<{ city_note: string; national: Record<string, string> }>({ path: `/api/labor/regions?city=${encodeURIComponent(data.city)}` })
-      .then((r) => r.ok && setRegion({ ...r.data.national, 地区提示: r.data.city_note }));
-  }, [data?.city]);
-
-  const advance = async () => {
-    setBusy(true);
-    const res = await bridge.api({ method: "POST", path: `/api/labor/cases/${props.caseId}/advance`, body: {} });
-    setBusy(false);
-    if (!res.ok) { setError(apiErr(res, "推进失败")); return; }
-    setError(""); await load();
-  };
-  const addTodo = async () => {
-    if (!todoText.trim()) return;
-    const res = await bridge.api({ method: "POST", path: `/api/labor/cases/${props.caseId}/todos`, body: { title: todoText.trim() } });
-    if (!res.ok) { setError(apiErr(res, "添加待办失败")); return; }
-    setTodoText(""); setError(""); await load();
-  };
-  const deleteTodo = async (id: string) => {
-    const res = await bridge.api({ method: "DELETE", path: `/api/labor/todos/${id}` });
-    if (!res.ok) { setError(apiErr(res, "删除待办失败")); return; }
-    await load();
-  };
-  const doneTodo = async (id: string) => {
-    const res = await bridge.api({ method: "POST", path: `/api/labor/todos/${id}/done` });
-    if (!res.ok) { setError(apiErr(res, "完成待办失败")); return; }
-    await load();
-  };
-
-  if (!data) return <div className="pg-body"><div className="empty-d">加载案件详情…</div></div>;
-  const openTodos = data.todos.filter((t) => !t.done);
-
-  return (
-    <div className="pg-root">
-      <div className="pg-head">
-        <button className="btn outline" onClick={props.onBack}><svg className="ic"><use href="#i-back" /></svg>返回</button>
-        <div className="grow">
-          <h1 className="pg-title">{data.title}</h1>
-          <div className="pg-sub">{data.employee} 诉 {data.employer}{data.city ? ` · ${data.city}` : ""}{data.dispute_amount ? ` · 争议 ${data.dispute_amount}` : ""}{openTodos.length > 0 ? ` · ${openTodos.length} 项待办` : ""}</div>
-        </div>
-        <UploadButton onUploaded={load} onError={setError} label="上传案件材料" />
-      </div>
-      <div className="pg-body">
-        {error && <ErrorBanner message={error} onRetry={() => setError("")} />}
-        <div className="stepper">
-          {data.stage_flow.map((s, i) => (
-            <div key={s.key} className={`step ${i < data.stage_index ? "past" : ""} ${i === data.stage_index ? "now" : ""}`}>
-              <span className="step-dot" />
-              <span className="step-name">{s.name}</span>
-              {i === data.stage_index && <span className="step-hint">{s.hint}</span>}
-            </div>
-          ))}
-        </div>
-        <div style={{ display: "flex", gap: 8 }}>
-          <button className="btn primary" onClick={advance} disabled={busy || data.stage_index >= 7}>
-            {busy ? "处理中…" : `推进到「${data.stage_flow[data.stage_index + 1]?.name ?? "已完成"}」`}
-          </button>
-        </div>
-        <StageChecklist caseId={props.caseId} stageName={data.stage.name} onRefresh={load} />
-        <div className="case-cols">
-          <div className="card">
-            <div className="set-sec" style={{ marginBottom: "8px" }}>待办</div>
-            <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
-              <input className="input" style={{ flex: 1 }} value={todoText} placeholder="新增待办，如「收集工资流水」" onChange={(e) => setTodoText(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addTodo()} />
-              <button className="btn outline" onClick={addTodo}>添加</button>
-            </div>
-            {data.todos.length === 0 && <div className="empty-d">暂无待办</div>}
-            {data.todos.map((t) => (
-              <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0", fontSize: 13, borderBottom: "1px solid var(--border)", opacity: t.done ? 0.5 : 1 }}>
-                <input type="checkbox" checked={t.done} disabled={t.done} onChange={() => doneTodo(t.id)} />
-                <span style={{ flex: 1, textDecoration: t.done ? "line-through" : "none" }}>{t.title}</span>
-                <button className="btn ghost sm" style={{ padding: "2px 6px" }} onClick={() => deleteTodo(t.id)} title="删除">
-                  <svg className="ic" style={{ width: 12, height: 12, color: "var(--risk-high)" }}><use href="#i-wclose" /></svg>
-                </button>
-              </div>
-            ))}
-          </div>
-          {region && (
-            <div className="card">
-              <div className="set-sec" style={{ marginBottom: "8px" }}>规则参考{data.city ? ` · ${data.city}` : ""}</div>
-              {Object.entries(region).map(([k, v]) => (
-                <div key={k} style={{ marginBottom: 8 }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: "var(--muted)" }}>{k}</div>
-                  <div style={{ fontSize: 12.5, lineHeight: 1.55 }}>{v}</div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function CreateCaseForm(props: { onCancel: () => void; onCreated: () => void; onError: (msg: string) => void }) {
-  const [f, setF] = useState({ title: "", employee: "", employer: "", city: "", claim_summary: "" });
-  const [busy, setBusy] = useState(false);
-  const submit = async () => {
-    if (!f.title || !f.employee || !f.employer) return;
-    setBusy(true);
-    const res = await bridge.api({ method: "POST", path: "/api/labor/cases", body: f });
-    setBusy(false);
-    if (res.ok) props.onCreated();
-    else props.onError(apiErr(res, "创建失败"));
-  };
-  return (
-    <div className="card">
-      <div className="set-sec" style={{ marginBottom: "10px" }}>新建劳动仲裁案件</div>
-      <div className="field"><div className="lab">案件名称 *</div>
-        <input className="input" value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} placeholder="如：张某诉某公司违法解除案" />
-      </div>
-      <div className="gw-row">
-        <div className="field"><div className="lab">劳动者 *</div><input className="input" value={f.employee} onChange={(e) => setF({ ...f, employee: e.target.value })} /></div>
-        <div className="field"><div className="lab">用人单位 *</div><input className="input" value={f.employer} onChange={(e) => setF({ ...f, employer: e.target.value })} /></div>
-      </div>
-      <div className="gw-row">
-        <div className="field"><div className="lab">城市</div><input className="input" value={f.city} onChange={(e) => setF({ ...f, city: e.target.value })} placeholder="北京" /></div>
-        <div className="field"><div className="lab">诉求摘要</div><input className="input" value={f.claim_summary} onChange={(e) => setF({ ...f, claim_summary: e.target.value })} placeholder="违法解除赔偿金 2N" /></div>
-      </div>
-      <div className="form-actions">
-        <button className="btn primary" onClick={submit} disabled={busy || !f.title || !f.employee || !f.employer}>{busy ? "创建中…" : "创建"}</button>
-        <button className="btn outline" onClick={props.onCancel}>取消</button>
-      </div>
-    </div>
-  );
-}
-
-function CreateFolderForm(props: { onCancel: () => void; onCreated: () => void; onError: (msg: string) => void }) {
+function CreateFolderForm(props: {
+  onCancel: () => void;
+  onCreated: () => void;
+  onError: (msg: string) => void;
+}) {
   const [f, setF] = useState({ title: "", client_name: "" });
   const [busy, setBusy] = useState(false);
+
   const submit = async () => {
     if (!f.title.trim()) return;
     setBusy(true);
-    const res = await bridge.api({ method: "POST", path: "/api/matters", body: { title: f.title.trim(), ...(f.client_name.trim() ? { client_name: f.client_name.trim() } : {}) } });
+    const res = await bridge.api({
+      method: "POST",
+      path: "/api/matters",
+      body: {
+        title: f.title.trim(),
+        ...(f.client_name.trim() ? { client_name: f.client_name.trim() } : {}),
+      },
+    });
     setBusy(false);
-    if (res.ok) props.onCreated();
-    else props.onError(apiErr(res, "创建失败"));
+    if (res.ok) {
+      props.onCreated();
+    } else {
+      props.onError(apiErr(res, "创建案件夹失败"));
+    }
   };
+
   return (
-    <div className="card">
-      <div className="set-sec" style={{ marginBottom: "10px" }}>新建案件夹</div>
-      <div className="gw-row">
-        <div className="field"><div className="lab">案件夹名称 *</div><input className="input" value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} placeholder="如：张某劳动争议" /></div>
-        <div className="field"><div className="lab">委托人</div><input className="input" value={f.client_name} onChange={(e) => setF({ ...f, client_name: e.target.value })} /></div>
+    <div className="card" style={{ marginTop: 14 }}>
+      <div className="card-head">
+        <span className="card-title">📁 新建案件夹（案件容器）</span>
+      </div>
+      <div className="gw-row" style={{ marginBottom: 10 }}>
+        <div className="field" style={{ flex: 1, minWidth: 200 }}>
+          <div className="lab">案件夹名称 *</div>
+          <input
+            className="input"
+            value={f.title}
+            onChange={(e) => setF({ ...f, title: e.target.value })}
+            placeholder="如：某某集团破产重整 / 张某系列诉讼"
+          />
+        </div>
+        <div className="field" style={{ flex: 1, minWidth: 200 }}>
+          <div className="lab">委托人</div>
+          <input
+            className="input"
+            value={f.client_name}
+            onChange={(e) => setF({ ...f, client_name: e.target.value })}
+            placeholder="委托单位或个人名称"
+          />
+        </div>
       </div>
       <div className="form-actions">
-        <button className="btn primary" onClick={submit} disabled={busy || !f.title.trim()}>{busy ? "创建中…" : "创建"}</button>
-        <button className="btn outline" onClick={props.onCancel}>取消</button>
-      </div>
-    </div>
-  );
-}
-
-
-function StageChecklist(props: { caseId: string; stageName: string; onRefresh?: () => void }) {
-  const [items, setItems] = useState<{ title: string; done: boolean }[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const loadChecklist = useCallback(async () => {
-    setLoading(true);
-    const res = await bridge.api<{ items: { title: string; done: boolean }[] }>({
-      path: `/api/labor/cases/${props.caseId}/stage-checklist`,
-    });
-    if (res.ok) setItems(res.data.items);
-    setLoading(false);
-  }, [props.caseId]);
-
-  useEffect(() => { loadChecklist(); }, [loadChecklist]);
-
-  const generateTodos = async () => {
-    const undone = items.filter((i) => !i.done);
-    for (const item of undone) {
-      await bridge.api({ method: "POST", path: `/api/labor/cases/${props.caseId}/todos`, body: { title: item.title } });
-    }
-    loadChecklist();
-    props.onRefresh?.();
-  };
-
-  if (loading) return <div className="empty-d">加载阶段检查单…</div>;
-  if (items.length === 0) return null;
-
-  const doneCount = items.filter((i) => i.done).length;
-
-  return (
-    <div className="card">
-      <div className="card-head">
-        <span className="card-title">📋 {props.stageName} · 阶段检查单</span>
-        <span className="badge">{doneCount}/{items.length}</span>
-        <button className="btn outline sm" style={{ marginLeft: "auto" }} onClick={generateTodos}>
-          一键生成待办
+        <button
+          className="btn primary"
+          onClick={submit}
+          disabled={busy || !f.title.trim()}
+        >
+          {busy ? "创建中…" : "确认创建"}
+        </button>
+        <button className="btn outline" onClick={props.onCancel}>
+          取消
         </button>
       </div>
-      {items.map((item) => (
-        <label key={item.title} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0", fontSize: 13, borderBottom: "1px solid var(--border)", opacity: item.done ? 0.5 : 1 }}>
-          <input type="checkbox" checked={item.done} readOnly />
-          <span style={{ textDecoration: item.done ? "line-through" : "none" }}>{item.title}</span>
-        </label>
-      ))}
     </div>
   );
 }

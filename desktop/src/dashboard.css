@@ -1,0 +1,267 @@
+/* ==========================================================================
+   仪表盘、指标与表格 (Dashboard, KPIs, Tables & Stepper)
+   ========================================================================== */
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-1);
+  overflow: hidden;
+}
+
+.stat {
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  text-align: left;
+  border: none;
+  background: none;
+  cursor: pointer;
+  transition: var(--t-state);
+}
+
+.stat:hover {
+  background: var(--surface-2);
+}
+
+.stat + .stat {
+  border-left: 1px solid var(--border);
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.stat-num {
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--fg-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-num small {
+  font-size: 13px;
+  color: var(--muted);
+  margin-left: 3px;
+}
+
+.stat-sub {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.stat-sub .up {
+  color: var(--accent);
+}
+
+.stat-sub .hot {
+  color: var(--risk-high);
+}
+
+/* 仪表盘快捷操作 */
+.quick {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.qa {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  text-align: left;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fg-strong);
+  cursor: pointer;
+  transition: var(--t-state);
+  box-shadow: var(--shadow-1);
+}
+
+.qa svg.ic {
+  width: 22px;
+  height: 22px;
+  color: var(--accent);
+  margin-bottom: 2px;
+}
+
+.qa:hover {
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-2);
+}
+
+.qa small {
+  font-size: 11.5px;
+  font-weight: 400;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+/* 8 阶段进度条与案件点 */
+.stepper {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 0;
+  margin: 8px 0;
+}
+
+.step {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.step::before {
+  content: "";
+  position: absolute;
+  top: 7px;
+  left: -50%;
+  width: 100%;
+  height: 2px;
+  background: var(--border);
+}
+
+.step:first-child::before {
+  display: none;
+}
+
+.step.past::before, .step.now::before {
+  background: var(--accent);
+}
+
+.step-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  z-index: 1;
+  flex: none;
+}
+
+.step.past .step-dot {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.step.now .step-dot {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.step-name {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.step.past .step-name, .step.now .step-name {
+  color: var(--fg);
+  font-weight: 600;
+}
+
+.dots8 {
+  display: inline-flex;
+  gap: 3px;
+  align-items: center;
+}
+
+.dots8 i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border);
+}
+
+.dots8 i.on {
+  background: var(--accent);
+}
+
+.dots8 i.cur {
+  background: var(--surface);
+  border: 2px solid var(--accent);
+  width: 10px;
+  height: 10px;
+}
+
+.todo {
+  display: flex;
+  flex-direction: column;
+}
+
+.todo-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.todo-item:last-child {
+  border-bottom: none;
+}
+
+.todo-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.todo-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.todo-meta {
+  display: flex;
+  gap: 8px;
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.due-urgent {
+  color: var(--risk-high);
+  font-weight: 600;
+}
+
+/* 表格 */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+
+.table th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border-strong);
+  background: var(--surface-2);
+}
+
+.table td {
+  padding: 10px 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.table tbody tr:hover {
+  background: var(--surface-2);
+}
