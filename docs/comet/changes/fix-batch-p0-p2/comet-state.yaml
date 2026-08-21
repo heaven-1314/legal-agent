@@ -1,0 +1,118 @@
+schema: comet.native.v4
+name: fix-batch-p0-p2
+language: zh-CN
+phase: build
+status: active
+state_version: 2
+brief: brief.md
+spec_changes: []
+workspace:
+  isolation: current
+  change_branch: main
+  target_branch: main
+  finish: null
+loop:
+  stage: building
+  goal_cycle: 1
+  iteration: 1
+  attempt: 0
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: submit-builder-candidate
+acceptance:
+  - id: A1
+    source: brief.md
+    text: "A1: 上传 txt/md/pdf 后，文档行点击展开预览面板显示文本内容"
+    result: pending
+    reason: null
+  - id: A2
+    source: brief.md
+    text: "A2: 发送咨询后关闭重开 app，历史对话在侧栏可见且可切换"
+    result: pending
+    reason: null
+  - id: A3
+    source: brief.md
+    text: "A3: 咨询输入框旁有上传按钮，上传后 agent 对话可引用文件名"
+    result: pending
+    reason: null
+  - id: A4
+    source: brief.md
+    text: 'A4: 设置页显示 "版本 0.4.0"'
+    result: pending
+    reason: null
+  - id: A5
+    source: brief.md
+    text: 'A5: 案件详情 8 阶段，点开"证据收集"阶段可见子项列表，可逐项打勾，点"生成待办"自动创建'
+    result: pending
+    reason: null
+  - id: A6
+    source: brief.md
+    text: 'A6: 法律检索页切换到"法条"tab，搜索"劳动合同"返回法条卡片'
+    result: pending
+    reason: null
+  - id: A7
+    source: brief.md
+    text: 'A7: 法律检索页切换到"案例"tab，可查看本地保存的案例'
+    result: pending
+    reason: null
+  - id: A8
+    source: brief.md
+    text: "A8: 计算器页有 tab 切换（劳动/交通/工伤/借贷），切换后表单和结果联动"
+    result: pending
+    reason: null
+  - id: A9
+    source: brief.md
+    text: 'A9: 导出 Word 后打开文件，页眉有"法律工作台"、正文排版符合规范'
+    result: pending
+    reason: null
+  - id: A10
+    source: brief.md
+    text: 'A10: 侧栏"办案"组新增"企业查询"，输入公司名返回工商信息卡'
+    result: pending
+    reason: null
+  - id: A11
+    source: brief.md
+    text: 'A11: 咨询中 AI 回复含法条引用时，末尾出现"存入知识库"按钮'
+    result: pending
+    reason: null
+  - id: A12
+    source: brief.md
+    text: 'A12: 合同审查结果页有"关联到案件"下拉，选择后案件详情可见关联文书'
+    result: pending
+    reason: null
+  - id: A13
+    source: brief.md
+    text: "A13: 全局截图视觉审：无错位/对齐问题"
+    result: pending
+    reason: null
+  - id: A14
+    source: brief.md
+    text: "A14: 全局截图视觉审：间距/密度合理"
+    result: pending
+    reason: null
+  - id: A15
+    source: brief.md
+    text: "A15: 全部页面无 console error"
+    result: pending
+    reason: null
+builder_handoff: null
+blockers: []
+verification: null
+history: []
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pending
+verification_report: null
+archived: false
+created_at: 2026-08-19T02:13:01.435Z
