@@ -1,4 +1,5 @@
 import type { AgentTool } from "@earendil-works/pi-agent-core";
+import { companyQueryTool } from "./company.js";
 import { consultTool } from "./consult.js";
 import { dossierReadBatchTool, dossierReadTool } from "./dossier.js";
 import { documentListTool, documentSearchTool } from "./documents.js";
@@ -11,10 +12,12 @@ import {
   laborRegionTool,
   laborTodoTool,
 } from "./labor.js";
+import { lawCasesTool, lawSearchTool } from "./laws.js";
 import { matterCreateTool, matterListTool } from "./matters.js";
 import { contractReviewTool } from "./review.js";
+import { compensationCalcTool } from "./calc.js";
 
-/** legal-agent 工具全集：六模块 + 劳动仲裁特色方向。 */
+/** legal-agent 工具全集：全量 20 个办案与检索工具。 */
 export const allTools: AgentTool<any>[] = [
   // 咨询
   consultTool,
@@ -32,13 +35,20 @@ export const allTools: AgentTool<any>[] = [
   // 阅卷
   dossierReadTool,
   dossierReadBatchTool,
-  // 劳动仲裁（特色）
+  // 劳动仲裁全流程
   laborCaseCreateTool,
   laborCaseListTool,
   laborCaseGetTool,
   laborCaseAdvanceTool,
   laborTodoTool,
   laborRegionTool,
+  // 企业工商与主体核验
+  companyQueryTool,
+  // 法规与案例检索
+  lawSearchTool,
+  lawCasesTool,
+  // 法定赔偿测算
+  compensationCalcTool,
 ];
 
 export {
@@ -58,4 +68,8 @@ export {
   laborCaseAdvanceTool,
   laborTodoTool,
   laborRegionTool,
+  companyQueryTool,
+  lawSearchTool,
+  lawCasesTool,
+  compensationCalcTool,
 };
