@@ -28,7 +28,7 @@
     "typescript": "^7.0.2",
     "vite": "^8.2.1"
   },
-  "author": "heaven-1314 <1285304839@qq.com>",
+  "author": "heaven-1314 <heaven-1314@users.noreply.github.com>",
   "description": "Legal workbench: Pi-based agent + FastAPI tools + Electron",
   "repository": {
     "type": "git",

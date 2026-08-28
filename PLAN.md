@@ -15,7 +15,7 @@
 | FastAPI 单仓 `backend/server.py` + `config.py` | `zentao-analysis/backend/` | 新项目沿用；密钥只进 env |
 | LLM：OpenAI-compatible | `AI_BASE` + `AI_KEY` + `AI_MODEL` | 默认走 new-api：`http://127.0.0.1:3000/v1`，`POST {AI_BASE}/chat/completions` |
 | 模型默认 | `deepseek-v4-flash` 等 | 可配置，不写死业务逻辑 |
-| 鉴权 | 禅道审计：账号表 + session | V0 可用 **单用户 dev token / 简单账号表**；多租户后置 |
+| 鉴权 | 既有系统：账号表 + session | V0 可用 **单用户 dev token / 简单账号表**；多租户后置 |
 | 大文件/数据 | `/data` | 文档与向量库落 `/data/legal-agent/`，代码在 `/root/projects/legal-agent` |
 | 禁止 | `systemctl restart docker`；前端硬编码绝对路径；`git add -A` 扫知识库 | 见 CLAUDE.md |
 
@@ -70,7 +70,7 @@
 - [ ] 文档上传：保存到 `/data/legal-agent/uploads/{id}/`
 - [ ] 文本抽取：先 PDF/纯文本/docx 最小通路（OCR 后置）
 - [ ] 分块 + 简易向量或先 **BM25/FTS5**（V0 不强制 embedding 服务）
-- [ ] LLM 客户端：复制禅道 `AI_BASE/AI_KEY/AI_MODEL` 模式
+- [ ] LLM 客户端：沿用 `AI_BASE/AI_KEY/AI_MODEL` 配置模式
 - [ ] 审计日志：谁、何时、何操作、文档 id、模型名（无卷宗路径进公开错误）
 
 ### 1.2 前端骨架

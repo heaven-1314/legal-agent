@@ -1,12 +1,14 @@
 # legal-agent
 
+> 🌐 **在线体验（Web 版，持续部署）**：<http://8.152.157.178:5002/legal-agent/>
+
 法律垂类 Agent 工作台（个人项目）。产品决策见 knowledge-base wiki **项目-法律Agent**。
 
 ## 状态
 
-- 阶段：V0 地基
+- 阶段：v0.4.6（13 页工作台 · Web + Electron 桌面端）
 - 默认 V1 尖刀：合同审查
-- 形态：Web 优先；桌面壳后置
+- 形态：Web + Electron 桌面端（Win / macOS / Linux 全平台自动发版）
 
 ## 本地运行
 
